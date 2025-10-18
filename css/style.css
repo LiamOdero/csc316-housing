@@ -1,0 +1,12 @@
+
+
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: 	#fff;
+  text-align: center;
+}
+
+.container-fluid {
+	padding-right: 30px;
+	padding-left: 30px;
+}
