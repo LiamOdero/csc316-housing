@@ -5,6 +5,9 @@ loadData();
 function loadData() {
     d3.csv("data/avg_rent_by_pop.csv"). then(data=>{
         cleaned_data = preparePopRentData(data);
+        let popChart = new PopulationRentChart("vis5", cleaned_data)
+
+        popChart.initVis();
     });
 }
 
@@ -27,5 +30,5 @@ function preparePopRentData(data){
             cleaned_data.push(locObj)
         }        
     });
-    console.log(cleaned_data)
+    return cleaned_data;
 }
