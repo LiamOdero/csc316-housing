@@ -12,7 +12,7 @@
 class PopulationRentChart {
 
 // constructor method to initialize PopulationRentChart object
-constructor(parentElement, data) {
+constructor(parentElement, filterElements, data) {
     this.parentElement = parentElement;
 
     // sorting the data to make accumulation logic simpler
@@ -52,16 +52,25 @@ constructor(parentElement, data) {
         .domain(this.displayCategories)
         .range(colorArray);
 
-    // Note: this method of getting filter keys is basically hard coding to exploit the static dataset
+    
+    this.structureIDMap = {RA3P: "Row and apartment structures of three units and over", 
+                          R3P: "Row structures of three units and over", 
+                          A3P: "Apartment structures of three units and over", 
+                          A6P: "Apartment structures of six units and over"};
     this.structureFilters = data[1].data.reduce((acc, e) => {
                                 acc[e.structure] = true;
                                 return acc;
                             }, {});
 
+    this.unitIDMap = {bachelor: "Bachelor units", onebed: "One bedroom units", twobed: "Two bedroom units", threebed: "Three bedroom units"};
     this.unitFilters = data[3].data.reduce((acc, e) => {
                                 acc[e.unit] = true;
                                 return acc;
                             }, {});
+
+    filterElements.forEach(e => {
+        this.createListener(e)
+    })
 }
 
 	/*
@@ -106,7 +115,6 @@ constructor(parentElement, data) {
 					  .attr("x", 0)
 					  .attr("y", 0)
 
-            // TO-DO: (Filter, aggregate, modify data)
          vis.wrangleData();
 
 	}
@@ -118,16 +126,18 @@ constructor(parentElement, data) {
         this.data.forEach(e =>  {
             let accAvg = 0;
             let num = 0;
+
             e.data.forEach(e => {
                 let include = vis.structureFilters[e.structure] && vis.unitFilters[e.unit]
                 accAvg += e.avg * include;
                 num += include;
             })
+
             if (num > 0)    {
+                newData.push(e);
                 accAvg /= num;
+                newData[newData.length - 1].avg = accAvg
             }
-            newData.push(e);
-            newData[newData.length - 1].avg = accAvg
         })
 
         if (vis.provinceMode)   {
@@ -175,8 +185,24 @@ constructor(parentElement, data) {
         }   else    {
             vis.displayCategories = vis.cities[d.province]
         }
-        console.log(vis.displayCategories)
         vis.wrangleData();
+    }
+
+    createListener(checkbox)    {
+        let vis = this;
+        let check = d3.select("#" + checkbox)
+        check.property("checked", true)
+        
+        check.on("change", function(d)  {
+            if (checkbox.length < 5)    {
+                
+                vis.structureFilters[vis.structureIDMap[checkbox]] = this.checked;
+                console.log(vis.structureFilters)
+            }   else    {
+                vis.unitFilters[vis.unitIDMap[checkbox]] = this.checked;
+            }
+            vis.wrangleData();
+        })
     }
 
 	/*

@@ -5,7 +5,7 @@ loadData();
 function loadData() {
     d3.csv("data/avg_rent_by_pop.csv"). then(data=>{
         cleaned_data = preparePopRentData(data);
-        let popChart = new PopulationRentChart("vis5", cleaned_data)
+        let popChart = new PopulationRentChart("vis5", ["RA3P", "R3P", "A3P", "A6P", "bachelor", "onebed", "twobed", "threebed"], cleaned_data)
 
         popChart.initVis();
     });
