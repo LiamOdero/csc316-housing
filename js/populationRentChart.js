@@ -81,12 +81,12 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
 
     // Listener for province selection
     this.provinceFilterArea = d3.select("#" + provinceFilterArea);
-    let select = d3.select("#" + provinceSelect);
+    this.select = d3.select("#" + provinceSelect);
     let vis = this;
-    select.on("change", function() {
-        vis.createProvinceFilters(select.property("value"));
+    this.select.on("change", function() {
+        vis.createProvinceFilters(vis.select.property("value"));
     });
-    this.createProvinceFilters(select.property("value"));
+    this.createProvinceFilters(vis.select.property("value"));
 }
 
 	/*
@@ -250,7 +250,20 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
         let category = d.key;
         if (vis.provinces.includes(category))   {
             // clicked on a province
-            vis.cityFilter[category].cityMode = true;
+            vis.provinces.forEach(e =>  {
+                let currProvince = e;
+                if (e != category)  {
+                    Object.keys(vis.cityFilter[currProvince]).forEach(e => {
+                        vis.cityFilter[currProvince][e] = false;
+                    })
+                }   else    {
+                    vis.cityFilter[e].cityMode = true;
+                }
+
+            })
+            vis.select.property("value", category);
+            this.createProvinceFilters(category)
+            
         }   else    {
             //clicked on a city
         }
@@ -273,19 +286,20 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
             vis.wrangleData();
         })
     }
-
+    
     createProvinceFilters(province)    {
         let vis = this;
-        let cities = ["All"];
+        let cities = ["All " + province];
+        let allCheckPre = true;
         Object.keys(vis.cityFilter[province]).forEach(e =>   {
             if (e != "cityMode")    {
                 cities.push(e)
+                allCheckPre = allCheckPre && vis.cityFilter[province][e];
             }
         })
 
         let citySelection = vis.provinceFilterArea.selectAll(".city-checkbox")
                                            .data(cities, d => d);
-        console.log(cities)
         citySelection.exit()
             .transition()
             .duration(200)
@@ -300,24 +314,25 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
         cityEnter.append("input")
             .attr("class", "form-check-input")
             .attr("type", "checkbox")
-            .attr("id", d => `check-${d}`)
+            .attr("id", d => `check-${d.replace(/[^a-zA-Z0-9_-]/g, "_")}`)
             .attr("value", d => d)
             .property("checked", function(d)    {
-                if (d == "All") {
-                    return true;
+                if (d.slice(0, 3) == "All") {
+                    return allCheckPre;
                 }   else    {
                     return vis.cityFilter[province][d]
                 }
             })
             .on("change", function(d)   {
                 let target = d.target.value
-                if (target == "All")    {
+                if (target.slice(0, 3) == "All")    {
+                    let allCheck = d.target.checked;
                     cities.forEach(e => {
-                        if (e != "All") {
-                            vis.cityFilter[province][e] = !vis.cityFilter[province][e];
+                        if (e.slice(0, 3) != "All") {
+                            vis.cityFilter[province][e] = allCheck;
 
                             d3.select(`#check-${e.replace(/[^a-zA-Z0-9_-]/g, "_")}`)
-                                    .property("checked", vis.cityFilter[province][e]);
+                                    .property("checked", allCheck);
                         }
                     })
                 }   else    {
@@ -330,7 +345,13 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
         cityEnter.append("label")
             .attr("class", "form-check-label")
             .attr("for", d => `check-${d}`)
-            .text(d => d);
+            .text(function(d)  {
+                if (d.slice(0, 3) == "All") {
+                    return "All";
+                }   else    {
+                    return d;
+                }
+            });
 
         // ENTER + UPDATE MERGE
         cityEnter.merge(citySelection)
