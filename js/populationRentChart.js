@@ -302,7 +302,13 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
             .attr("type", "checkbox")
             .attr("id", d => `check-${d}`)
             .attr("value", d => d)
-            .property("checked", true)
+            .property("checked", function(d)    {
+                if (d == "All") {
+                    return true;
+                }   else    {
+                    return vis.cityFilter[province][d]
+                }
+            })
             .on("change", function(d)   {
                 let target = d.target.value
                 if (target == "All")    {
