@@ -167,8 +167,8 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
                     newData[newData.length - 1].avg = accAvg
                 }
             }
-
         })
+
         // Accumulate city data by province and average it out  
         let accumulatedData = [];
 
@@ -195,37 +195,52 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
         })
 
         let categories = [];
+        
+        let startAvg = 0;
+        let startPop = 0;
+
         // final average calculation
         accumulatedData.forEach((e, i) =>   {
             e.avg /= e.cityNum
 
             // 2001 is the first year in the dataset, so exclude the change
-            e.popChange = (e.year != "2001") ? (e.pop - accumulatedData[i - 1].pop) / e.pop * 100: 0;
-            e.avgChange = (e.year != "2001") ? (e.avg - accumulatedData[i - 1].avg) / e.avg * 100: 0;
+            // For some reason Parksville has 0 in rent for 2001 which i somehow doubt is correct, so this is the bandaid fix
+            if (e.year == "2001" || (e.category == "Parksville" && e.year == "2002")) {
+                startAvg = e.avg;
+                startPop = e.pop;
+
+                e.popChange = 0;
+                e.avgChange = 0;
+            }   else    {
+                e.popChange = (e.pop - startPop) / (startPop) * 100
+                e.avgChange = (e.avg - startAvg) / startAvg * 100;
+            }
 
             if (e.year == "2001")   {
                 categories.push(e.category)
             }
         })
         vis.displayCategories = categories;
-        this.displayKeys = []
-        let max = d3.extent(accumulatedData, d => d.popChange)[1]
-        for (let i = 0; i < NUM_CATEGORIES; i++)    {
-            this.displayKeys.push(max / NUM_CATEGORIES * (i + 1))
-        }
-        vis.displayData = accumulatedData;
+        let range = d3.extent(
+            accumulatedData.filter(d => vis.displayCategories.includes(d.category)),
+            d => d.popChange
+        );
 
+        vis.displayKeys = d3.ticks(range[0], range[1], NUM_CATEGORIES);
+        vis.displayData = accumulatedData;
+        console.log(accumulatedData)
         this.accumulateCategories();
     }
 
     accumulateCategories()  {
-        // Bins the current display data by $ population change
+        // Bins the current display data by % population change
         let vis = this;
         let binnedData = [];
+        let range = d3.extent(vis.displayData, d => d.popChange)
         vis.displayKeys.forEach((e, i) => {
             let currObj = {};
 
-            let lowerCompare = (i > 0) ? vis.displayKeys[i - 1] : 0;
+            let lowerCompare = (i > 0) ? vis.displayKeys[i - 1] : range[0];
             let higherCompare = vis.displayKeys[i]
 
             // very inefficient way to collect the data, will optimize
@@ -246,7 +261,6 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
             });
             binnedData.push(currObj);
         })
-
         vis.stackData = binnedData;
 
     }
