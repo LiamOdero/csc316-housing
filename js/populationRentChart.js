@@ -25,11 +25,14 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
 
     let colors = ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a'];
 
+    // A list of all provinces in the dataset
     this.provinces = [...new Set(data.map(item => item.province))];
-    this.displayCategories = this.provinces
-    this.displayKeys = []
 
-    this.provinceMode = true;
+    // Has all cities / provinces currently displayed in the chart
+    this.displayCategories = this.provinces
+
+    // Contains all bins of % increases over the x axis
+    this.displayKeys = []
 
     // Constructing an object mapping provinces to the cities they contain
     this.cityFilter = this.provinces.reduce((acc, province) => {
@@ -41,11 +44,17 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
         this.cityFilter[e.province].push(e.city)
     });
 
+    // Inverse mapping of cities to provinces
+    this.cityProvinceMap = {}
+    let vis = this;
+
     this.provinces.forEach(e => {
         let citySet = [...new Set(this.cityFilter[e])];
         let currObj = {cityMode: false};
+        let provivince = e;
         citySet.forEach(e =>    {
             currObj[e] = true;
+            vis.cityProvinceMap[e] = provivince;
         })
         this.cityFilter[e] = currObj;
     })
@@ -82,7 +91,6 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
     // Listener for province selection
     this.provinceFilterArea = d3.select("#" + provinceFilterArea);
     this.select = d3.select("#" + provinceSelect);
-    let vis = this;
     this.select.on("change", function() {
         vis.createProvinceFilters(vis.select.property("value"));
     });
@@ -161,22 +169,20 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
             }
 
         })
-
         // Accumulate city data by province and average it out  
         let accumulatedData = [];
 
-
-        newData.forEach(e =>    {
+        newData.forEach((e, i) =>    {
             // accumulating averages across cities
             let currCategory = (vis.cityFilter[e.province].cityMode) ? e.city : e.province
-            if (accumulatedData.length == 0 || vis.cityFilter[e.province].cityMode || accumulatedData[accumulatedData.length - 1].category != currCategory)  {
-                // Directly push an object in one of 3 cases: No other object in accumulated data, the current province is displaying each city,
-                // or none of the above BUT the province has now changed
+            if (accumulatedData.length == 0 || vis.cityFilter[e.province].cityMode || (accumulatedData[accumulatedData.length - 1].category != currCategory) || (accumulatedData[accumulatedData.length - 1].year!= e.year) )  {
+                // Directly push an object in one of 4 cases: No other object in accumulated data, the current province is displaying each city,
+                // or none of the above BUT the province or year have changed
                 
                 let currObj = {category: currCategory, year: e.year, pop: e.pop, avg: e.avg, cityNum: 1}
                 accumulatedData.push(currObj)
             }   else    {
-                // only accumulate if there is data, the province is the same, and we arent displaying individual cities
+                // only accumulate if there is data, the province is the same and in the same year, and we arent displaying individual cities
                 accumulatedData[accumulatedData.length - 1].pop += e.pop;
                 accumulatedData[accumulatedData.length - 1].avg += e.avg;
                 accumulatedData[accumulatedData.length - 1].cityNum += 1;
@@ -266,6 +272,8 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
             
         }   else    {
             //clicked on a city
+            let province = vis.cityProvinceMap[category];
+            vis.cityFilter[province].cityMode = false;
         }
 
         vis.wrangleData();
