@@ -5,7 +5,8 @@ loadData();
 function loadData() {
     d3.csv("data/avg_rent_by_pop.csv"). then(data=>{
         cleaned_data = preparePopRentData(data);
-        let popChart = new PopulationRentChart("vis5", ["RA3P", "R3P", "A3P", "A6P", "bachelor", "onebed", "twobed", "threebed"], cleaned_data)
+        let popChart = new PopulationRentChart("vis5", ["RA3P", "R3P", "A3P", "A6P", "bachelor", "onebed", "twobed", "threebed"], 
+                                               "provinceSelect", "city-list", cleaned_data)
 
         popChart.initVis();
     })
@@ -33,8 +34,7 @@ function preparePopRentData(data){
         if (cleaned_data.length > 0 && cleaned_data[cleaned_data.length - 1].city == city) {
             cleaned_data[cleaned_data.length - 1].data.push(dataObj)
         }   else    {
-            let province = loc.slice(index + 1);
-
+            let province = loc.slice(index + 2);
             let locObj = {year: e.REF_DATE, city: city, province: province, pop: +e.POP, data: [dataObj]};
             cleaned_data.push(locObj)
         }        

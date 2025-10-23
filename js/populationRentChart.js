@@ -13,7 +13,7 @@ let NUM_CATEGORIES = 11;
 class PopulationRentChart {
 
 // constructor method to initialize PopulationRentChart object
-constructor(parentElement, filterElements, data) {
+constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, data) {
     this.parentElement = parentElement;
 
     // sorting the data to make accumulation logic simpler
@@ -76,8 +76,17 @@ constructor(parentElement, filterElements, data) {
                             }, {});
 
     filterElements.forEach(e => {
-        this.createListener(e)
+        this.createBuildingListeners(e)
     })
+
+    // Listener for province selection
+    this.provinceFilterArea = d3.select("#" + provinceFilterArea);
+    let select = d3.select("#" + provinceSelect);
+    let vis = this;
+    select.on("change", function() {
+        vis.createProvinceFilters(select.property("value"));
+    });
+    this.createProvinceFilters(select.property("value"));
 }
 
 	/*
@@ -117,7 +126,6 @@ constructor(parentElement, filterElements, data) {
 
 		vis.svg.append("g")
 			.attr("class", "y-axis axis");
-
 
 		vis.tooltip = vis.svg.append("text")
 					  .attr("x", 0)
@@ -250,7 +258,7 @@ constructor(parentElement, filterElements, data) {
         vis.wrangleData();
     }
 
-    createListener(checkbox)    {
+    createBuildingListeners(checkbox)    {
         let vis = this;
         let check = d3.select("#" + checkbox)
         check.property("checked", true)
@@ -265,6 +273,65 @@ constructor(parentElement, filterElements, data) {
             vis.wrangleData();
         })
     }
+
+    createProvinceFilters(province)    {
+        let vis = this;
+        let cities = ["All"];
+        Object.keys(vis.cityFilter[province]).forEach(e =>   {
+            if (e != "cityMode")    {
+                cities.push(e)
+            }
+        })
+
+        let citySelection = vis.provinceFilterArea.selectAll(".city-checkbox")
+                                           .data(cities, d => d);
+        console.log(cities)
+        citySelection.exit()
+            .transition()
+            .duration(200)
+            .style("opacity", 0)
+            .remove();
+
+        let cityEnter = citySelection.enter()
+            .append("div")
+            .attr("class", "form-check city-checkbox")
+            .style("opacity", 0);
+
+        cityEnter.append("input")
+            .attr("class", "form-check-input")
+            .attr("type", "checkbox")
+            .attr("id", d => `check-${d}`)
+            .attr("value", d => d)
+            .property("checked", true)
+            .on("change", function(d)   {
+                let target = d.target.value
+                if (target == "All")    {
+                    cities.forEach(e => {
+                        if (e != "All") {
+                            vis.cityFilter[province][e] = !vis.cityFilter[province][e];
+
+                            d3.select(`#check-${e.replace(/[^a-zA-Z0-9_-]/g, "_")}`)
+                                    .property("checked", vis.cityFilter[province][e]);
+                        }
+                    })
+                }   else    {
+                    vis.cityFilter[province][target] = !vis.cityFilter[province][target];
+                }
+                vis.wrangleData();
+            });
+
+
+        cityEnter.append("label")
+            .attr("class", "form-check-label")
+            .attr("for", d => `check-${d}`)
+            .text(d => d);
+
+        // ENTER + UPDATE MERGE
+        cityEnter.merge(citySelection)
+            .transition()
+            .duration(200)
+            .style("opacity", 1);
+            }
 
 	/*
  	* Data wrangling
