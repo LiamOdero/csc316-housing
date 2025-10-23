@@ -32,17 +32,22 @@ constructor(parentElement, filterElements, data) {
     this.provinceMode = true;
 
     // Constructing an object mapping provinces to the cities they contain
-    this.cities = this.provinces.reduce((acc, province) => {
+    this.cityFilter = this.provinces.reduce((acc, province) => {
                         acc[province] = [];
                         return acc;
                     }, {});
 
     this.data.forEach(e => {
-        this.cities[e.province].push(e.city)
+        this.cityFilter[e.province].push(e.city)
     });
 
     this.provinces.forEach(e => {
-        this.cities[e] = [...new Set(this.cities[e])];
+        let citySet = [...new Set(this.cityFilter[e])];
+        let currObj = {cityMode: false};
+        citySet.forEach(e =>    {
+            currObj[e] = true;
+        })
+        this.cityFilter[e] = currObj;
     })
 
     // prepare colors for range
@@ -55,7 +60,6 @@ constructor(parentElement, filterElements, data) {
         .domain(this.displayCategories)
         .range(colorArray);
 
-    
     this.structureIDMap = {RA3P: "Row and apartment structures of three units and over", 
                           R3P: "Row structures of three units and over", 
                           A3P: "Apartment structures of three units and over", 
@@ -132,59 +136,71 @@ constructor(parentElement, filterElements, data) {
         this.data.forEach(e =>  {
             let accAvg = 0;
             let num = 0;
+            
+            let include = vis.cityFilter[e.province][e.city];
+                if (include)    {
+                e.data.forEach(e => {
+                    let include = vis.structureFilters[e.structure] && vis.unitFilters[e.unit]
+                    accAvg += e.avg * include;
+                    num += include;
+                })
 
-            e.data.forEach(e => {
-                let include = vis.structureFilters[e.structure] && vis.unitFilters[e.unit]
-                accAvg += e.avg * include;
-                num += include;
-            })
-
-            if (num > 0)    {
-                newData.push(e);
-                accAvg /= num;
-                newData[newData.length - 1].avg = accAvg
+                if (num > 0)    {
+                    newData.push(e);
+                    accAvg /= num;
+                    newData[newData.length - 1].avg = accAvg
+                }
             }
+
         })
 
-        if (vis.provinceMode)   {
-            // Accumulate city data by province and average it out
+        // Accumulate city data by province and average it out  
+        let accumulatedData = [];
 
-            let provinceData = [];
 
-            newData.forEach(e =>    {
-                // accumulating averages across cities
-                if(provinceData.length > 0 && provinceData[provinceData.length - 1].province == e.province)    {
-                    
-                    provinceData[provinceData.length - 1].pop += e.pop;
-                    provinceData[provinceData.length - 1].avg += e.avg;
-                    provinceData[provinceData.length - 1].cityNum += 1;
-                }   else    {
-                    let currObj = {province: e.province, year: e.year, pop: e.pop, avg: e.avg, cityNum: 1}
-                    provinceData.push(currObj)
-                }
-            })
-            
-            provinceData = provinceData.sort(function(a, b) {
-                return a.province.localeCompare(b.province)
-            })
-            // final average calculation
-            provinceData.forEach((e, i) =>   {
-                e.avg /= e.cityNum
-
-                // 2001 is the first year in the dataset, so exclude the change
-                e.popChange = (e.year != "2001") ? (e.pop - provinceData[i - 1].pop) / e.pop * 100: 0;
-                e.avgChange = (e.year != "2001") ? (e.avg - provinceData[i - 1].avg) / e.avg * 100: 0;
-            })
-
-            this.displayKeys = []
-            let max = d3.extent(provinceData, d => d.popChange)[1]
-            for (let i = 0; i < NUM_CATEGORIES; i++)    {
-                this.displayKeys.push(max / NUM_CATEGORIES * (i + 1))
+        newData.forEach(e =>    {
+            // accumulating averages across cities
+            let currCategory = (vis.cityFilter[e.province].cityMode) ? e.city : e.province
+            if (accumulatedData.length == 0 || vis.cityFilter[e.province].cityMode || accumulatedData[accumulatedData.length - 1].category != currCategory)  {
+                // Directly push an object in one of 3 cases: No other object in accumulated data, the current province is displaying each city,
+                // or none of the above BUT the province has now changed
+                
+                let currObj = {category: currCategory, year: e.year, pop: e.pop, avg: e.avg, cityNum: 1}
+                accumulatedData.push(currObj)
+            }   else    {
+                // only accumulate if there is data, the province is the same, and we arent displaying individual cities
+                accumulatedData[accumulatedData.length - 1].pop += e.pop;
+                accumulatedData[accumulatedData.length - 1].avg += e.avg;
+                accumulatedData[accumulatedData.length - 1].cityNum += 1;
             }
-            vis.displayData = provinceData;
-        }   else    {
-            // TODO: cities
+
+        })
+            
+        accumulatedData = accumulatedData.sort(function(a, b) {
+            return a.category.localeCompare(b.category)
+        })
+
+        let categories = [];
+        // final average calculation
+        accumulatedData.forEach((e, i) =>   {
+            e.avg /= e.cityNum
+
+            // 2001 is the first year in the dataset, so exclude the change
+            e.popChange = (e.year != "2001") ? (e.pop - accumulatedData[i - 1].pop) / e.pop * 100: 0;
+            e.avgChange = (e.year != "2001") ? (e.avg - accumulatedData[i - 1].avg) / e.avg * 100: 0;
+
+            if (e.year == "2001")   {
+                categories.push(e.category)
+            }
+        })
+        vis.displayCategories = categories;
+        this.displayKeys = []
+        let max = d3.extent(accumulatedData, d => d.popChange)[1]
+        for (let i = 0; i < NUM_CATEGORIES; i++)    {
+            this.displayKeys.push(max / NUM_CATEGORIES * (i + 1))
         }
+        vis.displayData = accumulatedData;
+
         this.accumulateCategories();
     }
 
@@ -199,13 +215,13 @@ constructor(parentElement, filterElements, data) {
             let higherCompare = vis.displayKeys[i]
 
             // very inefficient way to collect the data, will optimize
-            vis.provinces.forEach(e => {
+            vis.displayCategories.forEach(e => {
                 let total = 0;
                 let currAvg = 0;
                 let currProvince = e;
                 vis.displayData.forEach(e =>   {
                     
-                    if (e.province == currProvince && e.popChange > lowerCompare && e.popChange <= higherCompare)   {
+                    if (e.category == currProvince && e.popChange > lowerCompare && e.popChange <= higherCompare)   {
                         currAvg += e.avgChange;
                         total += 1;
                     }
@@ -223,12 +239,12 @@ constructor(parentElement, filterElements, data) {
 
     handleClick(d)   {
         let vis = this;
-        vis.provinceMode = !vis.provinceMode;
-
-        if (vis.provinceMode)   {
-
+        let category = d.key;
+        if (vis.provinces.includes(category))   {
+            // clicked on a province
+            vis.cityFilter[category].cityMode = true;
         }   else    {
-
+            //clicked on a city
         }
 
         vis.wrangleData();
@@ -283,7 +299,6 @@ constructor(parentElement, filterElements, data) {
         d3.min(vis.stackedData, layer => d3.min(layer, d => d[0])),
         d3.max(vis.stackedData, layer => d3.max(layer, d => d[1]))
         ]);
-        console.log(this.displayKeys)
 
 		// Draw the layers
 		let categories = vis.svg.selectAll(".area")
@@ -294,6 +309,7 @@ constructor(parentElement, filterElements, data) {
                 vis.tooltip.text(d.key)
 			})
 			.on("click", function(e, d)	{
+                vis.handleClick(d)
 			})
 
 			.attr("class", "area")
