@@ -8,6 +8,15 @@ function loadData() {
         let popChart = new PopulationRentChart("vis5", ["RA3P", "R3P", "A3P", "A6P", "bachelor", "onebed", "twobed", "threebed"], cleaned_data)
 
         popChart.initVis();
+    })
+
+    // Load and create the building visualization
+    d3.json('data/vacancy_data.json').then(data => {
+        createBuildingVisualization(data);
+    }).catch(error => {
+        console.error('Error loading data:', error);
+        document.getElementById('buildings-container').innerHTML =
+            '<p style="color: #ff6b6b; text-align: center;">Error loading visualization data.</p>';
     });
 }
 
