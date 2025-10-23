@@ -1,14 +1,6 @@
 // Set current year in footer
 document.getElementById('current-year').textContent = new Date().getFullYear();
 
-// Load and create the building visualization
-d3.json('cleared_data/Burak\'s-cleared-data/cities_data.json').then(data => {
-    createBuildingVisualization(data);
-}).catch(error => {
-    console.error('Error loading data:', error);
-    document.getElementById('buildings-container').innerHTML =
-        '<p style="color: #ff6b6b; text-align: center;">Error loading visualization data.</p>';
-});
 
 function createBuildingVisualization(cities) {
     const container = d3.select('#buildings-container');
