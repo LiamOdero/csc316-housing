@@ -138,10 +138,6 @@ header .subtitle {
     transition: transform 0.3s ease;
 }
 
-.city-building:hover {
-    transform: translateY(-10px);
-}
-
 .smoke-container {
     position: relative;
     display: flex;
