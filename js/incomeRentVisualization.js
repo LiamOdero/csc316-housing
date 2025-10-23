@@ -49,7 +49,8 @@ function normalizeRentType(value) {
 
 Promise.all([
     d3.csv("data/rent-prices-data.csv").then(rows => rows.map(row => mapRowBySchema(row, RENT_DATA_MAP))),
-    d3.csv("data/income-data.csv").then(rows => rows.map(row => mapRowBySchema(row, INCOME_DATA_MAP)))
+    d3.csv("data/income-data.csv").then(rows => rows.filter(row => ['A','B','C','D','E'].includes(row.STATUS))
+    .map(row => mapRowBySchema(row, INCOME_DATA_MAP)))
 ]).then(([rentData, incomeData]) => {
     const vis = new IncomeRentComparison({
         container: "#vis4-container",
@@ -113,7 +114,6 @@ class IncomeRentComparison {
 
     prepareIncomeData() {
         const relevantRows = this.rawIncomeData.filter(row => row.value > 0 && row.date === this.year);
-
         this.incomeByFamily = d3.rollup(
             relevantRows,
             familyRows => d3.rollup(
@@ -127,7 +127,6 @@ class IncomeRentComparison {
             ),
             row => row.familyType
         );
-
         this.familyTypes = Array.from(this.incomeByFamily.keys()).sort(d3.ascending);
     }
 
@@ -188,6 +187,7 @@ class IncomeRentComparison {
             .attr("type", "button")
             .attr("id", "income-source-dropdown")
             .attr("data-bs-toggle", "dropdown")
+            .attr("data-bs-auto-close", "outside")
             .attr("aria-expanded", "false")
             .text("All income sources");
 
@@ -215,6 +215,7 @@ class IncomeRentComparison {
             .attr("type", "button")
             .attr("id", "income-city-dropdown")
             .attr("data-bs-toggle", "dropdown")
+            .attr("data-bs-auto-close", "outside")
             .attr("aria-expanded", "false")
             .text("All cities");
 
@@ -310,7 +311,7 @@ class IncomeRentComparison {
         this.familySelect.property("disabled", this.familyTypes.length === 0);
     }
 
-    populateSourceOptions(sources = []) {
+    populateIncomeSourceOptions(sources = []) {
         if (!this.sourceMenu) {
             return;
         }
@@ -333,7 +334,7 @@ class IncomeRentComparison {
                         .on("click", event => event.stopPropagation())
                         .on("change", (event, value) => {
                             event.stopPropagation();
-                            this.onSourceToggle(value, event.target.checked);
+                            this.onIncomeSourceToggle(value, event.target.checked);
                         });
 
                     label.append("span")
@@ -349,7 +350,7 @@ class IncomeRentComparison {
         labels.select("input")
             .property("checked", d => this.state.selectedSources.has(d));
 
-        this.updateSourceButtonLabel();
+        this.updateIncomeSourceButtonLabel();
     }
 
     populateCityOptions(cities = []) {
@@ -394,7 +395,7 @@ class IncomeRentComparison {
         this.updateCityButtonLabel();
     }
 
-    updateSourceButtonLabel() {
+    updateIncomeSourceButtonLabel() {
         if (!this.sourceButton) {
             return;
         }
@@ -452,41 +453,52 @@ class IncomeRentComparison {
         this.cityButton.text(label);
     }
 
-    refreshCityOptions({forceReset = false} = {}) {
+    updateIncomeSourceOptions({forceReset = false} = {}) {
         if (!this.state.selectedFamilyType) {
-            this.availableCities = [];
-            this.state.selectedCities = new Set();
-            this.populateCityOptions([]);
+            this.availableSources = [];
+            this.state.selectedSources = new Set();
+            this.populateIncomeSourceOptions([]);
             return;
         }
 
-        const sources = Array.from(this.state.selectedSources);
-        const cities = this.getCitiesForSelection(this.state.selectedFamilyType, sources);
+        const selectedCities = Array.from(this.state.selectedCities);
 
-        let nextSelection;
-        if (forceReset || this.state.selectedCities.size === 0) {
-            nextSelection = new Set(cities);
-        } else {
-            const retained = Array.from(this.state.selectedCities).filter(city => cities.includes(city));
-            nextSelection = retained.length ? new Set(retained) : new Set(cities);
+        if (selectedCities.length === 0) {
+            this.availableSources = [];
+            this.state.selectedSources = new Set();
+            this.populateIncomeSourceOptions([]);
+            return;
         }
 
-        this.state.selectedCities = nextSelection;
-        this.populateCityOptions(cities);
+        const sources = this.getIncomeSourcesForFamily(
+            this.state.selectedFamilyType,
+            selectedCities
+        );
+
+        let nextSelection;
+        if (forceReset || this.state.selectedSources.size === 0) {
+            nextSelection = new Set(sources);
+        } else {
+            const retained = Array.from(this.state.selectedSources).filter(source => sources.includes(source));
+            nextSelection = retained.length ? new Set(retained) : new Set(sources);
+        }
+
+        this.state.selectedSources = nextSelection;
+        this.populateIncomeSourceOptions(sources);
     }
 
-    getCitiesForSelection(familyType, sources) {
+    getAvailableCitiesForFamily(familyType) {
         const familyData = this.incomeByFamily.get(familyType);
         if (!familyData) {
             return [];
         }
 
         const citySet = new Set();
-        sources.forEach(source => {
-            const cityMap = familyData.get(source);
+        familyData.forEach(cityMap => {
             if (!cityMap) {
                 return;
             }
+
             cityMap.forEach((value, city) => {
                 if (this.rentByCity.has(city)) {
                     citySet.add(city);
@@ -497,7 +509,7 @@ class IncomeRentComparison {
         return Array.from(citySet).sort(d3.ascending);
     }
 
-    onSourceToggle(source, checked) {
+    onIncomeSourceToggle(source, checked) {
         const nextSelection = new Set(this.state.selectedSources);
 
         if (checked) {
@@ -513,8 +525,7 @@ class IncomeRentComparison {
                 .property("checked", d => this.state.selectedSources.has(d));
         }
 
-        this.updateSourceButtonLabel();
-        this.refreshCityOptions({forceReset: false});
+        this.updateIncomeSourceButtonLabel();
         this.renderComparison();
     }
 
@@ -535,6 +546,7 @@ class IncomeRentComparison {
         }
 
         this.updateCityButtonLabel();
+        this.updateIncomeSourceOptions({forceReset: false});
         this.renderComparison();
     }
 
@@ -544,7 +556,7 @@ class IncomeRentComparison {
             if (this.familySelect) {
                 this.familySelect.property("disabled", true);
             }
-            this.updateSourceButtonLabel();
+            this.updateIncomeSourceButtonLabel();
             this.updateCityButtonLabel();
             return;
         }
@@ -563,29 +575,47 @@ class IncomeRentComparison {
             this.familySelect.property("value", familyType);
         }
 
-        const sources = this.getSourcesForFamily(familyType);
+        const availableCities = this.getAvailableCitiesForFamily(familyType);
 
-        let nextSelection;
-        if (forceReset || this.state.selectedSources.size === 0) {
-            nextSelection = new Set(sources);
+        let nextCitySelection;
+        if (forceReset || this.state.selectedCities.size === 0) {
+            nextCitySelection = new Set(availableCities);
         } else {
-            const retained = Array.from(this.state.selectedSources).filter(source => sources.includes(source));
-            nextSelection = retained.length ? new Set(retained) : new Set(sources);
+            const retained = Array.from(this.state.selectedCities).filter(city => availableCities.includes(city));
+            nextCitySelection = retained.length ? new Set(retained) : new Set(availableCities);
         }
 
-        this.state.selectedSources = nextSelection;
-        this.populateSourceOptions(sources);
-        this.refreshCityOptions({forceReset: true});
+        this.state.selectedCities = nextCitySelection;
+        this.populateCityOptions(availableCities);
+        this.updateCityButtonLabel();
+
+        this.updateIncomeSourceOptions({forceReset: true});
         this.renderComparison();
     }
 
-    getSourcesForFamily(familyType) {
+    getIncomeSourcesForFamily(familyType, cities = []) {
         const familyData = this.incomeByFamily.get(familyType);
         if (!familyData) {
             return [];
         }
 
-        return Array.from(familyData.keys()).sort(d3.ascending);
+        const requiredCities = Array.isArray(cities) ? cities : [];
+        const enforceCities = requiredCities.length > 0;
+
+        return Array.from(familyData.entries())
+            .filter(([source, cityMap]) => {
+                if (!cityMap || cityMap.size === 0) {
+                    return false;
+                }
+
+                if (!enforceCities) {
+                    return true;
+                }
+
+                return requiredCities.every(city => cityMap.has(city));
+            })
+            .map(([source]) => source)
+            .sort(d3.ascending);
     }
 
     renderComparison() {
@@ -619,7 +649,6 @@ class IncomeRentComparison {
             if (!sourceData) {
                 return;
             }
-
             sourceData.forEach((monthlyIncome, city) => {
                 if (!this.rentByCity.has(city)) {
                     return;
@@ -632,9 +661,7 @@ class IncomeRentComparison {
                 cityIncomeMap.get(city).push(monthlyIncome);
             });
         });
-
         const comparisonData = [];
-
         selectedCities.forEach(city => {
             const incomes = cityIncomeMap.get(city);
             const rentInfo = this.rentByCity.get(city);
@@ -645,7 +672,7 @@ class IncomeRentComparison {
 
             comparisonData.push({
                 city,
-                monthlyIncome: d3.mean(incomes),
+                monthlyIncome: d3.sum(incomes),
                 rents: rentInfo
             });
         });
@@ -653,6 +680,10 @@ class IncomeRentComparison {
         if (comparisonData.length === 0) {
             this.renderEmptyState("No overlapping rent data for the current selection.");
             return;
+        }
+
+        if (this.table) {
+            this.table.selectAll("*").remove();
         }
 
         comparisonData.sort((a, b) => d3.ascending(a.city, b.city));
@@ -762,6 +793,8 @@ class IncomeRentComparison {
         let xOffset = 60;
         const baseY = 40;
 
+        data.sort((a, b) => d3.descending(a.monthlyIncome, b.monthlyIncome));
+
         data.forEach(city => {
             const incomeSize = sizeScale(city.monthlyIncome);
             const group = svg.append("g")
@@ -789,7 +822,7 @@ class IncomeRentComparison {
                 .attr("x", incomeSize / 2)
                 .attr("y", incomeSize + 22 + baseY)
                 .attr("text-anchor", "middle")
-                .text(`Income: ${this.formatCurrency(city.monthlyIncome)}`);
+                .text(`Monthly Income: ${this.formatCurrency(city.monthlyIncome)}`);
 
             const rentEntries = RENT_TYPE_ORDER
                 .map(type => ({type, value: city.rents[type]}))
