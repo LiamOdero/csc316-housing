@@ -52,7 +52,7 @@ Promise.all([
     d3.csv("data/income-data.csv").then(rows => rows.map(row => mapRowBySchema(row, INCOME_DATA_MAP)))
 ]).then(([rentData, incomeData]) => {
     const vis = new IncomeRentComparison({
-        container: "#vis4",
+        container: "#vis4-container",
         rentData,
         incomeData,
         year: TARGET_YEAR
@@ -137,7 +137,7 @@ class IncomeRentComparison {
         this.wrapper = this.container
             .append("div")
             .attr("class", "col-12 col-lg-10")
-            .style("margin-top", "240px");
+            .style("margin", "240px auto 0");
 
         const card = this.wrapper
             .append("div")
@@ -231,7 +231,63 @@ class IncomeRentComparison {
 
         this.chartArea = cardBody
             .append("div")
-            .attr("class", "income-rent__chart mt-4");
+            .attr("class", "income-rent__chart mt-4")
+            .style("overflow-x", "auto")
+            .style("overflow-y", "hidden")
+            .style("cursor", "grab")
+            .style("user-select", "none");
+
+        this.enableDragScroll(this.chartArea);
+    }
+
+    enableDragScroll(selection) {
+        const node = selection.node();
+        if (!node) {
+            return;
+        }
+
+        let isDragging = false;
+        let startX = 0;
+        let startScrollLeft = 0;
+
+        const onPointerDown = event => {
+            if (event.button !== 0) {
+                return;
+            }
+            event.preventDefault();
+            isDragging = true;
+            startX = event.clientX;
+            startScrollLeft = node.scrollLeft;
+            node.style.cursor = "grabbing";
+            if (node.setPointerCapture) {
+                node.setPointerCapture(event.pointerId);
+            }
+        };
+
+        const onPointerMove = event => {
+            if (!isDragging) {
+                return;
+            }
+            const deltaX = event.clientX - startX;
+            node.scrollLeft = startScrollLeft - deltaX;
+        };
+
+        const endDrag = event => {
+            if (!isDragging) {
+                return;
+            }
+            isDragging = false;
+            node.style.cursor = "grab";
+            if (node.hasPointerCapture && node.hasPointerCapture(event.pointerId)) {
+                node.releasePointerCapture(event.pointerId);
+            }
+        };
+
+        node.addEventListener("pointerdown", onPointerDown, {passive: false});
+        node.addEventListener("pointermove", onPointerMove);
+        node.addEventListener("pointerup", endDrag);
+        node.addEventListener("pointerleave", endDrag);
+        node.addEventListener("pointercancel", endDrag);
     }
 
     populateFamilyOptions() {
@@ -685,8 +741,7 @@ class IncomeRentComparison {
             .selectAll("svg")
             .data([null])
             .join("svg")
-            .attr("class", "income-rent__svg w-100")
-            .attr("width", 960)
+            .attr("class", "income-rent__svg")
             .attr("height", 500);
 
         svg.selectAll("*").remove();
@@ -764,7 +819,11 @@ class IncomeRentComparison {
                     .text(`${entry.type.toUpperCase()}: ${this.formatCurrency(entry.value)}`);
             });
 
-            xOffset += incomeSize + 180;
+            xOffset += incomeSize + 10;
         });
+
+        const containerWidth = this.chartArea.node()?.clientWidth || 0;
+        const totalWidth = Math.max(xOffset, containerWidth);
+        svg.attr("width", totalWidth).style("min-width", `${totalWidth}px`);
     }
 }
