@@ -3,11 +3,12 @@
  * PopulationRentChart - ES6 Class
  * @param  parentElement 	-- the HTML element in which to draw the visualization
  * @param  data             -- the data the that's provided initially
- * @param  displayData      -- the data that will be used finally (which might vary based on the selection)
  *
  * @param  focus            -- a switch that indicates the current mode (focus or stacked overview)
  * @param  selectedIndex    -- a global 'variable' inside the class that keeps track of the index of the selected area
  */
+
+let NUM_CATEGORIES = 11;
 
 class PopulationRentChart {
 
@@ -25,7 +26,9 @@ constructor(parentElement, filterElements, data) {
     let colors = ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a'];
 
     this.provinces = [...new Set(data.map(item => item.province))];
-    this.displayCategories = this.provinces;
+    this.displayCategories = this.provinces
+    this.displayKeys = []
+
     this.provinceMode = true;
 
     // Constructing an object mapping provinces to the cities they contain
@@ -92,7 +95,7 @@ constructor(parentElement, filterElements, data) {
 			.attr("transform", "translate(" + vis.margin.left + "," + vis.margin.top + ")");
 
 		// Scales and axes
-		vis.x = d3.scaleLog()
+		vis.x = d3.scaleLinear()
 			.range([0, vis.width]);
 
 		vis.y = d3.scaleLinear()
@@ -111,6 +114,7 @@ constructor(parentElement, filterElements, data) {
 		vis.svg.append("g")
 			.attr("class", "y-axis axis");
 
+
 		vis.tooltip = vis.svg.append("text")
 					  .attr("x", 0)
 					  .attr("y", 0)
@@ -123,6 +127,8 @@ constructor(parentElement, filterElements, data) {
     accumulateAvg() {
         let vis = this;
         let newData = [];
+
+        // Collecting yearly averages across selected structure and unit types
         this.data.forEach(e =>  {
             let accAvg = 0;
             let num = 0;
@@ -141,6 +147,8 @@ constructor(parentElement, filterElements, data) {
         })
 
         if (vis.provinceMode)   {
+            // Accumulate city data by province and average it out
+
             let provinceData = [];
 
             newData.forEach(e =>    {
@@ -155,25 +163,62 @@ constructor(parentElement, filterElements, data) {
                     provinceData.push(currObj)
                 }
             })
-
-            // final average calculation
-            provinceData.forEach(e =>   {
-                e.avg /= e.cityNum
-            })
-
+            
             provinceData = provinceData.sort(function(a, b) {
-                return a.pop - b.pop;
+                return a.province.localeCompare(b.province)
+            })
+            // final average calculation
+            provinceData.forEach((e, i) =>   {
+                e.avg /= e.cityNum
+
+                // 2001 is the first year in the dataset, so exclude the change
+                e.popChange = (e.year != "2001") ? (e.pop - provinceData[i - 1].pop) / e.pop * 100: 0;
+                e.avgChange = (e.year != "2001") ? (e.avg - provinceData[i - 1].avg) / e.avg * 100: 0;
             })
 
+            this.displayKeys = []
+            let max = d3.extent(provinceData, d => d.popChange)[1]
+            for (let i = 0; i < NUM_CATEGORIES; i++)    {
+                this.displayKeys.push(max / NUM_CATEGORIES * (i + 1))
+            }
             vis.displayData = provinceData;
         }   else    {
-            // If we are examining cities in a province, vis.displayCategories will be the cities we want to look at
-            let filteredData = newData.filter(function(e)   {
-                return vis.displayCategories.includes(e.city)
-            })
-
-            vis.displayData = filteredData;
+            // TODO: cities
         }
+        this.accumulateCategories();
+    }
+
+    accumulateCategories()  {
+        // Bins the current display data by $ population change
+        let vis = this;
+        let binnedData = [];
+        vis.displayKeys.forEach((e, i) => {
+            let currObj = {};
+
+            let lowerCompare = (i > 0) ? vis.displayKeys[i - 1] : 0;
+            let higherCompare = vis.displayKeys[i]
+
+            // very inefficient way to collect the data, will optimize
+            vis.provinces.forEach(e => {
+                let total = 0;
+                let currAvg = 0;
+                let currProvince = e;
+                vis.displayData.forEach(e =>   {
+                    
+                    if (e.province == currProvince && e.popChange > lowerCompare && e.popChange <= higherCompare)   {
+                        currAvg += e.avgChange;
+                        total += 1;
+                    }
+                })
+
+                currAvg /= (total > 0) ? total : 1;
+                currObj[e] = currAvg
+            });
+            binnedData.push(currObj);
+        })
+
+        vis.stackData = binnedData;
+
     }
 
     handleClick(d)   {
@@ -181,10 +226,11 @@ constructor(parentElement, filterElements, data) {
         vis.provinceMode = !vis.provinceMode;
 
         if (vis.provinceMode)   {
-            vis.displayCategories = vis.provinces;
+
         }   else    {
-            vis.displayCategories = vis.cities[d.province]
+
         }
+
         vis.wrangleData();
     }
 
@@ -197,7 +243,6 @@ constructor(parentElement, filterElements, data) {
             if (checkbox.length < 5)    {
                 
                 vis.structureFilters[vis.structureIDMap[checkbox]] = this.checked;
-                console.log(vis.structureFilters)
             }   else    {
                 vis.unitFilters[vis.unitIDMap[checkbox]] = this.checked;
             }
@@ -211,7 +256,18 @@ constructor(parentElement, filterElements, data) {
 	wrangleData(){
 		let vis = this;
         vis.accumulateAvg();
-		// Update the visualization
+        let stack = d3.stack()
+            .keys(vis.displayCategories)
+            .offset(d3.stackOffsetNone);
+        vis.stackedData = stack(vis.stackData);
+
+        vis.area = d3.area()	
+			.curve(d3.curveCardinal)
+			.x((d, i)=> vis.x(vis.displayKeys[i]))
+			.y0(d=> vis.y(d[0]))
+			.y1(d=>vis.y(d[1]))
+
+
 		vis.updateVis();
 	}
 
@@ -222,82 +278,33 @@ constructor(parentElement, filterElements, data) {
 	updateVis(){
 		let vis = this;
 
-        vis.x.domain(d3.extent(vis.displayData, d=> d.pop));
-        vis.y.domain(d3.extent(vis.displayData, d=> d.avg));
+        vis.x.domain(d3.extent(vis.displayKeys));
+        vis.y.domain([
+        d3.min(vis.stackedData, layer => d3.min(layer, d => d[0])),
+        d3.max(vis.stackedData, layer => d3.max(layer, d => d[1]))
+        ]);
+        console.log(this.displayKeys)
 
-    	let line = d3.line()
-            .x(d => vis.x(d.pop))
-            .y(d => vis.y(d.avg));
+		// Draw the layers
+		let categories = vis.svg.selectAll(".area")
+			.data(vis.stackedData);
+		
+		categories.enter().append("path")
+			.on("mouseover", function(e, d)	{
+                vis.tooltip.text(d.key)
+			})
+			.on("click", function(e, d)	{
+			})
 
-        let circles = vis.svg.selectAll("circle")
-                             .data(vis.displayData);
+			.attr("class", "area")
+			.merge(categories)
+            .transition(750)
+			.style("fill", d => {
+				return vis.colorScale(d)
+			})
+			.attr("d", d => vis.area(d))
 
-        circles.enter().append("circle")
-               .merge(circles)
-               	.on("mouseover", function(e, d)	{
-                if(vis.provinceMode)    {
-                    vis.tooltip.text(d[0].province);
-                }   else    {
-                    vis.tooltip.text(d[0].city);
-                }
-                })
-                .on("click", function(e, d)    {
-                    vis.handleClick(d)
-                })
-               .transition()
-               .duration(750)
-               .attr("fill", function(d, i) {
-                if (vis.provinceMode)   {
-                    return vis.colorScale(d.province);
-                }   else    {
-                    return "black"
-                }   
-               })
-               	.attr("cx", function(d) {
-				return vis.x(d.pop); 
-                })
-                .attr("cy", function(d) {
-                    return vis.y(d.avg); 
-                })
-                .attr("r", 2)
-                
-        circles.exit().remove()
-
-        let nested = d3.group(vis.displayData, d => (vis.provinceMode) ? d.province : d.city);
-        let lines = vis.svg.selectAll(".line")
-            .data(Array.from(nested.values()));
-
-        lines.enter()
-            .append("path")
-            .attr("class", "line")
-            .merge(lines)
-            .on("mouseover", function(e, d)	{
-                if(vis.provinceMode)    {
-                    vis.tooltip.text(d[0].province);
-                }   else    {
-                    vis.tooltip.text(d[0].city);
-                }
-                
-            })
-            .on("click", function(e, d) {
-                vis.handleClick(d[0])
-            })
-            .transition()
-            .duration(750)
-            .attr("fill", "none")
-            .attr("stroke", function(d) {
-                if (vis.provinceMode)   {
-                    return vis.colorScale(d[0].province);
-                }   else    {
-                    return "black"
-                }   
-            })  // color per province
-            .attr("stroke-width", 1.5)
-            .attr("d", d => {
-                // Sort by x (pop) so lines connect left-to-right
-                return line(d.sort((a,b) => d3.ascending(a.pop, b.pop)));
-            });
-        lines.exit().remove()
+		categories.exit().remove();
                                 
 
 		// Call axis functions with the new domain
