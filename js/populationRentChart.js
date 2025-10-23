@@ -103,7 +103,7 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
 	initVis(){
 		let vis = this;
 
-		vis.margin = {top: 200, right: 200, bottom: 60, left: 40};
+		vis.margin = {top: 100, right: 100, bottom: 60, left: 75};
 
 		vis.width = document.getElementById(vis.parentElement).getBoundingClientRect().width - vis.margin.left - vis.margin.right;
 		vis.height = document.getElementById(vis.parentElement).getBoundingClientRect().height - vis.margin.top - vis.margin.bottom;
@@ -134,6 +134,18 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
 
 		vis.svg.append("g")
 			.attr("class", "y-axis axis");
+
+        vis.svg.append("text")
+            .attr("class", "x-axis-title")
+            .attr("text-anchor", "middle")
+            .attr("x", vis.width / 2)
+            .attr("y", vis.height + 40)
+            .text("% Increase in Population Since 2001");
+        vis.svg.append("text")
+            .attr("class", "y-axis-title")
+            .attr("text-anchor", "middle")
+            .attr("transform", `translate(-40, ${vis.height / 2}) rotate(-90)`)
+            .text("Total % Increase in Average Rent Since 2001");
 
 		vis.tooltip = vis.svg.append("text")
 					  .attr("x", 0)
@@ -228,7 +240,6 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
 
         vis.displayKeys = d3.ticks(range[0], range[1], NUM_CATEGORIES);
         vis.displayData = accumulatedData;
-        console.log(accumulatedData)
         this.accumulateCategories();
     }
 
@@ -256,7 +267,7 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
                     }
                 })
 
-                currAvg /= (total > 0) ? total : 1;
+                currAvg /= (total > 0) ? total : 1 ;
                 currObj[e] = currAvg
             });
             binnedData.push(currObj);
@@ -313,12 +324,29 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
         let vis = this;
         let cities = ["All " + province];
         let allCheckPre = true;
-        Object.keys(vis.cityFilter[province]).forEach(e =>   {
-            if (e != "cityMode")    {
-                cities.push(e)
-                allCheckPre = allCheckPre && vis.cityFilter[province][e];
-            }
-        })
+
+        if (province == "All Provinces")    {
+            vis.provinces.forEach(e =>  {
+                cities.push(e); 
+                let check = false;
+                let currProvince = e
+                Object.keys(vis.cityFilter[currProvince]).forEach(e =>   {
+                    if (e != "cityMode")    {
+                        check = check || vis.cityFilter[currProvince][e];
+                    }
+                })
+                allCheckPre = check && allCheckPre
+            })
+
+
+        }   else    {
+            Object.keys(vis.cityFilter[province]).forEach(e =>   {
+                if (e != "cityMode")    {
+                    cities.push(e)
+                    allCheckPre = allCheckPre && vis.cityFilter[province][e];
+                }
+            })
+        }
 
         let citySelection = vis.provinceFilterArea.selectAll(".city-checkbox")
                                            .data(cities, d => d);
@@ -342,23 +370,55 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
                 if (d.slice(0, 3) == "All") {
                     return allCheckPre;
                 }   else    {
-                    return vis.cityFilter[province][d]
+                    if (province == "All Provinces")    {
+                        let check = false;
+                        Object.keys(vis.cityFilter[d]).forEach(e =>   {
+                            if (e != "cityMode")    {
+                                check = check || vis.cityFilter[d][e];
+                            }
+                        })
+                        return check;
+                    }   else    {
+                        return vis.cityFilter[province][d];
+                    }
                 }
             })
             .on("change", function(d)   {
-                let target = d.target.value
+                let target = d.target.value;
                 if (target.slice(0, 3) == "All")    {
                     let allCheck = d.target.checked;
-                    cities.forEach(e => {
-                        if (e.slice(0, 3) != "All") {
-                            vis.cityFilter[province][e] = allCheck;
 
+                    if (province == "All Provinces")    {
+                        vis.provinces.forEach(e =>  {
+                            Object.keys(vis.cityFilter[e]).forEach(j =>   {
+                            if (j != "cityMode")    {
+                                vis.cityFilter[e][j] = d.target.checked;;
+                            }
                             d3.select(`#check-${e.replace(/[^a-zA-Z0-9_-]/g, "_")}`)
-                                    .property("checked", allCheck);
-                        }
-                    })
+                                .property("checked", allCheck);
+                        })
+                        })
+                    }   else    {
+                        cities.forEach(e => {
+                            if (e.slice(0, 3) != "All") {
+                                vis.cityFilter[province][e] = allCheck;
+
+                                d3.select(`#check-${e.replace(/[^a-zA-Z0-9_-]/g, "_")}`)
+                                        .property("checked", allCheck);
+                            }
+                        })
+                    }
+
                 }   else    {
-                    vis.cityFilter[province][target] = !vis.cityFilter[province][target];
+                    if (province == "All Provinces")    {
+                        Object.keys(vis.cityFilter[target]).forEach(e =>   {
+                            if (e != "cityMode")    {
+                                vis.cityFilter[target][e] = d.target.checked;;
+                            }
+                        })
+                    }   else    {
+                        vis.cityFilter[province][target] = !vis.cityFilter[province][target];
+                    }
                 }
                 vis.wrangleData();
             });
