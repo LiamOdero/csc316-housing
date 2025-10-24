@@ -41,3 +41,6 @@ function preparePopRentData(data){
     });
     return cleaned_data;
 }
+
+// Initialize the housing units map visualization
+initCityMap();

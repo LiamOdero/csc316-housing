@@ -28,6 +28,39 @@
     <!-- Main Content -->
     <div class="container-fluid">
 
+        <!-- Opening Hook Section -->
+        <div class="row justify-content-center" style="margin-top: 60px; margin-bottom: 60px;">
+            <div class="col-12 text-center">
+                <h2 style="color: #666; font-size: 2em; margin-bottom: 40px;">Did you know?</h2>
+                
+                <div class="row justify-content-center">
+                    <div class="col-md-5">
+                        <h1 style="color: #48bb78; font-size: 3.5em; font-weight: bold; margin-bottom: 20px;">$230,134</h1>
+                        <p style="font-size: 1.3em; color: #4a5568;">
+                            The average price of a home in<br>September <strong>2000</strong>
+                        </p>
+                    </div>
+                    <div class="col-md-5">
+                        <h1 style="color: #c53030; font-size: 3.5em; font-weight: bold; margin-bottom: 20px;">$938,334</h1>
+                        <p style="font-size: 1.3em; color: #4a5568;">
+                            The average price of a home in<br>September <strong>2025</strong>
+                        </p>
+                    </div>
+                </div>
+                
+                <p style="font-size: 1.4em; color: #2d3748; margin-top: 40px; max-width: 900px; margin-left: auto; margin-right: auto; line-height: 1.6;">
+                    By now, most Canadians are intimately familiar with just how unaffordable housing has become, but how quickly did things actually go out of control?
+                </p>
+            </div>
+        </div>
+
+        <!-- Narrative intro -->
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 narrative-text narrative-before">
+                <h3>How quickly have mortgage prices increased over the past ~10 years?</h3>
+            </div>
+        </div>
+
         <!-- Visualization 1: Placeholder -->
         <div class="row justify-content-center g-5" id="vis1">
             <div class="col-12 visualization-section">
@@ -40,20 +73,33 @@
             </div>
         </div>
 
-        <!-- Visualization 2: Placeholder -->
+        <!-- Narrative before vis 2 -->
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 narrative-text narrative-before">
+                <h3>How quickly have rent prices increased over the past 4 years?</h3>
+            </div>
+        </div>
+
+        <!-- Visualization 2: Canadian Rental Price Explorer -->
         <div class="row justify-content-center g-5" id="vis2">
             <div class="col-12 visualization-section">
                 <div class="section-header">
                     <h2 class="section-title">Visualization 2</h2>
                 </div>
-                <div class="vis-placeholder">
-                    <h3>Visualization Coming Soon</h3>
-                </div>
+                <div id="map" style="min-height: 700px;"></div>
+            </div>
+        </div>
+
+        <!-- Narrative before vis 3 -->
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 narrative-text narrative-before">
+                <h3>As rent prices increase, do wages keep up?</h3>
             </div>
         </div>
 
         
-        <!-- Visualization 1: Housing Vacancy vs Rent (Burak's visualization) -->
+        <!-- Visualization 3: Housing Vacancy vs Rent (Burak's visualization) -->
+        <div class="viz-block">
         <div class="row justify-content-center g-5" id="vis3">
             <div class="col-12 visualization-section">
                 <div class="section-header">
@@ -93,7 +139,21 @@
             </div>
         </div>
 
+        <!-- Narrative after vis 3 -->
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 narrative-text narrative-after">
+                <h3>People are spending a big percentage of their income on rent</h3>
+            </div>
+        </div>
+        </div> <!-- /.viz-block -->
 
+
+        <!-- Narrative before vis 4 -->
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 narrative-text narrative-before">
+                <h3>How Have Changes in Population Affected Rent?</h3>
+            </div>
+        </div>
 
         <!-- Visualization 4: Placeholder -->
         <div class="row justify-content-center g-5" id="vis4">
@@ -101,13 +161,23 @@
                 <div class="section-header">
                     <h2 class="section-title">Visualization 4</h2>
                 </div>
-                <div id="vis4-container"></div>
+                <div class="vis-placeholder">
+                    <h3>Visualization Coming Soon</h3>
+                </div>
             </div>
         </div>
 
-        <!-- Visualization 5: Placeholder -->
-        <div class="row justify-content-center g-5">
-        <div class="col-12 visualization-section" style="min-height: 70vh;">
+        <!-- Narrative before vis 5 -->
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 narrative-text narrative-before">
+                <h3>How do vacancies affect housing affordability</h3>
+            </div>
+        </div>
+
+    <!-- Visualization 5: Placeholder -->
+    <div class="viz-block">
+    <div class="row justify-content-center g-5">
+    <div class="col-12 visualization-section" style="min-height: 70vh;">
             <div class="section-header">
             <h2 class="section-title">Visualization 5</h2>
             </div>
@@ -213,6 +283,44 @@
         </div>
         </div>
 
+        <!-- Narrative after vis 5 -->
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 narrative-text narrative-after">
+                <h3>Lower vacancy means lower affordability</h3>
+            </div>
+        </div>
+        </div> <!-- /.viz-block -->
+
+        <!-- Narrative before vis 6 -->
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 narrative-text narrative-before">
+                <h3>Construction Visualization Placeholder</h3>
+            </div>
+        </div>
+
+        <!-- Visualization 6: Placeholder -->
+        <div class="viz-block">
+        <div class="row justify-content-center g-5" id="vis6">
+            <div class="col-12 visualization-section">
+                <div class="section-header">
+                    <h2 class="section-title">Visualization 6</h2>
+                </div>
+                <div class="vis-placeholder">
+                    <h3>Visualization Coming Soon</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Narrative after vis 6 -->
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 narrative-text narrative-after">
+                <h3>Construction doesn't keep up with demand</h3>
+            </div>
+        </div>
+        </div> <!-- /.viz-block -->
+
+    </div>
+
     <!-- Footer -->
     <footer>
         <div class="container">
@@ -242,10 +350,9 @@
     <script src="js/PopulationRentChart.js"></script>
     <script src="js/vacancyVisualization.js"></script>
     <script src="js/incomeRentVisualization.js"></script>
+    <script src="js/housingUnitsVisualization.js"></script>
 
-    <!-- Visualization Script -->
+    <!-- Main Visualization Script -->
     <script src="js/main.js"></script>
-    
-
 </body>
 </html>
