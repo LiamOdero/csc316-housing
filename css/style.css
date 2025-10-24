@@ -5,6 +5,30 @@
     --accent-green: #48bb78;
 }
 
+.container-fluid {
+	padding-right: 30px;
+	padding-left: 30px;
+}
+
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.area {
+  opacity: 0.7;
+  clip-path: url(#clip);
+}
+.area:hover {
+  opacity: 1;
+}
+
+.brush .extent {
+  stroke: #fff;
+  fill-opacity: .125;
+  shape-rendering: crispEdges;
+}
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(to bottom, var(--primary-light) 0%, var(--secondary-light) 50%, var(--accent-light) 100%);
