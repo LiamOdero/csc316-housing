@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canada Mortgage Affordability Heatmap</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-badge">Live Data Visualization</div>
+            <h1>Canada Mortgage Affordability</h1>
+            <p class="subtitle">Interactive exploration of housing costs across provinces · 2012—2025</p>
+        </header>
+
+        <div class="controls-section">
+            <div class="income-control">
+                <label for="income-slider">Annual Income</label>
+                <span id="income-display">$75,000</span>
+                <input 
+                    type="range" 
+                    id="income-slider" 
+                    min="30000" 
+                    max="250000" 
+                    step="5000" 
+                    value="75000"
+                >
+                <div class="income-labels">
+                    <span>$30K</span>
+                    <span>$250K</span>
+                </div>
+            </div>
+            
+            <div class="timeline-control">
+                <label>Time Period</label>
+                <span id="quarter-display">2025 Q2</span>
+                <div class="playback-controls">
+                    <button id="play-button" class="control-btn">▶ Play</button>
+                    <button id="reset-button" class="control-btn">↺ Reset</button>
+                </div>
+                <input 
+                    type="range" 
+                    id="timeline-slider" 
+                    min="0" 
+                    max="51" 
+                    step="1" 
+                    value="51"
+                >
+                <div class="timeline-labels">
+                    <span>2012 Q3</span>
+                    <span>2025 Q2</span>
+                </div>
+            </div>
+            
+            <div class="legend">
+                <h3>Scale</h3>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #2d5016;"></div>
+                        <span>Very Affordable (&lt;20%)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #5a9216;"></div>
+                        <span>Affordable (20-30%)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ffc107;"></div>
+                        <span>Borderline (30-40%)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ff6b35;"></div>
+                        <span>Unaffordable (40-50%)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #c1121f;"></div>
+                        <span>Very Unaffordable (&gt;50%)</span>
+                    </div>
+                </div>
+                <p class="legend-note">Based on mortgage payment as % of monthly income</p>
+            </div>
+        </div>
+
+        <div class="map-container">
+            <svg id="canada-map"></svg>
+            <div id="tooltip" class="tooltip"></div>
+        </div>
+
+        <div class="info-section">
+            <div class="info-card">
+                <h3>National Average</h3>
+                <p class="big-number" id="national-payment">$2,006</p>
+                <p class="affordability-text" id="national-affordability"></p>
+            </div>
+            
+            <div class="info-card">
+                <h3>Most Affordable</h3>
+                <p class="province-name" id="most-affordable-province">Loading...</p>
+                <p class="payment-amount" id="most-affordable-payment"></p>
+            </div>
+            
+            <div class="info-card">
+                <h3>Least Affordable</h3>
+                <p class="province-name" id="least-affordable-province">Loading...</p>
+                <p class="payment-amount" id="least-affordable-payment"></p>
+            </div>
+        </div>
+
+        <div class="data-table-section">
+            <h2>Provincial Breakdown</h2>
+            <div class="table-wrapper">
+                <table id="data-table">
+                    <thead>
+                        <tr>
+                            <th>Province</th>
+                            <th>Monthly Payment</th>
+                            <th>% of Monthly Income</th>
+                            <th>Affordability</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <footer>
+            <p>Data Source: Equifax Canada via Canada Mortgage and Housing Corporation (CMHC) | Last Updated: September 2025</p>
+            <p>Affordability calculation based on the 30% rule: housing costs should not exceed 30% of gross monthly income</p>
+        </footer>
+    </div>
+
+    <script src="js/visualization.js"></script>
+</body>
+</html>
+
