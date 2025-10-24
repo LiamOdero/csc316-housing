@@ -1,0 +1,630 @@
+/* Modern Hipster Design */
+:root {
+    --bg-primary: #fafafa;
+    --bg-secondary: #ffffff;
+    --text-primary: #1a1a1a;
+    --text-secondary: #666666;
+    --accent: #2d3436;
+    --accent-light: #636e72;
+    --border: #e8e8e8;
+    --shadow: rgba(0, 0, 0, 0.08);
+    --shadow-lg: rgba(0, 0, 0, 0.12);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    padding: 40px 20px;
+    font-weight: 400;
+    letter-spacing: -0.011em;
+}
+
+.container {
+    max-width: 1600px;
+    margin: 0 auto;
+    background: var(--bg-secondary);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 2px 40px var(--shadow);
+}
+
+/* Header */
+header {
+    text-align: center;
+    padding: 60px 40px 50px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-bottom: 1px solid var(--border);
+    position: relative;
+}
+
+.header-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    background: var(--text-primary);
+    color: var(--bg-secondary);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border-radius: 20px;
+    margin-bottom: 20px;
+}
+
+h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+}
+
+.subtitle {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Controls Section */
+.controls-section {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.income-control,
+.timeline-control,
+.legend {
+    padding: 40px;
+    border-right: 1px solid var(--border);
+}
+
+.legend {
+    border-right: none;
+}
+
+.income-control label,
+.timeline-control label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+}
+
+#income-display,
+#quarter-display {
+    display: block;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+}
+
+/* Sliders */
+input[type="range"] {
+    width: 100%;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--border);
+    outline: none;
+    cursor: pointer;
+    margin: 20px 0 12px;
+    -webkit-appearance: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 4px solid var(--bg-secondary);
+    box-shadow: 0 2px 8px var(--shadow-lg);
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--text-primary);
+    cursor: pointer;
+    border: 4px solid var(--bg-secondary);
+    box-shadow: 0 2px 8px var(--shadow-lg);
+}
+
+.income-labels,
+.timeline-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.813rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* Timeline Controls */
+.playback-controls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.control-btn {
+    flex: 1;
+    padding: 14px 24px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border: 1.5px solid var(--text-primary);
+    border-radius: 12px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: -0.01em;
+}
+
+.control-btn:hover {
+    background: var(--text-primary);
+    color: var(--bg-secondary);
+    transform: translateY(-1px);
+}
+
+.control-btn:active {
+    transform: translateY(0);
+}
+
+.control-btn.playing {
+    background: var(--text-primary);
+    color: var(--bg-secondary);
+}
+
+/* Legend */
+.legend h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+}
+
+.legend-items {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+}
+
+.legend-color {
+    width: 32px;
+    height: 20px;
+    border-radius: 6px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.legend-note {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-style: normal;
+    margin-top: 16px;
+    line-height: 1.5;
+}
+
+/* Map Container */
+.map-container {
+    position: relative;
+    background: #f8f9fa;
+    padding: 40px 20px;
+    min-height: 900px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+}
+
+#canada-map {
+    width: 100%;
+    height: 900px;
+}
+
+/* Province & CMA Styling */
+.province {
+    stroke: #ffffff;
+    stroke-width: 2;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.province:hover {
+    stroke: var(--text-primary);
+    stroke-width: 3;
+    filter: brightness(0.95);
+}
+
+.cma-marker {
+    stroke: var(--text-primary);
+    stroke-width: 2;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cma-marker:hover {
+    stroke-width: 3;
+    filter: brightness(1.1);
+}
+
+.cma-line {
+    stroke: var(--text-primary);
+    stroke-width: 1;
+    stroke-dasharray: 3, 3;
+    fill: none;
+    opacity: 0.3;
+}
+
+.cma-label {
+    font-size: 11px;
+    font-weight: 600;
+    fill: var(--text-primary);
+    pointer-events: none;
+    text-shadow: 0 0 4px white, 0 0 8px white;
+    font-family: 'Inter', sans-serif;
+}
+
+.province-label {
+    font-size: 14px;
+    font-weight: 700;
+    fill: var(--text-primary);
+    pointer-events: none;
+    text-anchor: middle;
+    text-shadow: 0 0 4px white, 0 0 8px white;
+    font-family: 'Space Grotesk', sans-serif;
+    letter-spacing: 0.5px;
+}
+
+/* Tooltip */
+.tooltip {
+    position: absolute;
+    background: rgba(26, 26, 26, 0.96);
+    color: white;
+    padding: 20px;
+    border-radius: 16px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    font-size: 0.875rem;
+    max-width: 300px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tooltip.visible {
+    opacity: 1;
+}
+
+.tooltip h4 {
+    margin-bottom: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    padding-bottom: 8px;
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+.tooltip p {
+    margin: 8px 0;
+    line-height: 1.6;
+}
+
+.tooltip .affordability-status {
+    font-weight: 600;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Info Section */
+.info-section {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.info-card {
+    background: var(--bg-secondary);
+    padding: 40px;
+    border-right: 1px solid var(--border);
+    transition: background 0.2s ease;
+}
+
+.info-card:last-child {
+    border-right: none;
+}
+
+.info-card:hover {
+    background: #f8f9fa;
+}
+
+.info-card h3 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+}
+
+.big-number {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 12px 0;
+    color: var(--text-primary);
+}
+
+.province-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 12px 0;
+    color: var(--text-primary);
+}
+
+.payment-amount,
+.affordability-text {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* Data Table */
+.data-table-section {
+    padding: 60px 40px;
+}
+
+.data-table-section h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 30px;
+    text-align: left;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-secondary);
+}
+
+thead {
+    background: #f8f9fa;
+    border-bottom: 2px solid var(--border);
+}
+
+th {
+    padding: 16px 20px;
+    text-align: left;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.8px;
+    color: var(--text-secondary);
+}
+
+tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.2s ease;
+}
+
+tbody tr:hover {
+    background: #f8f9fa;
+}
+
+tbody tr:last-child {
+    border-bottom: none;
+}
+
+td {
+    padding: 16px 20px;
+    color: var(--text-primary);
+    font-size: 0.938rem;
+}
+
+.affordability-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.813rem;
+    font-weight: 600;
+    color: white;
+    letter-spacing: -0.01em;
+}
+
+.badge-very-affordable {
+    background: #2d5016;
+}
+
+.badge-affordable {
+    background: #5a9216;
+}
+
+.badge-borderline {
+    background: #ffc107;
+    color: #1a1a1a;
+}
+
+.badge-unaffordable {
+    background: #ff6b35;
+}
+
+.badge-very-unaffordable {
+    background: #c1121f;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-secondary);
+    font-size: 0.813rem;
+    border-top: 1px solid var(--border);
+    background: #f8f9fa;
+}
+
+footer p {
+    margin: 8px 0;
+    line-height: 1.8;
+}
+
+/* Responsive Design */
+@media (max-width: 1400px) {
+    .controls-section {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .legend {
+        border-right: none;
+        border-top: 1px solid var(--border);
+        grid-column: 1 / -1;
+    }
+    
+    .info-section {
+        grid-template-columns: 1fr;
+    }
+    
+    .info-card {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .info-card:last-child {
+        border-bottom: none;
+    }
+}
+
+@media (max-width: 1024px) {
+    body {
+        padding: 20px;
+    }
+    
+    .container {
+        border-radius: 16px;
+    }
+    
+    h1 {
+        font-size: 2.25rem;
+    }
+    
+    .controls-section {
+        grid-template-columns: 1fr;
+    }
+    
+    .income-control,
+    .timeline-control,
+    .legend {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .legend {
+        border-bottom: none;
+    }
+}
+
+@media (max-width: 768px) {
+    header {
+        padding: 40px 30px;
+    }
+    
+    h1 {
+        font-size: 1.875rem;
+    }
+    
+    .subtitle {
+        font-size: 0.938rem;
+    }
+    
+    #canada-map {
+        height: 600px;
+    }
+    
+    .income-control,
+    .timeline-control,
+    .legend,
+    .info-card {
+        padding: 30px;
+    }
+    
+    .data-table-section {
+        padding: 40px 30px;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+    
+    .container {
+        border-radius: 12px;
+    }
+    
+    h1 {
+        font-size: 1.5rem;
+    }
+    
+    #canada-map {
+        height: 500px;
+    }
+    
+    .income-control,
+    .timeline-control,
+    .legend,
+    .info-card {
+        padding: 24px;
+    }
+    
+    th, td {
+        padding: 12px 16px;
+        font-size: 0.875rem;
+    }
+}
