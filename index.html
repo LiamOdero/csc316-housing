@@ -106,18 +106,112 @@
         </div>
 
         <!-- Visualization 5: Placeholder -->
-        <div class="row justify-content-center g-5" id="vis5">
-            <div class="col-12 visualization-section">
-                <div class="section-header">
-                    <h2 class="section-title">Visualization 5</h2>
+        <div class="row justify-content-center g-5">
+        <div class="col-12 visualization-section" style="min-height: 70vh;">
+            <div class="section-header">
+            <h2 class="section-title">Visualization 5</h2>
+            </div>
+
+            <div class="legend">
+            <h3>How Have Changes in Population Affected Rent?</h3>
+            </div>
+
+            <!-- Flex container for vis + sidebar -->
+            <div class="d-flex justify-content-center align-items-stretch"
+                style="height: 60vh; min-height: 400px;"> <!-- 👈 fixed height -->
+            <!-- Main Visualization Area -->
+            <div id="vis5"
+                style="flex: 1; height: 100%; display: flex; border: thin solid transparent;">
+            </div>
+
+            <!-- Filters Sidebar -->
+            <div class="col-2 d-flex flex-column"
+                style="max-height: 60vh; border: thin solid rgb(49, 49, 49);
+                        border-radius: 5px; padding: 10px; gap: 10px; overflow-y: auto;">
+                <h4 style="margin-bottom: 10px;">Filters:</h4>
+
+                <!-- Structure Filter -->
+                <div id="vis5-structure-filter" class="d-flex flex-column"
+                    style="border: thin solid rgb(49, 49, 49); border-radius: 5px;
+                            padding: 5px; flex: 1 1 0; overflow-y: auto;">
+                <h6>Structure Types:</h6>
+                <div>
+                    <input type="checkbox" id="RA3P" name="RA3P" checked />
+                    <label for="RA3P">Row and apartment structures of three units and over</label>
                 </div>
-                <div class="vis-placeholder">
-                    <h3>Visualization Coming Soon</h3>
+                <div>
+                    <input type="checkbox" id="R3P" name="R3P" checked />
+                    <label for="R3P">Row structures of three units and over</label>
                 </div>
+                <div>
+                    <input type="checkbox" id="A3P" name="A3P" checked />
+                    <label for="A3P">Apartment structures of three units and over</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="A6P" name="A6P" checked />
+                    <label for="A6P">Apartment structures of six units and over</label>
+                </div>
+                </div>
+
+                <!-- Unit Filter -->
+                <div id="vis5-unit-filter" class="d-flex flex-column"
+                    style="border: thin solid rgb(49, 49, 49); border-radius: 5px;
+                            padding: 5px; flex: 1 1 0; overflow-y: auto;">
+                <h6>Unit Types:</h6>
+                <div>
+                    <input type="checkbox" id="bachelor" name="bachelor" checked />
+                    <label for="bachelor">Bachelor units</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="onebed" name="onebed" checked />
+                    <label for="onebed">One bedroom units</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="twobed" name="twobed" checked />
+                    <label for="twobed">Two bedroom units</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="threebed" name="threebed" checked />
+                    <label for="threebed">Three bedroom units</label>
+                </div>
+                </div>
+
+                <!-- City Filter -->
+                <div id="vis5-city-filter" class="d-flex flex-column"
+                    style="border: thin solid rgb(49, 49, 49); border-radius: 5px;
+                            padding: 5px; flex: 1 1 0; overflow-y: auto;">
+
+                    <div class="row align-items-center mb-3">
+                        <div class="col-auto">
+                            <h6 class="mb-0">Enable:</h6>
+                        </div>
+                        <div class="col">
+                            <select id="provinceSelect" class="form-select form-select-sm">
+                                <option value="All Provinces">All Provinces</option>
+                                <option value="Alberta">Alberta</option>
+                                <option value="British Columbia">British Columbia</option>
+                                <option value="Manitoba">Manitoba</option>
+                                <option value="New Brunswick">New Brunswick</option>
+                                <option value="Newfoundland and Labrador">Newfoundland and Labrador</option>
+                                <option value="Northwest Territories">Northwest Territories</option>
+                                <option value="Nova Scotia">Nova Scotia</option>
+                                <option value="Ontario">Ontario</option>
+                                <option value="Prince Edward Island">Prince Edward Island</option>
+                                <option value="Quebec">Quebec</option>
+                                <option value="Saskatchewan">Saskatchewan</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="city-list"></div>
+
+                </div>
+
+
+            </div>
             </div>
         </div>
-
-    </div>
+        </div>
 
     <!-- Footer -->
     <footer>
@@ -145,6 +239,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Visualization Objects -->
+    <script src="js/PopulationRentChart.js"></script>
     <script src="js/vacancyVisualization.js"></script>
     <script src="js/incomeRentVisualization.js"></script>
     <script src="js/housingUnitsVisualization.js"></script>
