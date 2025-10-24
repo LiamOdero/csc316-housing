@@ -115,15 +115,34 @@
             </div>
         </div>
 
-        <!-- Visualization 2: Placeholder -->
-        <div class="row justify-content-center g-5" id="vis2">
-            <div class="col-12 visualization-section">
-                <div class="section-header"><h2 class="section-title">Visualization 2</h2></div>
-                <div class="vis-placeholder"><h3>Visualization Coming Soon</h3></div>
+        <!-- Narrative before vis 2 -->
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 narrative-text narrative-before">
+                <h3>How quickly have rent prices increased over the past 4 years?</h3>
             </div>
         </div>
 
-        <!-- Visualization 3: Vacancy Rates and Average Rent -->
+        <!-- Visualization 2: Canadian Rental Price Explorer -->
+        <div class="row justify-content-center g-5" id="vis2">
+            <div class="col-12 visualization-section">
+                <div class="section-header">
+                    <h2 class="section-title">Visualization 2</h2>
+                </div>
+                <div id="map" style="min-height: 700px;"></div>
+            </div>
+        </div>
+
+        <!-- Narrative before vis 5 -->
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 narrative-text narrative-before">
+                <h3>How do vacancies affect housing affordability</h3>
+            </div>
+        </div>
+
+
+        
+        <!-- Visualization 3: Housing Vacancy vs Rent (Burak's visualization) -->
+        <div class="viz-block">
         <div class="row justify-content-center g-5" id="vis3">
             <div class="col-12 visualization-section">
                 <div class="section-header">
@@ -163,6 +182,22 @@
             </div>
         </div>
 
+        <!-- Narrative after vis 5 -->
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 narrative-text narrative-after">
+                <h3>Lower vacancy means lower affordability</h3>
+            </div>
+        </div>
+        </div> <!-- /.viz-block -->
+        
+
+        <!-- Narrative before vis 3 -->
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 narrative-text narrative-before">
+                <h3>As rent prices increase, do wages keep up?</h3>
+            </div>
+        </div>
+
         <!-- Visualization 4: Placeholder -->
         <div class="row justify-content-center g-5" id="vis4">
             <div class="col-12 visualization-section">
@@ -171,11 +206,29 @@
             </div>
         </div>
 
-        <!-- Visualization 5: Population vs Rent (fixed layout) -->
-        <div class="row justify-content-center g-5" id="vis5-row">
-            <div class="col-12 visualization-section" style="min-height: 70vh;">
-                <div class="section-header"><h2 class="section-title">Visualization 5</h2></div>
-                <div class="legend"><h3>How Have Changes in Population Affected Rent?</h3></div>
+        <!-- Narrative after vis 3 -->
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 narrative-text narrative-after">
+                <h3>People are spending a big percentage of their income on rent</h3>
+            </div>
+        </div>
+        </div> <!-- /.viz-block -->
+
+    <!-- Narrative before vis 4 -->
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 narrative-text narrative-before">
+            <h3>How Have Changes in Population Affected Rent?</h3>
+        </div>
+    </div>
+
+
+    <!-- Visualization 5: Placeholder -->
+    <div class="viz-block">
+    <div class="row justify-content-center g-5">
+    <div class="col-12 visualization-section" style="min-height: 70vh;">
+            <div class="section-header">
+            <h2 class="section-title">Visualization 5</h2>
+            </div>
 
                 <div class="d-flex" style="height: 60vh; min-height: 400px; gap: 10px;">
                     <!-- Main Visualization Area -->
@@ -227,15 +280,54 @@
 
     </div>
 
+        <!-- Narrative before vis 6 -->
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 narrative-text narrative-before">
+                <h3>Construction Visualization Placeholder</h3>
+            </div>
+        </div>
+
+        <!-- Visualization 6: Placeholder -->
+        <div class="viz-block">
+        <div class="row justify-content-center g-5" id="vis6">
+            <div class="col-12 visualization-section">
+                <div class="section-header">
+                    <h2 class="section-title">Visualization 6</h2>
+                </div>
+                <div class="vis-placeholder">
+                    <h3>Visualization Coming Soon</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Narrative after vis 6 -->
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 narrative-text narrative-after">
+                <h3>Construction doesn't keep up with demand</h3>
+            </div>
+        </div>
+        </div> <!-- /.viz-block -->
+
+        <!-- Narrative after vis 6 -->
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 narrative-text narrative-after">
+                <h3>Conclusion paragraph</h3>
+            </div>
+        </div>
+        </div> <!-- /.viz-block -->
+
+
+    </div>
+
     <!-- Footer -->
     <footer>
         <div class="container">
             <div class="row">
                 <div class="col-md-4"><h5>About This Project</h5></div>
-                <div class="col-md-4"><h5>Team Members</h5><p>Burak Unat</p><p>Jefferson Liu</p></div>
+                <div class="col-md-4"><h5>Team Members</h5><p>Burak Unat</p><p>Jefferson Liu</p><p>Liam Odero</p><p>Mikhael Orteza</p><p>Mohammed Hussain</p></div>
                 <div class="col-md-4"><h5>Data Sources</h5></div>
             </div>
-            <div class="copyright">&copy; <span id="current-year"></span> Canadian Housing Analysis Team | Data Visualization Project</div>
+            <div> <span id="current-year"></span> Data Visualization Project</div>
         </div>
     </footer>
 
@@ -246,8 +338,9 @@
     <script src="js/PopulationRentChart.js"></script>
     <script src="js/vacancyVisualization.js"></script>
     <script src="js/incomeRentVisualization.js"></script>
+    <script src="js/housingUnitsVisualization.js"></script>
 
-    <!-- Visualization Script -->
+    <!-- Main Visualization Script -->
     <script src="js/main.js"></script>
     <script src="js/visualization.js"></script>
 
