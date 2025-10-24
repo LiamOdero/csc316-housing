@@ -162,7 +162,7 @@ function initCityMap() {
         .attr('class', 'zoom-btn rentalpricemap-btn reset')
         .text('Reset');
     
-    // Create line chart container (initially hidden)
+    // create line chart container (initially hidden - will pop up when a city is clicked)
     const chartContainer = d3.select(mapContainer)
         .append('div')
         .attr('class', 'line-chart-container')
@@ -177,7 +177,7 @@ function initCityMap() {
         .style('display', 'none')
         .style('z-index', '999');
     
-    // Chart close button
+    // line chart close button
     const closeChartBtn = chartContainer.append('button')
         .style('position', 'absolute')
         .style('right', '10px')
