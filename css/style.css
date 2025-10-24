@@ -334,14 +334,42 @@ footer .copyright {
 #map {
     position: relative;
     width: 100%;
-    height: 600px;
+    height: 700px;
     border-radius: 10px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
+    overflow: visible; /* Changed from hidden to allow line chart to overflow */
 }
 
 #map svg {
     display: block;
+}
+
+/* Timeline styles */
+.timeline-container {
+    user-select: none;
+}
+
+.year-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.year-btn:active {
+    transform: translateY(0);
+}
+
+/* Line chart styles */
+.line-chart-container {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.housing-toggle:hover {
+    transform: scale(1.05);
+}
+
+.housing-toggle:active {
+    transform: scale(0.98);
 }
 
 /* styling for the map and its button controls in the 4th visualization */
