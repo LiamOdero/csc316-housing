@@ -5,30 +5,6 @@
     --accent-green: #48bb78;
 }
 
-.container-fluid {
-	padding-right: 30px;
-	padding-left: 30px;
-}
-
-.axis line {
-  fill: none;
-  stroke: #000;
-  shape-rendering: crispEdges;
-}
-
-.area {
-  opacity: 0.7;
-  clip-path: url(#clip);
-}
-.area:hover {
-  opacity: 1;
-}
-
-.brush .extent {
-  stroke: #fff;
-  fill-opacity: .125;
-  shape-rendering: crispEdges;
-}
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(to bottom, var(--primary-light) 0%, var(--secondary-light) 50%, var(--accent-light) 100%);
@@ -60,7 +36,12 @@ header .subtitle {
 .visualization-section {
     padding: 60px 0;
     min-height: 600px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.viz-block {
+    border-bottom: 3px dotted rgba(74, 85, 104, 0.3);
+    padding-bottom: 18px;
+    margin-bottom: 30px;
 }
 
 .section-header {
@@ -91,6 +72,45 @@ header .subtitle {
     font-size: 0.9em;
     color: #2f855a;
     margin-top: 10px;
+}
+
+/* Narrative text sections between visualizations */
+.narrative-text {
+    /* Limit width and center the narrative block for better readability */
+    max-width: 960px;
+    margin: 20px auto;
+    text-align: center;
+    padding: 40px 24px;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.narrative-text h3 {
+    font-size: 1.8em;
+    color: #2d3748;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Narrative "before" visualization - introduces upcoming content */
+.narrative-before {
+    margin-top: 60px;
+    margin-bottom: 30px;
+    background: rgba(72, 187, 120, 0.08);
+}
+
+/* Narrative "after" visualization - takeaway/insight from previous */
+.narrative-after {
+    margin-top: 30px;
+    margin-bottom: 60px;
+    background: rgba(74, 144, 226, 0.08);
 }
 
 /* Placeholder styles for other visualizations */
@@ -361,7 +381,7 @@ footer .copyright {
     height: 700px;
     border-radius: 10px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    overflow: visible; /* Changed from hidden to allow line chart to overflow */
+    overflow: visible;
 }
 
 #map svg {
