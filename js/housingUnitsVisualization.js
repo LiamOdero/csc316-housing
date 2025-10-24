@@ -151,15 +151,15 @@ function initCityMap() {
         .style('gap', '5px');
 
     const zoomInBtn = zoomGroup.append('button')
-        .attr('class', 'zoom-btn visualization4btn')
+        .attr('class', 'zoom-btn rentalpricemap-btn')
         .text('+');
 
     const zoomOutBtn = zoomGroup.append('button')
-        .attr('class', 'zoom-btn visualization4btn')
+        .attr('class', 'zoom-btn rentalpricemap-btn')
         .text('−');
 
     const resetBtn = zoomGroup.append('button')
-        .attr('class', 'zoom-btn visualization4btn reset')
+        .attr('class', 'zoom-btn rentalpricemap-btn reset')
         .text('Reset');
     
     // Create line chart container (initially hidden)

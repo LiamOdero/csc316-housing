@@ -374,7 +374,7 @@ footer .copyright {
 
 /* styling for the map and its button controls in the 4th visualization */
 
-.visualization4btn {
+.rentalpricemap-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -391,22 +391,21 @@ footer .copyright {
     transition: background 0.15s ease, transform 0.06s ease;
     color: #333;
 }
-.visualization4btn:hover {
+.rentalpricemap-btn:hover {
     background: #f0f0f0;
 }
 
-.visualization4btn:active {
+.rentalpricemap-btn:active {
     transform: translateY(1px);
 }
 
-.visualization4btn.deselect-btn {
+.rentalpricemap-btn.deselect-btn {
     width: 130px;
     height: 50px;
     font-size: 13px;
     padding: 8px 14px;
 }
 
-/* Specific styles for zoom-related buttons */
 .zoom-btn {
     width: 40px;
     height: 40px;
@@ -416,7 +415,6 @@ footer .copyright {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-/* Smaller text for reset if needed (JS can override); keeps consistent sizing */
 .zoom-btn.reset {
     font-size: 12px;
 }
@@ -425,11 +423,11 @@ footer .copyright {
     align-items: flex-start;
 }
 
-.map-controls .visualization4btn {
+.map-controls .rentalpricemap-btn {
     width: 40px; 
 }
 
-.map-controls .visualization4btn.deselect-btn {
+.map-controls .rentalpricemap-btn.deselect-btn {
     width: 130px; 
 }
 
