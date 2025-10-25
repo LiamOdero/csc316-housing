@@ -28,7 +28,7 @@
     <!-- Main Content -->
     <div class="container-fluid">
 
-        <!-- Opening Hook Section -->
+                <!-- Opening Hook Section -->
         <div class="row justify-content-center" style="margin-top: 60px; margin-bottom: 60px;">
             <div class="col-12 text-center">
                 <h2 style="color: #666; font-size: 2em; margin-bottom: 40px;">Did you know?</h2>
@@ -61,14 +61,90 @@
             </div>
         </div>
 
-        <!-- Visualization 1: Placeholder -->
+
+        <!-- Visualization 1: Canada Mortgage Affordability Heatmap -->
         <div class="row justify-content-center g-5" id="vis1">
             <div class="col-12 visualization-section">
                 <div class="section-header">
-                    <h2 class="section-title">Visualization 1</h2>
+                    <h2 class="section-title">Visualization 1: Canada Mortgage Affordability Heatmap</h2>
                 </div>
                 <div class="vis-placeholder">
-                    <h3>Visualization Coming Soon</h3>
+                    <div class="container">
+                        <header>
+                            <div class="header-badge">Live Data Visualization</div>
+                            <h1>Canada Mortgage Affordability</h1>
+                            <p class="subtitle">Interactive exploration of housing costs across provinces · 2012—2025</p>
+                        </header>
+
+                        <div class="controls-section">
+                            <div class="income-control">
+                                <label for="income-slider">Annual Income</label>
+                                <span id="income-display">$75,000</span>
+                                <input type="range" id="income-slider" min="30000" max="250000" step="5000" value="75000">
+                                <div class="income-labels">
+                                    <span>$30K</span>
+                                    <span>$250K</span>
+                                </div>
+                            </div>
+                            <div class="timeline-control">
+                                <label>Time Period</label>
+                                <span id="quarter-display">2025 Q2</span>
+                                <div class="playback-controls">
+                                    <button id="play-button" class="control-btn">▶ Play</button>
+                                    <button id="reset-button" class="control-btn">↺ Reset</button>
+                                </div>
+                                <input type="range" id="timeline-slider" min="0" max="51" step="1" value="51">
+                                <div class="timeline-labels">
+                                    <span>2012 Q3</span>
+                                    <span>2025 Q2</span>
+                                </div>
+                            </div>
+                            <div class="legend">
+                                <h3>Scale</h3>
+                                <div class="legend-items">
+                                    <div class="legend-item"><div class="legend-color" style="background: #2d5016;"></div><span>Very Affordable (&lt;20%)</span></div>
+                                    <div class="legend-item"><div class="legend-color" style="background: #5a9216;"></div><span>Affordable (20-30%)</span></div>
+                                    <div class="legend-item"><div class="legend-color" style="background: #ffc107;"></div><span>Borderline (30-40%)</span></div>
+                                    <div class="legend-item"><div class="legend-color" style="background: #ff6b35;"></div><span>Unaffordable (40-50%)</span></div>
+                                    <div class="legend-item"><div class="legend-color" style="background: #c1121f;"></div><span>Very Unaffordable (&gt;50%)</span></div>
+                                </div>
+                                <p class="legend-note">Based on mortgage payment as % of monthly income</p>
+                            </div>
+                        </div>
+
+                        <div class="map-container">
+                            <svg id="canada-map"></svg>
+                            <div id="tooltip" class="tooltip"></div>
+                        </div>
+
+                        <div class="info-section">
+                            <div class="info-card"><h3>National Average</h3><p class="big-number" id="national-payment">$2,006</p><p class="affordability-text" id="national-affordability"></p></div>
+                            <div class="info-card"><h3>Most Affordable</h3><p class="province-name" id="most-affordable-province">Loading...</p><p class="payment-amount" id="most-affordable-payment"></p></div>
+                            <div class="info-card"><h3>Least Affordable</h3><p class="province-name" id="least-affordable-province">Loading...</p><p class="payment-amount" id="least-affordable-payment"></p></div>
+                        </div>
+
+                        <div class="data-table-section">
+                            <h2>Provincial Breakdown</h2>
+                            <div class="table-wrapper">
+                                <table id="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Province</th>
+                                            <th>Monthly Payment</th>
+                                            <th>% of Monthly Income</th>
+                                            <th>Affordability</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <footer>
+                            <p>Data Source: Equifax Canada via Canada Mortgage and Housing Corporation (CMHC) | Last Updated: September 2025</p>
+                            <p>Affordability calculation based on the 30% rule: housing costs should not exceed 30% of gross monthly income</p>
+                        </footer>
+                    </div>
                 </div>
             </div>
         </div>
@@ -90,12 +166,13 @@
             </div>
         </div>
 
-        <!-- Narrative before vis 3 -->
+        <!-- Narrative before vis 5 -->
         <div class="row justify-content-center">
             <div class="col-12 col-md-8 narrative-text narrative-before">
-                <h3>As rent prices increase, do wages keep up?</h3>
+                <h3>How do vacancies affect housing affordability</h3>
             </div>
         </div>
+
 
         
         <!-- Visualization 3: Housing Vacancy vs Rent (Burak's visualization) -->
@@ -113,29 +190,53 @@
                     </p>
                 </div>
 
-                <!-- Legend -->
-                <div class="legend">
-                    <div class="legend-item">
-                        <div class="legend-box occupied"></div>
-                        <span>Occupied Housing</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-box vacant"></div>
-                        <span>Vacant Housing</span>
-                    </div>
-                    <div class="legend-item">
-                        <span>🏭 Chimney Height = Rent Price</span>
-                    </div>
-                    <div class="legend-item">
-                        <span>🏢 Height = Population</span>
-                    </div>
-                    <div class="legend-item">
-                        <span style="color: #2ecc71;">🟢 Green = High Vacancy (>2%)</span>
-                    </div>
+            <!-- Legend -->
+            <div class="legend vis3-legend">
+                <div class="legend-item">
+                    <div class="legend-box occupied"></div>
+                    <span>Occupied Housing</span>
                 </div>
+                <div class="legend-item">
+                    <div class="legend-box vacant"></div>
+                    <span>Vacant Housing</span>
+                </div>
+                <div class="legend-item">
+                    <span>🏭 Chimney Height = Rent Price</span>
+                </div>
+                <div class="legend-item">
+                    <span>🏢 Height = Population</span>
+                </div>
+                <div class="legend-item">
+                    <span style="color: #2ecc71;">🟢 Green = High Vacancy (&gt;2%)</span>
+                </div>
+            </div>
 
-                <!-- Buildings Container -->
+
                 <div id="buildings-container"></div>
+            </div>
+        </div>
+
+        <!-- Narrative after vis 5 -->
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 narrative-text narrative-after">
+                <h3>Lower vacancy means lower affordability</h3>
+            </div>
+        </div>
+        </div> <!-- /.viz-block -->
+        
+
+        <!-- Narrative before vis 3 -->
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 narrative-text narrative-before">
+                <h3>As rent prices increase, do wages keep up?</h3>
+            </div>
+        </div>
+
+        <!-- Visualization 4: Placeholder -->
+        <div class="row justify-content-center g-5" id="vis4">
+            <div class="col-12 visualization-section">
+                <div class="section-header"><h2 class="section-title">Visualization 4</h2></div>
+                <div id="vis4-container"></div>
             </div>
         </div>
 
@@ -147,32 +248,13 @@
         </div>
         </div> <!-- /.viz-block -->
 
-
-        <!-- Narrative before vis 4 -->
-        <div class="row justify-content-center">
-            <div class="col-12 col-md-8 narrative-text narrative-before">
-                <h3>How Have Changes in Population Affected Rent?</h3>
-            </div>
+    <!-- Narrative before vis 4 -->
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 narrative-text narrative-before">
+            <h3>How Have Changes in Population Affected Rent?</h3>
         </div>
+    </div>
 
-        <!-- Visualization 4: Placeholder -->
-        <div class="row justify-content-center g-5" id="vis4">
-            <div class="col-12 visualization-section">
-                <div class="section-header">
-                    <h2 class="section-title">Visualization 4</h2>
-                </div>
-                <div class="vis-placeholder">
-                    <h3>Visualization Coming Soon</h3>
-                </div>
-            </div>
-        </div>
-
-        <!-- Narrative before vis 5 -->
-        <div class="row justify-content-center">
-            <div class="col-12 col-md-8 narrative-text narrative-before">
-                <h3>How do vacancies affect housing affordability</h3>
-            </div>
-        </div>
 
     <!-- Visualization 5: Placeholder -->
     <div class="viz-block">
@@ -182,81 +264,33 @@
             <h2 class="section-title">Visualization 5</h2>
             </div>
 
-            <div class="legend">
-            <h3>How Have Changes in Population Affected Rent?</h3>
-            </div>
+                <div class="d-flex" style="height: 60vh; min-height: 400px; gap: 10px;">
+                    <!-- Main Visualization Area -->
+                    <div id="vis5" style="flex: 1; height: 100%; border: thin solid transparent;"></div>
 
-            <!-- Flex container for vis + sidebar -->
-            <div class="d-flex justify-content-center align-items-stretch"
-                style="height: 60vh; min-height: 400px;"> <!-- 👈 fixed height -->
-            <!-- Main Visualization Area -->
-            <div id="vis5"
-                style="flex: 1; height: 100%; display: flex; border: thin solid transparent;">
-            </div>
+                    <!-- Sidebar -->
+                    <div style="width: 300px; height: 100%; border: thin solid rgb(49, 49, 49); border-radius: 5px; padding: 10px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto;">
+                        <h4 style="margin-bottom: 10px;">Filters:</h4>
 
-            <!-- Filters Sidebar -->
-            <div class="col-2 d-flex flex-column"
-                style="max-height: 60vh; border: thin solid rgb(49, 49, 49);
-                        border-radius: 5px; padding: 10px; gap: 10px; overflow-y: auto;">
-                <h4 style="margin-bottom: 10px;">Filters:</h4>
-
-                <!-- Structure Filter -->
-                <div id="vis5-structure-filter" class="d-flex flex-column"
-                    style="border: thin solid rgb(49, 49, 49); border-radius: 5px;
-                            padding: 5px; flex: 1 1 0; overflow-y: auto;">
-                <h6>Structure Types:</h6>
-                <div>
-                    <input type="checkbox" id="RA3P" name="RA3P" checked />
-                    <label for="RA3P">Row and apartment structures of three units and over</label>
-                </div>
-                <div>
-                    <input type="checkbox" id="R3P" name="R3P" checked />
-                    <label for="R3P">Row structures of three units and over</label>
-                </div>
-                <div>
-                    <input type="checkbox" id="A3P" name="A3P" checked />
-                    <label for="A3P">Apartment structures of three units and over</label>
-                </div>
-                <div>
-                    <input type="checkbox" id="A6P" name="A6P" checked />
-                    <label for="A6P">Apartment structures of six units and over</label>
-                </div>
-                </div>
-
-                <!-- Unit Filter -->
-                <div id="vis5-unit-filter" class="d-flex flex-column"
-                    style="border: thin solid rgb(49, 49, 49); border-radius: 5px;
-                            padding: 5px; flex: 1 1 0; overflow-y: auto;">
-                <h6>Unit Types:</h6>
-                <div>
-                    <input type="checkbox" id="bachelor" name="bachelor" checked />
-                    <label for="bachelor">Bachelor units</label>
-                </div>
-                <div>
-                    <input type="checkbox" id="onebed" name="onebed" checked />
-                    <label for="onebed">One bedroom units</label>
-                </div>
-                <div>
-                    <input type="checkbox" id="twobed" name="twobed" checked />
-                    <label for="twobed">Two bedroom units</label>
-                </div>
-                <div>
-                    <input type="checkbox" id="threebed" name="threebed" checked />
-                    <label for="threebed">Three bedroom units</label>
-                </div>
-                </div>
-
-                <!-- City Filter -->
-                <div id="vis5-city-filter" class="d-flex flex-column"
-                    style="border: thin solid rgb(49, 49, 49); border-radius: 5px;
-                            padding: 5px; flex: 1 1 0; overflow-y: auto;">
-
-                    <div class="row align-items-center mb-3">
-                        <div class="col-auto">
-                            <h6 class="mb-0">Enable:</h6>
+                        <div id="vis5-structure-filter" style="border: thin solid rgb(49, 49, 49); border-radius: 5px; padding: 5px; flex: 1 1 auto; overflow-y: auto;">
+                            <h6>Structure Types:</h6>
+                            <div><input type="checkbox" id="RA3P" checked /><label for="RA3P">Row and apartment structures of three units and over</label></div>
+                            <div><input type="checkbox" id="R3P" checked /><label for="R3P">Row structures of three units and over</label></div>
+                            <div><input type="checkbox" id="A3P" checked /><label for="A3P">Apartment structures of three units and over</label></div>
+                            <div><input type="checkbox" id="A6P" checked /><label for="A6P">Apartment structures of six units and over</label></div>
                         </div>
-                        <div class="col">
-                            <select id="provinceSelect" class="form-select form-select-sm">
+
+                        <div id="vis5-unit-filter" style="border: thin solid rgb(49, 49, 49); border-radius: 5px; padding: 5px; flex: 1 1 auto; overflow-y: auto;">
+                            <h6>Unit Types:</h6>
+                            <div><input type="checkbox" id="bachelor" checked /><label for="bachelor">Bachelor units</label></div>
+                            <div><input type="checkbox" id="onebed" checked /><label for="onebed">One bedroom units</label></div>
+                            <div><input type="checkbox" id="twobed" checked /><label for="twobed">Two bedroom units</label></div>
+                            <div><input type="checkbox" id="threebed" checked /><label for="threebed">Three bedroom units</label></div>
+                        </div>
+
+                        <div id="vis5-city-filter" style="border: thin solid rgb(49, 49, 49); border-radius: 5px; padding: 5px; flex: 1 1 auto; overflow-y: auto;">
+                            <h6>Province / City</h6>
+                            <select id="provinceSelect" class="form-select form-select-sm mb-2">
                                 <option value="All Provinces">All Provinces</option>
                                 <option value="Alberta">Alberta</option>
                                 <option value="British Columbia">British Columbia</option>
@@ -270,26 +304,15 @@
                                 <option value="Quebec">Quebec</option>
                                 <option value="Saskatchewan">Saskatchewan</option>
                             </select>
+                            <div id="city-list"></div>
                         </div>
+
                     </div>
-
-                    <div id="city-list"></div>
-
                 </div>
-
-
-            </div>
             </div>
         </div>
-        </div>
 
-        <!-- Narrative after vis 5 -->
-        <div class="row justify-content-center">
-            <div class="col-12 col-md-8 narrative-text narrative-after">
-                <h3>Lower vacancy means lower affordability</h3>
-            </div>
-        </div>
-        </div> <!-- /.viz-block -->
+    </div>
 
         <!-- Narrative before vis 6 -->
         <div class="row justify-content-center">
@@ -319,27 +342,26 @@
         </div>
         </div> <!-- /.viz-block -->
 
+        <!-- Narrative after vis 6 -->
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 narrative-text narrative-after">
+                <h3>Conclusion paragraph</h3>
+            </div>
+        </div>
+        </div> <!-- /.viz-block -->
+
+
     </div>
 
     <!-- Footer -->
     <footer>
         <div class="container">
             <div class="row">
-                <div class="col-md-4">
-                    <h5>About This Project</h5>
-                </div>
-                <div class="col-md-4">
-                    <h5>Team Members</h5>
-                    <p>Burak Unat</p>
-                    <p>Jefferson Liu</p>
-                </div>
-                <div class="col-md-4">
-                    <h5>Data Sources</h5>
-                </div>
+                <div class="col-md-4"><h5>About This Project</h5></div>
+                <div class="col-md-4"><h5>Team Members</h5><p>Burak Unat</p><p>Jefferson Liu</p><p>Liam Odero</p><p>Mikhael Orteza</p><p>Mohammed Hussain</p></div>
+                <div class="col-md-4"><h5>Data Sources</h5></div>
             </div>
-            <div class="copyright">
-                &copy; <span id="current-year"></span> Canadian Housing Analysis Team | Data Visualization Project
-            </div>
+            <div> <span id="current-year"></span> Data Visualization Project</div>
         </div>
     </footer>
 
@@ -354,5 +376,7 @@
 
     <!-- Main Visualization Script -->
     <script src="js/main.js"></script>
+    <script src="js/visualization.js"></script>
+
 </body>
 </html>
