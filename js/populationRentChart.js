@@ -23,16 +23,11 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
 
     this.displayData = [];
 
-    let colors = ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a'];
-
     // A list of all provinces in the dataset
     this.provinces = [...new Set(data.map(item => item.province))];
 
     // Has all cities / provinces currently displayed in the chart
     this.displayCategories = this.provinces
-
-    // Contains all bins of % increases over the x axis
-    this.displayKeys = []
 
     // Constructing an object mapping provinces to the cities they contain
     this.cityFilter = this.provinces.reduce((acc, province) => {
@@ -59,15 +54,9 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
         this.cityFilter[e] = currObj;
     })
 
-    // prepare colors for range
-    let colorArray = this.displayCategories.map( (d,i) => {
-        return colors[i%10]
-    })
-
     // Set ordinal color scale
-    this.colorScale = d3.scaleOrdinal()
-        .domain(this.displayCategories)
-        .range(colorArray);
+    vis.colorScale = d3.scaleLinear()
+        .range(["green", "yellow", "red"]);
 
     this.structureIDMap = {RA3P: "Row and apartment structures of three units and over", 
                           R3P: "Row structures of three units and over", 
@@ -103,7 +92,7 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
 	initVis(){
 		let vis = this;
 
-		vis.margin = {top: 100, right: 100, bottom: 60, left: 75};
+		vis.margin = {top: 100, right: 100, bottom: 60, left: 175};
 
 		vis.width = document.getElementById(vis.parentElement).getBoundingClientRect().width - vis.margin.left - vis.margin.right;
 		vis.height = document.getElementById(vis.parentElement).getBoundingClientRect().height - vis.margin.top - vis.margin.bottom;
@@ -116,40 +105,38 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
 			.attr("transform", "translate(" + vis.margin.left + "," + vis.margin.top + ")");
 
 		// Scales and axes
-		vis.x = d3.scaleLinear()
-			.range([0, vis.width]);
+		vis.x = d3.scaleBand()
+			.range([0, vis.width])
+              .paddingInner(0.01);
 
-		vis.y = d3.scaleLinear()
-			.range([vis.height, 0]);
+		vis.y = d3.scaleBand()
+			.range([vis.height, 0])
+            .paddingInner(0.01);
 
 		vis.xAxis = d3.axisBottom()
 			.scale(vis.x);
 
 		vis.yAxis = d3.axisLeft()
-			.scale(vis.y);
-
+			.scale(vis.y)
 		vis.svg.append("g")
 			.attr("class", "x-axis axis")
 			.attr("transform", "translate(0," + vis.height + ")");
 
 		vis.svg.append("g")
-			.attr("class", "y-axis axis");
+			.attr("class", "y-axis axis")
 
-        vis.svg.append("text")
-            .attr("class", "x-axis-title")
-            .attr("text-anchor", "middle")
-            .attr("x", vis.width / 2)
-            .attr("y", vis.height + 40)
-            .text("% Increase in Population Since 2001");
-        vis.svg.append("text")
-            .attr("class", "y-axis-title")
-            .attr("text-anchor", "middle")
-            .attr("transform", `translate(-40, ${vis.height / 2}) rotate(-90)`)
-            .text("Total % Increase in Average Rent Since 2001");
-
-		vis.tooltip = vis.svg.append("text")
-					  .attr("x", 0)
-					  .attr("y", 0)
+        // create a tooltip
+        vis.tooltip = d3.select("body")
+            .append("div")
+            .style("opacity", 1)
+            .attr("class", "tooltip")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px")
+            .style("position", "absolute")
+            .style("color", "black")
 
          vis.wrangleData();
 
@@ -208,9 +195,7 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
 
         let categories = [];
         
-        let startAvg = 0;
-        let startPop = 0;
-
+        console.log(accumulatedData)
         // final average calculation
         accumulatedData.forEach((e, i) =>   {
             e.avg /= e.cityNum
@@ -218,14 +203,12 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
             // 2001 is the first year in the dataset, so exclude the change
             // For some reason Parksville has 0 in rent for 2001 which i somehow doubt is correct, so this is the bandaid fix
             if (e.year == "2001" || (e.category == "Parksville" && e.year == "2002")) {
-                startAvg = e.avg;
-                startPop = e.pop;
 
                 e.popChange = 0;
                 e.avgChange = 0;
             }   else    {
-                e.popChange = (e.pop - startPop) / (startPop) * 100
-                e.avgChange = (e.avg - startAvg) / startAvg * 100;
+                e.popChange = (e.pop - accumulatedData[i - 1].pop) / (accumulatedData[i - 1].pop) * 100
+                e.avgChange = (e.avg - accumulatedData[i - 1].avg) / accumulatedData[i - 1].avg * 100;
             }
 
             if (e.year == "2001")   {
@@ -239,41 +222,9 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
         );
 
         vis.displayKeys = d3.ticks(range[0], range[1], NUM_CATEGORIES);
-        vis.displayData = accumulatedData;
-        this.accumulateCategories();
-    }
-
-    accumulateCategories()  {
-        // Bins the current display data by % population change
-        let vis = this;
-        let binnedData = [];
-        let range = d3.extent(vis.displayData, d => d.popChange)
-        vis.displayKeys.forEach((e, i) => {
-            let currObj = {};
-
-            let lowerCompare = (i > 0) ? vis.displayKeys[i - 1] : range[0];
-            let higherCompare = vis.displayKeys[i]
-
-            // very inefficient way to collect the data, will optimize
-            vis.displayCategories.forEach(e => {
-                let total = 0;
-                let currAvg = 0;
-                let currProvince = e;
-                vis.displayData.forEach(e =>   {
-                    
-                    if (e.category == currProvince && e.popChange > lowerCompare && e.popChange <= higherCompare)   {
-                        currAvg += e.avgChange;
-                        total += 1;
-                    }
-                })
-
-                currAvg /= (total > 0) ? total : 1 ;
-                currObj[e] = currAvg
-            });
-            binnedData.push(currObj);
+        vis.displayData = accumulatedData.filter(function (d)   {
+            return d.year != "2001"
         })
-        vis.stackData = binnedData;
-
     }
 
     handleClick(d)   {
@@ -435,7 +386,6 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
                 }
             });
 
-        // ENTER + UPDATE MERGE
         cityEnter.merge(citySelection)
             .transition()
             .duration(200)
@@ -448,20 +398,9 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
 	wrangleData(){
 		let vis = this;
         vis.accumulateAvg();
-        let stack = d3.stack()
-            .keys(vis.displayCategories)
-            .offset(d3.stackOffsetNone);
-        vis.stackedData = stack(vis.stackData);
-
-        vis.area = d3.area()	
-			.curve(d3.curveCardinal)
-			.x((d, i)=> vis.x(vis.displayKeys[i]))
-			.y0(d=> vis.y(d[0]))
-			.y1(d=>vis.y(d[1]))
-
-
 		vis.updateVis();
 	}
+
 
 	/*
 	 * The drawing function - should use the D3 update sequence (enter, update, exit)
@@ -470,37 +409,51 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
 	updateVis(){
 		let vis = this;
 
-        vis.x.domain(d3.extent(vis.displayKeys));
-        vis.y.domain([
-        d3.min(vis.stackedData, layer => d3.min(layer, d => d[0])),
-        d3.max(vis.stackedData, layer => d3.max(layer, d => d[1]))
-        ]);
+        vis.x.domain([...new Set(vis.displayData.map(item => item.year))]);
+        vis.y.domain(vis.displayCategories)
+        vis.colorScale.domain([d3.min(vis.displayData, d => d.avgChange * (1 + d.popChange / 100)),
+                               d3.median(vis.displayData, d => d.avgChange * (1 + d.popChange / 100)),
+                               d3.max(vis.displayData, d => d.avgChange * (1 + d.popChange / 100))
+        ])
 
-		// Draw the layers
-		let categories = vis.svg.selectAll(".area")
-			.data(vis.stackedData);
-		
-		categories.enter().append("path")
-			.on("mouseover", function(e, d)	{
-                vis.tooltip.text(d.key)
-			})
-			.on("click", function(e, d)	{
-                vis.handleClick(d)
-			})
-
-			.attr("class", "area")
-			.merge(categories)
-            .transition(750)
-			.style("fill", d => {
-				return vis.colorScale(d)
-			})
-			.attr("d", d => vis.area(d))
-
-		categories.exit().remove();
-                                
+        let boxes = vis.svg.selectAll("rect")
+                       .data(vis.displayData)
+        // Draw the layers
+        boxes.enter().append("rect")    
+                     .merge(boxes)
+                     .on("mouseover", function(d)   {
+                        d3.select(this)
+                          .style("stroke", "black")
+                          .style("stroke-width", 1)
+                        vis.tooltip.style("opacity", 1)
+                     })
+                     .on("mouseleave", function(d)   {
+                        d3.select(this)
+                          .style("stroke-width", 0)
+                        vis.tooltip.style("opacity", 0)
+                     })
+                     .on("mousemove", function(e, d)   {
+                        const [x, y] = d3.pointer(e);
+                        vis.tooltip
+                            .style("left", (e.pageX + 10) + "px")
+                            .style("top", (e.pageY + 10) + "px")
+                            .html(`
+                            <strong>${d.category}</strong><br/>
+                            Year: ${d.year}<br/>
+                            Change in Rent Since: ${d.avgChange.toFixed(2)}%<br/>
+                            Change in Population: ${d.popChange.toFixed(2)}%
+                            `);
+                     })
+                     .transition(750)
+                     .attr("width", vis.x.bandwidth())
+                     .attr("height", vis.y.bandwidth())
+                     .attr("x", d => vis.x(d.year))
+                     .attr("y", d => vis.y(d.category))
+                     .style("fill", d => vis.colorScale(d.avgChange * (1 + d.popChange / 100)))
+        boxes.exit().remove();  
 
 		// Call axis functions with the new domain
 		vis.svg.select(".x-axis").call(vis.xAxis);
-		vis.svg.select(".y-axis").call(vis.yAxis);
+        vis.svg.select(".y-axis").call(vis.yAxis);
 	}
 }
