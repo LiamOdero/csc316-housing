@@ -55,7 +55,9 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
     })
 
     // Set ordinal color scale
-    vis.colorScale = d3.scaleLinear()
+    vis.popColorScale = d3.scaleLinear()
+        .range(["green", "yellow", "red"]);
+    vis.avgColorScale = d3.scaleLinear()
         .range(["green", "yellow", "red"]);
 
     this.structureIDMap = {RA3P: "Row and apartment structures of three units and over", 
@@ -92,7 +94,7 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
 	initVis(){
 		let vis = this;
 
-		vis.margin = {top: 100, right: 100, bottom: 60, left: 175};
+		vis.margin = {top: 25, right: 100, bottom: 25, left: 175};
 
 		vis.width = document.getElementById(vis.parentElement).getBoundingClientRect().width - vis.margin.left - vis.margin.right;
 		vis.height = document.getElementById(vis.parentElement).getBoundingClientRect().height - vis.margin.top - vis.margin.bottom;
@@ -137,9 +139,9 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
             .style("padding", "5px")
             .style("position", "absolute")
             .style("color", "black")
+        vis.defs = vis.svg.append("defs");
 
-         vis.wrangleData();
-
+        vis.wrangleData();
 	}
 
     // Accumulates averages over the current displayCategory
@@ -174,7 +176,8 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
         newData.forEach((e, i) =>    {
             // accumulating averages across cities
             let currCategory = (vis.cityFilter[e.province].cityMode) ? e.city : e.province
-            if (accumulatedData.length == 0 || vis.cityFilter[e.province].cityMode || (accumulatedData[accumulatedData.length - 1].category != currCategory) || (accumulatedData[accumulatedData.length - 1].year!= e.year) )  {
+            if (accumulatedData.length == 0 || vis.cityFilter[e.province].cityMode || (accumulatedData[accumulatedData.length - 1].category != currCategory) 
+                || (accumulatedData[accumulatedData.length - 1].year!= e.year) )  {
                 // Directly push an object in one of 4 cases: No other object in accumulated data, the current province is displaying each city,
                 // or none of the above BUT the province or year have changed
                 
@@ -195,7 +198,6 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
 
         let categories = [];
         
-        console.log(accumulatedData)
         // final average calculation
         accumulatedData.forEach((e, i) =>   {
             e.avg /= e.cityNum
@@ -203,7 +205,6 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
             // 2001 is the first year in the dataset, so exclude the change
             // For some reason Parksville has 0 in rent for 2001 which i somehow doubt is correct, so this is the bandaid fix
             if (e.year == "2001" || (e.category == "Parksville" && e.year == "2002")) {
-
                 e.popChange = 0;
                 e.avgChange = 0;
             }   else    {
@@ -229,11 +230,12 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
 
     handleClick(d)   {
         let vis = this;
-        let category = d.key;
+        let category = d.category;
         if (vis.provinces.includes(category))   {
             // clicked on a province
             vis.provinces.forEach(e =>  {
                 let currProvince = e;
+                // disable other provinces
                 if (e != category)  {
                     Object.keys(vis.cityFilter[currProvince]).forEach(e => {
                         vis.cityFilter[currProvince][e] = false;
@@ -401,6 +403,10 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
 		vis.updateVis();
 	}
 
+    sanitizeId(str) {
+        return str.replace(/[^a-zA-Z0-9_-]/g, "_");
+    }
+
 
 	/*
 	 * The drawing function - should use the D3 update sequence (enter, update, exit)
@@ -408,17 +414,41 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
  	*/
 	updateVis(){
 		let vis = this;
-
+        console.log(this.displayData)
         vis.x.domain([...new Set(vis.displayData.map(item => item.year))]);
         vis.y.domain(vis.displayCategories)
-        vis.colorScale.domain([d3.min(vis.displayData, d => d.avgChange * (1 + d.popChange / 100)),
-                               d3.median(vis.displayData, d => d.avgChange * (1 + d.popChange / 100)),
-                               d3.max(vis.displayData, d => d.avgChange * (1 + d.popChange / 100))
+        vis.popColorScale.domain([d3.min(vis.displayData, d => d.popChange),
+                               d3.median(vis.displayData, d => d.popChange),
+                               d3.max(vis.displayData, d => d.popChange)
         ])
+        vis.avgColorScale.domain([d3.min(vis.displayData, d => d.avgChange),
+                               d3.median(vis.displayData, d => d.avgChange),
+                               d3.max(vis.displayData, d => d.avgChange)
+        ])
+
+        // build gradients
+        vis.displayData.forEach(d => {
+            const gradId = `grad-${d.year}-${d.category.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
+            
+            let gradient = vis.defs.append("linearGradient")
+                .attr("id", gradId)
+                .attr("x1", "0%")
+                .attr("y1", "0%")
+                .attr("x2", "100%")
+                .attr("y2", "100%");
+            
+            gradient.append("stop")
+                .attr("offset", "0%")
+                .attr("stop-color", vis.avgColorScale(d.avgChange));
+            
+            gradient.append("stop")
+                .attr("offset", "100%")
+                .attr("stop-color", vis.popColorScale(d.popChange));
+        });
 
         let boxes = vis.svg.selectAll("rect")
                        .data(vis.displayData)
-        // Draw the layers
+
         boxes.enter().append("rect")    
                      .merge(boxes)
                      .on("mouseover", function(d)   {
@@ -444,12 +474,15 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
                             Change in Population: ${d.popChange.toFixed(2)}%
                             `);
                      })
+                     .on("click", function(e, d)   {
+                        vis.handleClick(d)
+                     })
                      .transition(750)
                      .attr("width", vis.x.bandwidth())
                      .attr("height", vis.y.bandwidth())
                      .attr("x", d => vis.x(d.year))
                      .attr("y", d => vis.y(d.category))
-                     .style("fill", d => vis.colorScale(d.avgChange * (1 + d.popChange / 100)))
+                     .style("fill", d => `url(#grad-${d.year}-${d.category.replace(/[^a-zA-Z0-9_-]/g, "_")})`)
         boxes.exit().remove();  
 
 		// Call axis functions with the new domain
