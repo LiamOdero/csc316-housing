@@ -207,6 +207,13 @@ header .subtitle {
     stroke-width: 2;
     filter: brightness(1.05);
 }
+    .city-card.is-focused .city-card-bg,
+    .city-card.is-focused .bachelor-block,
+    .city-card.is-focused .onebr-block,
+    .city-card.is-focused .twobr-block,
+    .city-card.is-focused .threebr-block {
+        stroke-width: 2;
+    }
 
 #buildings-container {
     display: flex;
