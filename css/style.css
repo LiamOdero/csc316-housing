@@ -164,6 +164,50 @@ header .subtitle {
     background: #e2e8f0;
 }
 
+.year-slider .form-range {
+    accent-color: #6c757d;
+}
+
+.year-slider .form-range::-webkit-slider-thumb {
+    background-color: #6c757d;
+}
+
+.year-slider .form-range::-moz-range-thumb {
+    background-color: #6c757d;
+}
+
+.year-slider .form-range::-ms-thumb {
+    background-color: #6c757d;
+}
+
+.year-slider .form-range {
+    background-color: transparent;
+}
+
+.year-slider .form-range::-webkit-slider-runnable-track {
+    background-color: #b4b4b4;
+}
+
+.year-slider .form-range::-moz-range-track,
+.year-slider .form-range::-moz-range-progress {
+    background-color: #b4b4b4;
+}
+
+.year-slider .form-range::-ms-track,
+.year-slider .form-range::-ms-fill-lower,
+.year-slider .form-range::-ms-fill-upper {
+    background-color: #b4b4b4;
+}
+
+.city-card.is-hovered .city-card-bg,
+.city-card.is-hovered .bachelor-block,
+.city-card.is-hovered .onebr-block,
+.city-card.is-hovered .twobr-block,
+.city-card.is-hovered .threebr-block {
+    stroke-width: 2;
+    filter: brightness(1.05);
+}
+
 #buildings-container {
     display: flex;
     justify-content: center;

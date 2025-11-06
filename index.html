@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,6 +15,7 @@
     <!-- D3.js -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
+
 <body>
 
     <!-- Header -->
@@ -32,24 +34,28 @@
         <div class="row justify-content-center" style="margin-top: 60px; margin-bottom: 60px;">
             <div class="col-12 text-center">
                 <h2 style="color: #666; font-size: 2em; margin-bottom: 40px;">Did you know?</h2>
-                
+
                 <div class="row justify-content-center">
                     <div class="col-md-5">
-                        <h1 style="color: #48bb78; font-size: 3.5em; font-weight: bold; margin-bottom: 20px;">$230,134</h1>
+                        <h1 style="color: #48bb78; font-size: 3.5em; font-weight: bold; margin-bottom: 20px;">$230,134
+                        </h1>
                         <p style="font-size: 1.3em; color: #4a5568;">
                             The average price of a home in<br>September <strong>2000</strong>
                         </p>
                     </div>
                     <div class="col-md-5">
-                        <h1 style="color: #c53030; font-size: 3.5em; font-weight: bold; margin-bottom: 20px;">$938,334</h1>
+                        <h1 style="color: #c53030; font-size: 3.5em; font-weight: bold; margin-bottom: 20px;">$938,334
+                        </h1>
                         <p style="font-size: 1.3em; color: #4a5568;">
                             The average price of a home in<br>September <strong>2025</strong>
                         </p>
                     </div>
                 </div>
-                
-                <p style="font-size: 1.4em; color: #2d3748; margin-top: 40px; max-width: 900px; margin-left: auto; margin-right: auto; line-height: 1.6;">
-                    By now, most Canadians are intimately familiar with just how unaffordable housing has become, but how quickly did things actually go out of control?
+
+                <p
+                    style="font-size: 1.4em; color: #2d3748; margin-top: 40px; max-width: 900px; margin-left: auto; margin-right: auto; line-height: 1.6;">
+                    By now, most Canadians are intimately familiar with just how unaffordable housing has become, but
+                    how quickly did things actually go out of control?
                 </p>
             </div>
         </div>
@@ -97,55 +103,56 @@
             </div>
         </div>
 
-        
-        <!-- Visualization 3: Housing Vacancy vs Rent (Burak's visualization) -->
+
+        <!-- Housing Vacancy vs Rent (Burak's visualization) -->
         <div class="viz-block">
-        <div class="row justify-content-center g-5" id="vis3">
-            <div class="col-12 visualization-section">
-                <div class="section-header">
-                    <h2 class="section-title">Visualization 3: Vacancy Rates and Average Rent in Major Canadian Cities (2023)</h2>
-                    <p class="section-description">
-                        Each building represents a major Canadian city. Building height shows population size,
-                        while windows represent housing units: <strong>lit windows are occupied</strong>,
-                        and <strong>dark windows are vacant</strong>. Chimney smoke indicates average
-                        rent prices—more smoke means higher rent. Cities with <strong>vacancy rates above 2%</strong>
-                        are highlighted in green.
-                    </p>
+            <div class="row justify-content-center g-5" id="vis3">
+                <div class="col-12 visualization-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Vacancy Rates and Average Rent in Major Canadian Cities (2023)</h2>
+                        <p class="section-description">
+                            Each building represents a major Canadian city. Building height shows population size,
+                            while windows represent housing units: <strong>lit windows are occupied</strong>,
+                            and <strong>dark windows are vacant</strong>. Chimney smoke indicates average
+                            rent prices—more smoke means higher rent. Cities with <strong>vacancy rates above
+                                2%</strong>
+                            are highlighted in green.
+                        </p>
+                    </div>
+
+                    <!-- Legend -->
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-box occupied"></div>
+                            <span>Occupied Housing</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-box vacant"></div>
+                            <span>Vacant Housing</span>
+                        </div>
+                        <div class="legend-item">
+                            <span>🏭 Chimney Height = Rent Price</span>
+                        </div>
+                        <div class="legend-item">
+                            <span>🏢 Height = Population</span>
+                        </div>
+                        <div class="legend-item">
+                            <span style="color: #2ecc71;">🟢 Green = High Vacancy (>2%)</span>
+                        </div>
+                    </div>
+
+                    <!-- Buildings Container -->
+                    <div id="buildings-container"></div>
                 </div>
-
-                <!-- Legend -->
-                <div class="legend">
-                    <div class="legend-item">
-                        <div class="legend-box occupied"></div>
-                        <span>Occupied Housing</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-box vacant"></div>
-                        <span>Vacant Housing</span>
-                    </div>
-                    <div class="legend-item">
-                        <span>🏭 Chimney Height = Rent Price</span>
-                    </div>
-                    <div class="legend-item">
-                        <span>🏢 Height = Population</span>
-                    </div>
-                    <div class="legend-item">
-                        <span style="color: #2ecc71;">🟢 Green = High Vacancy (>2%)</span>
-                    </div>
+            </div>
+            <!-- Narrative after vis 3 -->
+            <div class="row justify-content-center">
+                <div class="col-12 col-md-8 narrative-text narrative-after">
+                    <h3>People are spending a big percentage of their income on rent</h3>
                 </div>
-
-                <!-- Buildings Container -->
-                <div id="buildings-container"></div>
             </div>
-        </div>
-
-        <!-- Narrative after vis 3 -->
-        <div class="row justify-content-center">
-            <div class="col-12 col-md-8 narrative-text narrative-after">
-                <h3>People are spending a big percentage of their income on rent</h3>
-            </div>
-        </div>
         </div> <!-- /.viz-block -->
+
 
 
         <!-- Narrative before vis 4 -->
@@ -155,22 +162,28 @@
             </div>
         </div>
 
-        <!-- Visualization 4: Jeff's visualization -->
-         <!-- This is going to be shown OVER time as well, 
+        <!-- Jeff's visualization -->
+        <!-- This is going to be shown OVER time as well, 
           so we should get new data that isn't just from 2023. 
           ALSO, to change the time selected, 
           I will make a simple line graph with 2 lines showing average incomes and average rent prices in all the cities displayed, 
           if we click on a node in the line, it takes us to the data for THAT SPECIFIC year.-->
-        <div class="row justify-content-center g-5" id="vis4">
+        <div class="row justify-content-center g-5">
             <div class="col-12 visualization-section">
                 <div class="section-header">
                     <h2 class="section-title">Visualization 4</h2>
                 </div>
-                <div class="vis-placeholder">
-                    <h3>Visualization Coming Soon</h3>
+                
+                <div class="d-flex flex-column" style="height: 60vh; min-height: 400px;">
+                    <div class="vis4 mb-3 d-flex justify-content-center align-items-center flex-wrap gap-2 text-center px-3" id="vis4-caption"></div>
+                    <div class="vis4 mb-3 d-flex justify-content-center align-items-center flex-wrap gap-2 text-center px-3" id="vis4-slider"></div>
+                    <div class="flex-grow-1 d-flex" style="min-height: 0;">
+                        <div class="vis4 flex-grow-1 px-3" id="vis4-container"></div>
+                    </div>
                 </div>
             </div>
         </div>
+
 
         <!-- Narrative before vis 5 -->
         <div class="row justify-content-center">
@@ -179,121 +192,118 @@
             </div>
         </div>
 
-    <!-- Visualization 5: Placeholder -->
-    <div class="viz-block">
-    <div class="row justify-content-center g-5">
-    <div class="col-12 visualization-section" style="min-height: 70vh;">
-            <div class="section-header">
-            <h2 class="section-title">Visualization 5</h2>
-            </div>
-
-            <div class="legend">
-            <h3>How Have Changes in Population Affected Rent?</h3>
-            </div>
-
-            <!-- Flex container for vis + sidebar -->
-            <div class="d-flex justify-content-center align-items-stretch"
-                style="height: 60vh; min-height: 400px;"> <!-- 👈 fixed height -->
-            <!-- Main Visualization Area -->
-            <div id="vis5"
-                style="flex: 1; height: 100%; display: flex; border: thin solid transparent;">
-            </div>
-
-            <!-- Filters Sidebar -->
-            <div class="col-2 d-flex flex-column"
-                style="max-height: 60vh; border: thin solid rgb(49, 49, 49);
-                        border-radius: 5px; padding: 10px; gap: 10px; overflow-y: auto;">
-                <h4 style="margin-bottom: 10px;">Filters:</h4>
-
-                <!-- Structure Filter -->
-                <div id="vis5-structure-filter" class="d-flex flex-column"
-                    style="border: thin solid rgb(49, 49, 49); border-radius: 5px;
-                            padding: 5px; flex: 1 1 0; overflow-y: auto;">
-                <h6>Structure Types:</h6>
-                <div>
-                    <input type="checkbox" id="RA3P" name="RA3P" checked />
-                    <label for="RA3P">Row and apartment structures of three units and over</label>
-                </div>
-                <div>
-                    <input type="checkbox" id="R3P" name="R3P" checked />
-                    <label for="R3P">Row structures of three units and over</label>
-                </div>
-                <div>
-                    <input type="checkbox" id="A3P" name="A3P" checked />
-                    <label for="A3P">Apartment structures of three units and over</label>
-                </div>
-                <div>
-                    <input type="checkbox" id="A6P" name="A6P" checked />
-                    <label for="A6P">Apartment structures of six units and over</label>
-                </div>
-                </div>
-
-                <!-- Unit Filter -->
-                <div id="vis5-unit-filter" class="d-flex flex-column"
-                    style="border: thin solid rgb(49, 49, 49); border-radius: 5px;
-                            padding: 5px; flex: 1 1 0; overflow-y: auto;">
-                <h6>Unit Types:</h6>
-                <div>
-                    <input type="checkbox" id="bachelor" name="bachelor" checked />
-                    <label for="bachelor">Bachelor units</label>
-                </div>
-                <div>
-                    <input type="checkbox" id="onebed" name="onebed" checked />
-                    <label for="onebed">One bedroom units</label>
-                </div>
-                <div>
-                    <input type="checkbox" id="twobed" name="twobed" checked />
-                    <label for="twobed">Two bedroom units</label>
-                </div>
-                <div>
-                    <input type="checkbox" id="threebed" name="threebed" checked />
-                    <label for="threebed">Three bedroom units</label>
-                </div>
-                </div>
-
-                <!-- City Filter -->
-                <div id="vis5-city-filter" class="d-flex flex-column"
-                    style="border: thin solid rgb(49, 49, 49); border-radius: 5px;
-                            padding: 5px; flex: 1 1 0; overflow-y: auto;">
-
-                    <div class="row align-items-center mb-3">
-                        <div class="col-auto">
-                            <h6 class="mb-0">Enable:</h6>
-                        </div>
-                        <div class="col">
-                            <select id="provinceSelect" class="form-select form-select-sm">
-                                <option value="All Provinces">All Provinces</option>
-                                <option value="Alberta">Alberta</option>
-                                <option value="British Columbia">British Columbia</option>
-                                <option value="Manitoba">Manitoba</option>
-                                <option value="New Brunswick">New Brunswick</option>
-                                <option value="Newfoundland and Labrador">Newfoundland and Labrador</option>
-                                <option value="Northwest Territories">Northwest Territories</option>
-                                <option value="Nova Scotia">Nova Scotia</option>
-                                <option value="Ontario">Ontario</option>
-                                <option value="Prince Edward Island">Prince Edward Island</option>
-                                <option value="Quebec">Quebec</option>
-                                <option value="Saskatchewan">Saskatchewan</option>
-                            </select>
-                        </div>
+        <!-- Visualization 5: Placeholder -->
+        <div class="viz-block">
+            <div class="row justify-content-center g-5">
+                <div class="col-12 visualization-section" style="min-height: 70vh;">
+                    <div class="section-header">
+                        <h2 class="section-title">Visualization 5</h2>
                     </div>
 
-                    <div id="city-list"></div>
+                    <div class="legend">
+                        <h3>How Have Changes in Population Affected Rent?</h3>
+                    </div>
 
+                    <!-- Flex container for vis + sidebar -->
+                    <div class="d-flex justify-content-center align-items-stretch"
+                        style="height: 60vh; min-height: 400px;"> <!-- 👈 fixed height -->
+                        <!-- Main Visualization Area -->
+                        <div id="vis5" style="flex: 1; height: 100%; display: flex; border: thin solid transparent;">
+                        </div>
+
+                        <!-- Filters Sidebar -->
+                        <div class="col-2 d-flex flex-column" style="max-height: 60vh; border: thin solid rgb(49, 49, 49);
+                        border-radius: 5px; padding: 10px; gap: 10px; overflow-y: auto;">
+                            <h4 style="margin-bottom: 10px;">Filters:</h4>
+
+                            <!-- Structure Filter -->
+                            <div id="vis5-structure-filter" class="d-flex flex-column" style="border: thin solid rgb(49, 49, 49); border-radius: 5px;
+                            padding: 5px; flex: 1 1 0; overflow-y: auto;">
+                                <h6>Structure Types:</h6>
+                                <div>
+                                    <input type="checkbox" id="RA3P" name="RA3P" checked />
+                                    <label for="RA3P">Row and apartment structures of three units and
+                                        over</label>
+                                </div>
+                                <div>
+                                    <input type="checkbox" id="R3P" name="R3P" checked />
+                                    <label for="R3P">Row structures of three units and over</label>
+                                </div>
+                                <div>
+                                    <input type="checkbox" id="A3P" name="A3P" checked />
+                                    <label for="A3P">Apartment structures of three units and over</label>
+                                </div>
+                                <div>
+                                    <input type="checkbox" id="A6P" name="A6P" checked />
+                                    <label for="A6P">Apartment structures of six units and over</label>
+                                </div>
+                            </div>
+
+                            <!-- Unit Filter -->
+                            <div id="vis5-unit-filter" class="d-flex flex-column" style="border: thin solid rgb(49, 49, 49); border-radius: 5px;
+                            padding: 5px; flex: 1 1 0; overflow-y: auto;">
+                                <h6>Unit Types:</h6>
+                                <div>
+                                    <input type="checkbox" id="bachelor" name="bachelor" checked />
+                                    <label for="bachelor">Bachelor units</label>
+                                </div>
+                                <div>
+                                    <input type="checkbox" id="onebed" name="onebed" checked />
+                                    <label for="onebed">One bedroom units</label>
+                                </div>
+                                <div>
+                                    <input type="checkbox" id="twobed" name="twobed" checked />
+                                    <label for="twobed">Two bedroom units</label>
+                                </div>
+                                <div>
+                                    <input type="checkbox" id="threebed" name="threebed" checked />
+                                    <label for="threebed">Three bedroom units</label>
+                                </div>
+                            </div>
+
+                            <!-- City Filter -->
+                            <div id="vis5-city-filter" class="d-flex flex-column" style="border: thin solid rgb(49, 49, 49); border-radius: 5px;
+                            padding: 5px; flex: 1 1 0; overflow-y: auto;">
+
+                                <div class="row align-items-center mb-3">
+                                    <div class="col-auto">
+                                        <h6 class="mb-0">Enable:</h6>
+                                    </div>
+                                    <div class="col">
+                                        <select id="provinceSelect" class="form-select form-select-sm">
+                                            <option value="All Provinces">All Provinces</option>
+                                            <option value="Alberta">Alberta</option>
+                                            <option value="British Columbia">British Columbia</option>
+                                            <option value="Manitoba">Manitoba</option>
+                                            <option value="New Brunswick">New Brunswick</option>
+                                            <option value="Newfoundland and Labrador">Newfoundland and Labrador
+                                            </option>
+                                            <option value="Northwest Territories">Northwest Territories</option>
+                                            <option value="Nova Scotia">Nova Scotia</option>
+                                            <option value="Ontario">Ontario</option>
+                                            <option value="Prince Edward Island">Prince Edward Island</option>
+                                            <option value="Quebec">Quebec</option>
+                                            <option value="Saskatchewan">Saskatchewan</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div id="city-list"></div>
+
+                            </div>
+
+
+                        </div>
+                    </div>
                 </div>
-
-
             </div>
-            </div>
-        </div>
-        </div>
 
-        <!-- Narrative after vis 5 -->
-        <div class="row justify-content-center">
-            <div class="col-12 col-md-8 narrative-text narrative-after">
-                <h3>Lower vacancy means lower affordability</h3>
+            <!-- Narrative after vis 5 -->
+            <div class="row justify-content-center">
+                <div class="col-12 col-md-8 narrative-text narrative-after">
+                    <h3>Lower vacancy means lower affordability</h3>
+                </div>
             </div>
-        </div>
         </div> <!-- /.viz-block -->
 
         <!-- Narrative before vis 6 -->
@@ -305,23 +315,23 @@
 
         <!-- Visualization 6: Placeholder -->
         <div class="viz-block">
-        <div class="row justify-content-center g-5" id="vis6">
-            <div class="col-12 visualization-section">
-                <div class="section-header">
-                    <h2 class="section-title">Visualization 6</h2>
-                </div>
-                <div class="vis-placeholder">
-                    <h3>Visualization Coming Soon</h3>
+            <div class="row justify-content-center g-5" id="vis6">
+                <div class="col-12 visualization-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Visualization 6</h2>
+                    </div>
+                    <div class="vis-placeholder">
+                        <h3>Visualization Coming Soon</h3>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Narrative after vis 6 -->
-        <div class="row justify-content-center">
-            <div class="col-12 col-md-8 narrative-text narrative-after">
-                <h3>Construction doesn't keep up with demand</h3>
+            <!-- Narrative after vis 6 -->
+            <div class="row justify-content-center">
+                <div class="col-12 col-md-8 narrative-text narrative-after">
+                    <h3>Construction doesn't keep up with demand</h3>
+                </div>
             </div>
-        </div>
         </div> <!-- /.viz-block -->
 
     </div>
@@ -343,7 +353,8 @@
                 </div>
             </div>
             <div class="copyright">
-                &copy; <span id="current-year"></span> Canadian Housing Analysis Team | Data Visualization Project
+                &copy; <span id="current-year"></span> Canadian Housing Analysis Team | Data Visualization
+                Project
             </div>
         </div>
     </footer>
@@ -360,4 +371,5 @@
     <!-- Main Visualization Script -->
     <script src="js/main.js"></script>
 </body>
+
 </html>

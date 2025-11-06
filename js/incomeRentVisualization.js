@@ -2,7 +2,6 @@ const INCOME_DATA_MAP = {
     city: "GEO",
     date: "REF_DATE",
     value: "VALUE",
-    source: "Income source",
     familyType: "Economic family type"
 };
 
@@ -13,8 +12,13 @@ const RENT_DATA_MAP = {
     type: "Type of unit"
 };
 
-const TARGET_YEAR = 2023;
-const RENT_TYPE_ORDER = ["3br", "2br", "1br", "0br"];
+function getCityLabel(value) {
+    if (typeof value !== "string") {
+        return value;
+    }
+    const [cityPart] = value.split(",");
+    return cityPart.trim();
+}
 
 function mapRowBySchema(row, schema) {
     return Object.fromEntries(
@@ -47,816 +51,633 @@ function normalizeRentType(value) {
     return cleaned;
 }
 
+function createDropdown(data, defaultText, container, options = {}) {
+    const dropdownDiv = container.append('div').attr('class', 'dropdown d-inline mx-1');
+    const button = dropdownDiv.append('button')
+        .attr('class', 'btn btn-outline-primary dropdown-toggle')
+        .attr('type', 'button')
+        .attr('data-bs-toggle', 'dropdown')
+        .attr('aria-expanded', 'false');
+
+    const menu = dropdownDiv.append('ul')
+        .attr('class', 'dropdown-menu');
+
+    let currentValue = options.initialSelected ?? (data.length > 0 ? data[0] : null);
+    const onChange = typeof options.onChange === 'function' ? options.onChange : () => { };
+
+    if (currentValue) {
+        button.text(currentValue);
+    } else if (defaultText) {
+        button.text(defaultText);
+    } else {
+        button.text('Select option');
+    }
+
+    menu.selectAll('li')
+        .data(data)
+        .enter()
+        .append('li')
+        .append('a')
+        .attr('class', 'dropdown-item')
+        .attr('href', '#')
+        .text(d => d)
+        .on('click', (event, value) => {
+            event.preventDefault();
+            currentValue = value;
+            button.text(value);
+            onChange(currentValue);
+        });
+
+    if (currentValue) {
+        onChange(currentValue);
+    }
+
+    return {
+        element: dropdownDiv,
+        getSelected: () => currentValue,
+        setSelected: value => {
+            currentValue = value;
+            button.text(value || defaultText || 'Select option');
+            if (value) {
+                onChange(currentValue);
+            }
+        }
+    };
+}
+
+function createSelection(data, defaultText, container, options = {}) {
+    const selectionDiv = container.append('div').attr('class', 'dropdown d-inline mx-1');
+    const button = selectionDiv.append('button')
+        .attr('class', 'btn btn-outline-secondary dropdown-toggle')
+        .attr('type', 'button')
+        .attr('data-bs-toggle', 'dropdown')
+        .attr('data-bs-auto-close', 'outside')
+        .attr('aria-expanded', 'false')
+        .text(defaultText || 'Select options');
+
+    const menu = selectionDiv.append('div')
+        .attr('class', 'dropdown-menu p-2');
+
+    const initialSelection = Array.isArray(options.initialSelected)
+        ? options.initialSelected
+        : options.initialSelected !== undefined
+            ? [options.initialSelected]
+            : data;
+    const selected = new Set(initialSelection);
+    const onSelectionChange = typeof options.onChange === 'function' ? options.onChange : () => { };
+
+    const updateButtonLabel = () => {
+        if (selected.size === 0) {
+            button.text(defaultText || 'Select options');
+            return;
+        }
+        if (selected.size === 1) {
+            button.text(Array.from(selected).join(', '));
+            return;
+        }
+        const values = Array.from(selected);
+        button.text(`${values.slice(0, -1).join(', ')} and ${values[values.length - 1]}`);
+    };
+
+    const items = menu.selectAll('label')
+        .data(data)
+        .enter()
+        .append('label')
+        .attr('class', 'dropdown-item form-check d-flex align-items-center gap-2');
+
+    const checkboxes = items.append('input')
+        .attr('class', 'form-check-input m-0')
+        .attr('type', 'checkbox')
+        .attr('value', d => d)
+        .property('checked', d => selected.has(d))
+        .on('change', function (_, value) {
+            if (this.checked) {
+                selected.add(value);
+            } else {
+                selected.delete(value);
+            }
+            updateButtonLabel();
+            onSelectionChange(Array.from(selected));
+        });
+
+    items.append('span').text(d => d);
+
+    updateButtonLabel();
+    onSelectionChange(Array.from(selected));
+
+    return {
+        element: selectionDiv,
+        getSelected: () => Array.from(selected),
+        setSelected: values => {
+            selected.clear();
+            (values || []).forEach(v => selected.add(v));
+            checkboxes.property('checked', d => selected.has(d));
+            updateButtonLabel();
+            onSelectionChange(Array.from(selected));
+        }
+    };
+}
+
 Promise.all([
-    d3.csv("data/rent-prices-data.csv").then(rows => rows.map(row => mapRowBySchema(row, RENT_DATA_MAP))),
-    d3.csv("data/income-data.csv").then(rows => rows.filter(row => ['A','B','C','D','E'].includes(row.STATUS))
-    .map(row => mapRowBySchema(row, INCOME_DATA_MAP)))
+    d3.csv("data/jeff/rent-prices.csv").then(rows => rows.map(row => mapRowBySchema(row, RENT_DATA_MAP))),
+    d3.csv("data/jeff/u65incomedata.csv").then(rows => rows.filter(row => ['A', 'B', 'C', 'D', 'E'].includes(row.STATUS))
+        .map(row => mapRowBySchema(row, INCOME_DATA_MAP)))
 ]).then(([rentData, incomeData]) => {
+    rentData.forEach(d => {
+        d.type = normalizeRentType(d.type);
+        d.cityLabel = getCityLabel(d.city);
+    });
+
+    incomeData.forEach(d => {
+        d.cityLabel = getCityLabel(d.city);
+    });
+
+    const yearValues = Array.from(new Set([
+        ...rentData.map(d => Number(d.date)),
+        ...incomeData.map(d => Number(d.date))
+    ].filter(year => Number.isFinite(year)))).sort((a, b) => a - b);
+
+    const minYear = yearValues[0] ?? 2000;
+    const maxYear = yearValues[yearValues.length - 1] ?? 2023;
+
     const vis = new IncomeRentComparison({
-        container: "#vis4-container",
+        parentElement: "#vis4-container",
         rentData,
         incomeData,
-        year: TARGET_YEAR
+        initialYear: maxYear
+    });
+
+    const caption = new Caption({
+        parentElement: "#vis4-caption",
+        text: "",
+        rentData,
+        incomeData,
+        onCityChange: cities => vis.setCityFilter(cities),
+        onHouseholdChange: household => vis.setHouseholdFilter(household)
     });
 
     vis.init();
+    caption.init();
+
+    const slider = new Slider({
+        parentElement: "#vis4-slider",
+        min: minYear,
+        max: maxYear,
+        initialYear: vis.selectedYear ?? maxYear,
+        onChange: year => vis.setYear(year)
+    });
+
+    slider.init();
+}).catch(error => {
+    console.error("Failed to load income/rent datasets", error);
 });
 
 class IncomeRentComparison {
-    constructor({container, rentData, incomeData, year}) {
-        this.container = d3.select(container);
-        this.rawRentData = rentData;
-        this.rawIncomeData = incomeData;
-        this.year = year;
-        this.state = {
-            selectedFamilyType: null,
-            selectedSources: new Set(),
-            selectedCities: new Set()
-        };
-
-        this.availableSources = [];
-        this.availableCities = [];
+    constructor(config) {
+        this.config = config;
+        this.parentSelector = this.config.parentElement;
+        this.parentElement = d3.select(this.parentSelector);
+        this.rentData = this.config.rentData;
+        this.incomeData = this.config.incomeData;
+        this.selectedApartmentTypes = new Set(this.rentData.map(d => d.type));
+        this.selectedCities = new Set(this.incomeData.map(d => d.cityLabel));
+        this.selectedHousehold = null;
+        this.cityMetrics = {};
+        const yearSet = new Set([
+            ...this.rentData.map(d => Number(d.date)),
+            ...this.incomeData.map(d => Number(d.date))
+        ].filter(year => Number.isFinite(year)));
+        this.availableYears = Array.from(yearSet).sort((a, b) => a - b);
+        const configuredYear = Number(this.config.initialYear);
+        if (Number.isFinite(configuredYear) && yearSet.has(configuredYear)) {
+            this.selectedYear = configuredYear;
+        } else {
+            this.selectedYear = this.availableYears.length ? this.availableYears[this.availableYears.length - 1] : null;
+        }
     }
 
     init() {
-        this.prepareRentData();
-        this.prepareIncomeData();
-        this.buildLayout();
-        this.populateFamilyOptions();
-        this.renderInitialState();
+        this.createVisualization();
     }
 
-    prepareRentData() {
-        const relevantRows = this.rawRentData
-            .filter(row => row.value > 0 && row.date === this.year)
-            .map(row => ({...row, type: normalizeRentType(row.type)}))
-            .filter(row => RENT_TYPE_ORDER.includes(row.type));
+    createVisualization() {
+        const vis = this;
+        vis.margin = { top: 60, right: 40, bottom: 60, left: 60 };
 
-        this.rentByCity = d3.rollup(
-            relevantRows,
-            rows => {
-                const groupedByType = d3.group(rows, row => row.type);
-                const averages = {};
-
-                RENT_TYPE_ORDER.forEach(type => {
-                    const typeRows = groupedByType.get(type);
-
-                    if (typeRows && typeRows.length) {
-                        averages[type] = d3.mean(typeRows, row => row.value);
-                    }
-                });
-
-                return averages;
-            },
-            row => row.city
-        );
-    }
-
-    prepareIncomeData() {
-        const relevantRows = this.rawIncomeData.filter(row => row.value > 0 && row.date === this.year);
-        this.incomeByFamily = d3.rollup(
-            relevantRows,
-            familyRows => d3.rollup(
-                familyRows,
-                sourceRows => d3.rollup(
-                    sourceRows,
-                    cityRows => d3.mean(cityRows, row => row.value / 12),
-                    row => row.city
-                ),
-                row => row.source
-            ),
-            row => row.familyType
-        );
-        this.familyTypes = Array.from(this.incomeByFamily.keys()).sort(d3.ascending);
-    }
-
-    buildLayout() {
-        this.container.selectAll("*").remove();
-
-        this.wrapper = this.container
-            .append("div")
-            .attr("class", "col-12 col-lg-10")
-            .style("margin", "240px auto 0");
-
-        const card = this.wrapper
-            .append("div")
-            .attr("class", "card shadow-sm");
-
-        const cardBody = card
-            .append("div")
-            .attr("class", "card-body");
-
-        this.controlsEl = cardBody
-            .append("div")
-            .attr("class", "income-rent__controls mb-3 d-flex flex-column flex-xl-row flex-wrap gap-3 align-items-xl-center");
-
-        const familyFilter = this.controlsEl
-            .append("div")
-            .attr("class", "d-flex flex-column flex-sm-row gap-2 align-items-sm-center");
-
-        familyFilter
-            .append("label")
-            .attr("for", "income-family-select")
-            .attr("class", "form-label fw-semibold mb-0")
-            .text("Household type");
-
-        this.familySelect = familyFilter
-            .append("select")
-            .attr("id", "income-family-select")
-            .attr("class", "form-select form-select-sm")
-            .on("change", event => {
-                this.onFamilyChange(event.target.value);
-            });
-
-        const sourceFilter = this.controlsEl
-            .append("div")
-            .attr("class", "d-flex flex-column gap-1");
-
-        sourceFilter
-            .append("span")
-            .attr("class", "form-label fw-semibold mb-0")
-            .text("Income sources");
-
-        const sourceDropdown = sourceFilter
-            .append("div")
-            .attr("class", "dropdown");
-
-        this.sourceButton = sourceDropdown
-            .append("button")
-            .attr("class", "btn btn-outline-secondary btn-sm dropdown-toggle")
-            .attr("type", "button")
-            .attr("id", "income-source-dropdown")
-            .attr("data-bs-toggle", "dropdown")
-            .attr("data-bs-auto-close", "outside")
-            .attr("aria-expanded", "false")
-            .text("All income sources");
-
-        this.sourceMenu = sourceDropdown
-            .append("div")
-            .attr("class", "dropdown-menu p-3 dropdown-menu-end small")
-            .style("min-width", "240px");
-
-        const cityFilter = this.controlsEl
-            .append("div")
-            .attr("class", "d-flex flex-column gap-1");
-
-        cityFilter
-            .append("span")
-            .attr("class", "form-label fw-semibold mb-0")
-            .text("Cities");
-
-        const cityDropdown = cityFilter
-            .append("div")
-            .attr("class", "dropdown");
-
-        this.cityButton = cityDropdown
-            .append("button")
-            .attr("class", "btn btn-outline-secondary btn-sm dropdown-toggle")
-            .attr("type", "button")
-            .attr("id", "income-city-dropdown")
-            .attr("data-bs-toggle", "dropdown")
-            .attr("data-bs-auto-close", "outside")
-            .attr("aria-expanded", "false")
-            .text("All cities");
-
-        this.cityMenu = cityDropdown
-            .append("div")
-            .attr("class", "dropdown-menu p-3 dropdown-menu-end small overflow-auto")
-            .style("min-height", "120px")
-            .style("max-height", "260px")
-            .style("min-width", "240px");
-
-        this.table = cardBody
-            .append("table")
-            .attr("class", "table table-striped table-bordered table-sm mb-0");
-
-        this.chartArea = cardBody
-            .append("div")
-            .attr("class", "income-rent__chart mt-4")
-            .style("overflow-x", "auto")
-            .style("overflow-y", "hidden")
-            .style("cursor", "grab")
-            .style("user-select", "none");
-
-        this.enableDragScroll(this.chartArea);
-    }
-
-    enableDragScroll(selection) {
-        const node = selection.node();
-        if (!node) {
+        const containerNode = vis.parentElement.node();
+        if (!containerNode) {
+            console.error(`IncomeRentComparison: container '${vis.parentSelector}' not found.`);
             return;
         }
 
-        let isDragging = false;
-        let startX = 0;
-        let startScrollLeft = 0;
+        const bounds = containerNode.getBoundingClientRect();
+        const rawWidth = bounds.width - vis.margin.left - vis.margin.right;
+        const rawHeight = bounds.height - vis.margin.top - vis.margin.bottom;
 
-        const onPointerDown = event => {
-            if (event.button !== 0) {
-                return;
-            }
-            event.preventDefault();
-            isDragging = true;
-            startX = event.clientX;
-            startScrollLeft = node.scrollLeft;
-            node.style.cursor = "grabbing";
-            if (node.setPointerCapture) {
-                node.setPointerCapture(event.pointerId);
-            }
-        };
+        vis.width = Math.max(rawWidth, 320);
+        vis.height = Math.max(rawHeight, 240);
 
-        const onPointerMove = event => {
-            if (!isDragging) {
-                return;
-            }
-            const deltaX = event.clientX - startX;
-            node.scrollLeft = startScrollLeft - deltaX;
-        };
+        const svgRoot = vis.parentElement.append('svg')
+            .attr('width', vis.width + vis.margin.left + vis.margin.right)
+            .attr('height', vis.height + vis.margin.top + vis.margin.bottom);
 
-        const endDrag = event => {
-            if (!isDragging) {
-                return;
-            }
-            isDragging = false;
-            node.style.cursor = "grab";
-            if (node.hasPointerCapture && node.hasPointerCapture(event.pointerId)) {
-                node.releasePointerCapture(event.pointerId);
-            }
-        };
+        vis.svg = svgRoot.append('g')
+            .attr('transform', `translate(${vis.margin.left},${vis.margin.top})`);
 
-        node.addEventListener("pointerdown", onPointerDown, {passive: false});
-        node.addEventListener("pointermove", onPointerMove);
-        node.addEventListener("pointerup", endDrag);
-        node.addEventListener("pointerleave", endDrag);
-        node.addEventListener("pointercancel", endDrag);
+        vis.yScale = d3.scaleLinear()
+            .domain([0, 15000])
+            .range([0, vis.height]);
+
+        const yAxis = d3.axisLeft(vis.yScale)
+            .ticks(6)
+            .tickFormat(d3.format(','));
+
+        vis.yAxisGroup = vis.svg.append('g')
+            .attr('class', 'axis axis-y')
+            .call(yAxis);
+
+        
+
+        this.update();
     }
 
-    populateFamilyOptions() {
-        if (!this.familySelect) {
+    setApartmentTypes(types) {
+        this.selectedApartmentTypes = new Set(types || []);
+        this.update();
+    }
+
+    setCityFilter(cities) {
+        this.selectedCities = new Set(cities || []);
+        this.update();
+    }
+
+    setHouseholdFilter(household) {
+        this.selectedHousehold = household || null;
+        this.update();
+    }
+
+    setYear(year) {
+        const numericYear = Number(year);
+        if (!Number.isFinite(numericYear)) {
+            return;
+        }
+        if (this.selectedYear === numericYear) {
+            return;
+        }
+        this.selectedYear = numericYear;
+        this.update();
+    }
+
+    update() {
+        if (!this.svg || !this.yScale) {
             return;
         }
 
-        this.familySelect
-            .selectAll("option")
-            .data(this.familyTypes, d => d)
-            .join(
-                enter => enter
-                    .append("option")
-                    .attr("value", d => d)
-                    .text(d => d),
-                update => update.text(d => d),
-                exit => exit.remove()
-            );
+        const aptFilterActive = this.selectedApartmentTypes.size > 0;
+        const cityFilterActive = this.selectedCities.size > 0;
+        const noCitySelection = this.selectedCities.size === 0;
+        const yearFilterActive = Number.isFinite(this.selectedYear);
 
-        this.familySelect.property("disabled", this.familyTypes.length === 0);
-    }
-
-    populateIncomeSourceOptions(sources = []) {
-        if (!this.sourceMenu) {
-            return;
-        }
-
-        this.availableSources = [...sources];
-
-        const labels = this.sourceMenu
-            .selectAll("label.dropdown-item")
-            .data(sources, d => d)
-            .join(
-                enter => {
-                    const label = enter
-                        .append("label")
-                        .attr("class", "dropdown-item d-flex align-items-center gap-2");
-
-                    label.append("input")
-                        .attr("type", "checkbox")
-                        .attr("class", "form-check-input flex-shrink-0")
-                        .attr("value", d => d)
-                        .on("click", event => event.stopPropagation())
-                        .on("change", (event, value) => {
-                            event.stopPropagation();
-                            this.onIncomeSourceToggle(value, event.target.checked);
-                        });
-
-                    label.append("span")
-                        .attr("class", "flex-grow-1")
-                        .text(d => d);
-
-                    return label;
-                },
-                update => update,
-                exit => exit.remove()
-            );
-
-        labels.select("input")
-            .property("checked", d => this.state.selectedSources.has(d));
-
-        this.updateIncomeSourceButtonLabel();
-    }
-
-    populateCityOptions(cities = []) {
-        if (!this.cityMenu) {
-            return;
-        }
-
-        this.availableCities = [...cities];
-
-        const labels = this.cityMenu
-            .selectAll("label.dropdown-item")
-            .data(cities, d => d)
-            .join(
-                enter => {
-                    const label = enter
-                        .append("label")
-                        .attr("class", "dropdown-item d-flex align-items-center gap-2");
-
-                    label.append("input")
-                        .attr("type", "checkbox")
-                        .attr("class", "form-check-input flex-shrink-0")
-                        .attr("value", d => d)
-                        .on("click", event => event.stopPropagation())
-                        .on("change", (event, value) => {
-                            event.stopPropagation();
-                            this.onCityToggle(value, event.target.checked);
-                        });
-
-                    label.append("span")
-                        .attr("class", "flex-grow-1")
-                        .text(d => d);
-
-                    return label;
-                },
-                update => update,
-                exit => exit.remove()
-            );
-
-        labels.select("input")
-            .property("checked", d => this.state.selectedCities.has(d));
-
-        this.updateCityButtonLabel();
-    }
-
-    updateIncomeSourceButtonLabel() {
-        if (!this.sourceButton) {
-            return;
-        }
-
-        const total = this.availableSources.length;
-        const selectedCount = this.state.selectedSources.size;
-
-        let label = "Select income sources";
-
-        if (total === 0) {
-            label = "No income sources";
-            this.sourceButton.attr("disabled", true);
-        } else {
-            this.sourceButton.attr("disabled", null);
-            if (selectedCount === 0) {
-                label = "Select income sources";
-            } else if (selectedCount === total) {
-                label = "All income sources";
-            } else if (selectedCount === 1) {
-                label = Array.from(this.state.selectedSources)[0];
-            } else {
-                label = `${selectedCount} sources`;
-            }
-        }
-
-        this.sourceButton.text(label);
-    }
-
-    updateCityButtonLabel() {
-        if (!this.cityButton) {
-            return;
-        }
-
-        const total = this.availableCities.length;
-        const selectedCount = this.state.selectedCities.size;
-
-        let label = "Select cities";
-
-        if (total === 0) {
-            label = "No cities";
-            this.cityButton.attr("disabled", true);
-        } else {
-            this.cityButton.attr("disabled", null);
-            if (selectedCount === 0) {
-                label = "Select cities";
-            } else if (selectedCount === total) {
-                label = "All cities";
-            } else if (selectedCount === 1) {
-                label = Array.from(this.state.selectedCities)[0];
-            } else {
-                label = `${selectedCount} cities`;
-            }
-        }
-
-        this.cityButton.text(label);
-    }
-
-    updateIncomeSourceOptions({forceReset = false} = {}) {
-        if (!this.state.selectedFamilyType) {
-            this.availableSources = [];
-            this.state.selectedSources = new Set();
-            this.populateIncomeSourceOptions([]);
-            return;
-        }
-
-        const selectedCities = Array.from(this.state.selectedCities);
-
-        if (selectedCities.length === 0) {
-            this.availableSources = [];
-            this.state.selectedSources = new Set();
-            this.populateIncomeSourceOptions([]);
-            return;
-        }
-
-        const sources = this.getIncomeSourcesForFamily(
-            this.state.selectedFamilyType,
-            selectedCities
-        );
-
-        let nextSelection;
-        if (forceReset || this.state.selectedSources.size === 0) {
-            nextSelection = new Set(sources);
-        } else {
-            const retained = Array.from(this.state.selectedSources).filter(source => sources.includes(source));
-            nextSelection = retained.length ? new Set(retained) : new Set(sources);
-        }
-
-        this.state.selectedSources = nextSelection;
-        this.populateIncomeSourceOptions(sources);
-    }
-
-    getAvailableCitiesForFamily(familyType) {
-        const familyData = this.incomeByFamily.get(familyType);
-        if (!familyData) {
-            return [];
-        }
-
-        const citySet = new Set();
-        familyData.forEach(cityMap => {
-            if (!cityMap) {
-                return;
-            }
-
-            cityMap.forEach((value, city) => {
-                if (this.rentByCity.has(city)) {
-                    citySet.add(city);
-                }
-            });
+        const filteredRent = noCitySelection ? [] : this.rentData.filter(d => {
+            const includeType = !aptFilterActive || this.selectedApartmentTypes.has(d.type);
+            const includeCity = !cityFilterActive || this.selectedCities.has(d.cityLabel);
+            const includeYear = !yearFilterActive || Number(d.date) === this.selectedYear;
+            return includeType && includeCity && includeYear;
         });
 
-        return Array.from(citySet).sort(d3.ascending);
-    }
+        const filteredIncome = noCitySelection ? [] : this.incomeData.filter(d => {
+            const includeCity = !cityFilterActive || this.selectedCities.has(d.cityLabel);
+            const includeHousehold = !this.selectedHousehold || d.familyType === this.selectedHousehold;
+            const includeYear = !yearFilterActive || Number(d.date) === this.selectedYear;
+            return includeCity && includeHousehold && includeYear;
+        });
 
-    onIncomeSourceToggle(source, checked) {
-        const nextSelection = new Set(this.state.selectedSources);
+        const cityCount = cityFilterActive
+            ? this.selectedCities.size
+            : new Set(filteredRent.map(d => d.cityLabel)).size;
 
-        if (checked) {
-            nextSelection.add(source);
-        } else {
-            nextSelection.delete(source);
-        }
+        const typeCount = filteredRent.length > 0
+            ? new Set(filteredRent.map(d => d.type)).size
+            : 0;
 
-        this.state.selectedSources = nextSelection;
+        const householdLabel = this.selectedHousehold ? ` for ${this.selectedHousehold}` : '';
 
-        if (this.sourceMenu) {
-            this.sourceMenu.selectAll("input")
-                .property("checked", d => this.state.selectedSources.has(d));
-        }
+        const yearLabel = yearFilterActive ? `for ${this.selectedYear}` : 'across all years';
 
-        this.updateIncomeSourceButtonLabel();
-        this.renderComparison();
-    }
+        const rentTypeOrder = ['0br', '1br', '2br', '3br'];
+        const cityMetrics = {};
 
-    onCityToggle(city, checked) {
-        const nextSelection = new Set(this.state.selectedCities);
+        const cityKeys = Array.from(this.selectedCities);
 
-        if (checked) {
-            nextSelection.add(city);
-        } else {
-            nextSelection.delete(city);
-        }
+        cityKeys.forEach(city => {
+            const rentRecords = filteredRent.filter(d => d.cityLabel === city);
+            const rentValues = rentTypeOrder.map(type => {
+                const values = rentRecords
+                    .filter(r => r.type === type)
+                    .map(r => Number(r.value))
+                    .filter(value => Number.isFinite(value));
+                return values.length ? d3.mean(values) : null;
+            });
 
-        this.state.selectedCities = nextSelection;
+            const incomeRecord = filteredIncome.find(d => d.cityLabel === city);
+            const incomeValue = incomeRecord && Number.isFinite(Number(incomeRecord.value))
+                ? Number(incomeRecord.value)
+                : null;
 
-        if (this.cityMenu) {
-            this.cityMenu.selectAll("input")
-                .property("checked", d => this.state.selectedCities.has(d));
-        }
+            cityMetrics[city] = {
+                income: incomeValue / 12,
+                rent: rentValues
+            };
+        });
 
-        this.updateCityButtonLabel();
-        this.updateIncomeSourceOptions({forceReset: false});
-        this.renderComparison();
-    }
+        this.cityMetrics = cityMetrics;
 
-    renderInitialState() {
-        if (!this.familyTypes.length) {
-            this.renderEmptyState("No income data available for the selected year.");
-            if (this.familySelect) {
-                this.familySelect.property("disabled", true);
-            }
-            this.updateIncomeSourceButtonLabel();
-            this.updateCityButtonLabel();
-            return;
-        }
+        this.filteredRent = filteredRent;
+        this.filteredIncome = filteredIncome;
+        this.latestSummary = {
+            rentRecords: filteredRent.length,
+            incomeRecords: filteredIncome.length,
+            cityCount,
+            typeCount,
+            household: this.selectedHousehold || null,
+            year: yearFilterActive ? this.selectedYear : null,
+            summaryText: `Showing ${filteredRent.length} rent records and ${filteredIncome.length} income records ${yearLabel} across ${cityCount} cities and ${typeCount} unit types${householdLabel}.`
+        };
 
-        if (this.familySelect) {
-            this.familySelect.property("disabled", false);
-        }
+        const vis = this;
+        const blockWidth = 180;
+        const blockHeight = 80;
+        const gap = 20;
+        const startX = 10;
+        const startY = 0;
 
-        this.onFamilyChange(this.familyTypes[0], {forceReset: true});
-    }
+        const cityEntries = Object.entries(this.cityMetrics);
+        const cityGroups = vis.svg.selectAll('.city-card')
+            .data(cityEntries, d => d[0]);
 
-    onFamilyChange(familyType, {forceReset = false} = {}) {
-        this.state.selectedFamilyType = familyType;
+        cityGroups.exit().remove();
 
-        if (this.familySelect) {
-            this.familySelect.property("value", familyType);
-        }
+        vis.svg.selectAll('.vis-no-selection').remove();
 
-        const availableCities = this.getAvailableCitiesForFamily(familyType);
+        const cityGroupsEnter = cityGroups.enter()
+            .append('g')
+            .attr('class', 'city-card');
 
-        let nextCitySelection;
-        if (forceReset || this.state.selectedCities.size === 0) {
-            nextCitySelection = new Set(availableCities);
-        } else {
-            const retained = Array.from(this.state.selectedCities).filter(city => availableCities.includes(city));
-            nextCitySelection = retained.length ? new Set(retained) : new Set(availableCities);
-        }
+        cityGroupsEnter.append('rect')
+            .attr('class', 'city-card-bg')
+            .attr('width', blockWidth)
+            .attr('height', blockHeight)
+            .attr('fill', '#dde1e7')
+            .attr('stroke', '#000000')
+            .attr('stroke-width', 1);
+        
+        
+        
 
-        this.state.selectedCities = nextCitySelection;
-        this.populateCityOptions(availableCities);
-        this.updateCityButtonLabel();
 
-        this.updateIncomeSourceOptions({forceReset: true});
-        this.renderComparison();
-    }
 
-    getIncomeSourcesForFamily(familyType, cities = []) {
-        const familyData = this.incomeByFamily.get(familyType);
-        if (!familyData) {
-            return [];
-        }
+        
+        cityGroupsEnter.append('rect')
+            .attr('class', 'threebr-block')
+            .attr('width', blockWidth)
+            .attr('height', blockHeight)
+            .attr('fill', '#A37272')
+            .attr('stroke', '#000000')
+            .attr('stroke-width', 1);
+        cityGroupsEnter.append('rect')
+            .attr('class', 'twobr-block')
+            .attr('width', blockWidth)
+            .attr('height', blockHeight)
+            .attr('fill', '#A272A3')
+            .attr('stroke', '#000000')
+            .attr('stroke-width', 1);
+        cityGroupsEnter.append('rect')
+            .attr('class', 'onebr-block')
+            .attr('width', blockWidth)
+            .attr('height', blockHeight)
+            .attr('fill', '#7296A3')
+            .attr('stroke', '#000000')
+            .attr('stroke-width', 1);
+        cityGroupsEnter.append('rect')
+            .attr('class', 'bachelor-block')
+            .attr('width', blockWidth)
+            .attr('height', blockHeight)
+            .attr('fill', '#77A372')
+            .attr('stroke', '#000000')
+            .attr('stroke-width', 1);
 
-        const requiredCities = Array.isArray(cities) ? cities : [];
-        const enforceCities = requiredCities.length > 0;
+        cityGroupsEnter.append('text')
+            .attr('class', 'city-card-label')
+            .attr('x', blockWidth / 2)
+            .attr('y', -24)
+            .attr('text-anchor', 'middle')
+            .attr('fill', '#1f2937')
+            .attr('font-weight', '600')
+            .attr('font-size', 14);
 
-        return Array.from(familyData.entries())
-            .filter(([source, cityMap]) => {
-                if (!cityMap || cityMap.size === 0) {
-                    return false;
-                }
+        const cityGroupsMerged = cityGroupsEnter.merge(cityGroups);
 
-                if (!enforceCities) {
-                    return true;
-                }
 
-                return requiredCities.every(city => cityMap.has(city));
+        cityGroupsEnter.append('text')
+            .attr('class', 'city-card-status')
+            .attr('x', blockWidth / 2)
+            .attr('y', blockHeight / 2)
+            .attr('text-anchor', 'middle')
+            .attr('fill', '#6b7280')
+            .attr('font-size', 12)
+            .attr('font-style', 'italic');
+        cityGroupsMerged
+            .attr('transform', (d, i) => `translate(${startX + i * (blockWidth + gap)}, ${startY})`)
+            .style('cursor', 'pointer')
+            .on('mouseenter', function () {
+                d3.select(this).classed('is-hovered', true);
             })
-            .map(([source]) => source)
-            .sort(d3.ascending);
-    }
-
-    renderComparison() {
-        const {selectedFamilyType, selectedSources, selectedCities} = this.state;
-
-        if (!selectedFamilyType) {
-            this.renderEmptyState("Select a household type to see matching data.");
-            return;
-        }
-
-        const familyData = this.incomeByFamily.get(selectedFamilyType);
-        if (!familyData || familyData.size === 0) {
-            this.renderEmptyState("No income data found for this household type.");
-            return;
-        }
-
-        if (!selectedSources || selectedSources.size === 0) {
-            this.renderEmptyState("Select at least one income source.");
-            return;
-        }
-
-        if (!selectedCities || selectedCities.size === 0) {
-            this.renderEmptyState("Select at least one city.");
-            return;
-        }
-
-        const cityIncomeMap = new Map();
-
-        selectedSources.forEach(source => {
-            const sourceData = familyData.get(source);
-            if (!sourceData) {
-                return;
-            }
-            sourceData.forEach((monthlyIncome, city) => {
-                if (!this.rentByCity.has(city)) {
-                    return;
-                }
-
-                if (!cityIncomeMap.has(city)) {
-                    cityIncomeMap.set(city, []);
-                }
-
-                cityIncomeMap.get(city).push(monthlyIncome);
-            });
-        });
-        const comparisonData = [];
-        selectedCities.forEach(city => {
-            const incomes = cityIncomeMap.get(city);
-            const rentInfo = this.rentByCity.get(city);
-
-            if (!incomes || incomes.length === 0 || !rentInfo) {
-                return;
-            }
-
-            comparisonData.push({
-                city,
-                monthlyIncome: d3.sum(incomes),
-                rents: rentInfo
-            });
-        });
-
-        if (comparisonData.length === 0) {
-            this.renderEmptyState("No overlapping rent data for the current selection.");
-            return;
-        }
-
-        if (this.table) {
-            this.table.selectAll("*").remove();
-        }
-
-        comparisonData.sort((a, b) => d3.ascending(a.city, b.city));
-        //this.renderTable(comparisonData);
-        this.renderVisualization(comparisonData);
-    }
-
-    renderTable(data) {
-        const columns = [
-            {key: "city", label: "City"},
-            {key: "monthlyIncome", label: "Monthly Income"},
-            ...RENT_TYPE_ORDER.map(type => ({key: type, label: `${type.toUpperCase()} Rent`}))
-        ];
-
-        const thead = this.table.selectAll("thead").data([null]).join("thead");
-
-        const headerRow = thead
-            .selectAll("tr")
-            .data([columns])
-            .join("tr");
-
-        headerRow
-            .selectAll("th")
-            .data(columns)
-            .join("th")
-            .text(column => column.label);
-
-        const tbody = this.table.selectAll("tbody").data([null]).join("tbody");
-
-        const rows = tbody
-            .selectAll("tr")
-            .data(data, d => d.city)
-            .join("tr");
-
-        rows.selectAll("td")
-            .data(rowData => columns.map(column => this.resolveCellValue(column.key, rowData)))
-            .join("td")
-            .text(cell => cell);
-    }
-
-    resolveCellValue(columnKey, rowData) {
-        if (columnKey === "city") {
-            return rowData.city;
-        }
-
-        if (columnKey === "monthlyIncome") {
-            return this.formatCurrency(rowData.monthlyIncome);
-        }
-
-        const rentValue = rowData.rents[columnKey];
-        return Number.isFinite(rentValue) ? this.formatCurrency(rentValue) : "N/A";
-    }
-
-    renderEmptyState(message) {
-        this.table.selectAll("*").remove();
-
-        this.table.append("tbody")
-            .append("tr")
-            .append("td")
-            .attr("colspan", RENT_TYPE_ORDER.length + 2)
-            .attr("class", "text-center text-muted")
-            .text(message);
-
-        if (this.chartArea) {
-            this.chartArea.selectAll("*").remove();
-        }
-    }
-
-    formatCurrency(value) {
-        if (!Number.isFinite(value)) {
-            return "N/A";
-        }
-
-        return `$${d3.format(",.2f")(value)}`;
-    }
-
-    renderVisualization(data) {
-        if (!this.chartArea) {
-            return;
-        }
-
-        const colors = d3.scaleOrdinal()
-            .domain(RENT_TYPE_ORDER)
-            .range([ "#cb181d",  "#731ed4ff", "#24d5e2ff","#1cd825ff"]);
-        const svg = this.chartArea
-            .selectAll("svg")
-            .data([null])
-            .join("svg")
-            .attr("class", "income-rent__svg")
-            .attr("height", 500);
-
-        svg.selectAll("*").remove();
-
-        const maxValue = d3.max(data, d => d3.max([
-            d.monthlyIncome,
-            ...RENT_TYPE_ORDER.map(type => d.rents[type] || 0)
-        ])) || 0;
-
-        if (maxValue === 0) {
-            return;
-        }
-
-        const sizeScale = d3.scaleLinear()
-            .domain([0, maxValue])
-            .range([0, 300]);
-
-        let xOffset = 60;
-        const baseY = 40;
-
-        data.sort((a, b) => d3.descending(a.monthlyIncome, b.monthlyIncome));
-
-        data.forEach(city => {
-            const incomeSize = sizeScale(city.monthlyIncome);
-            const group = svg.append("g")
-                .attr("class", "city-node")
-                .attr("transform", `translate(${xOffset}, ${baseY})`);
-
-            group.append("rect")
-                .attr("class", "income-square")
-                .attr("width", incomeSize)
-                .attr("height", incomeSize)
-                .attr("fill", "white")
-                .attr("stroke", "#000000ff")
-                .attr("stroke-width", 2)
-                .attr("y", baseY);
-
-            group.append("text")
-                .attr("class", "city-label")
-                .attr("x", incomeSize / 2)
-                .attr("y", -15)
-                .attr("text-anchor", "middle")
-                .text(city.city);
-
-            group.append("text")
-                .attr("class", "income-label")
-                .attr("x", incomeSize / 2)
-                .attr("y", incomeSize + 22 + baseY)
-                .attr("text-anchor", "middle")
-                .text(`Monthly Income: ${this.formatCurrency(city.monthlyIncome)}`);
-
-            const rentEntries = RENT_TYPE_ORDER
-                .map(type => ({type, value: city.rents[type]}))
-                .filter(entry => Number.isFinite(entry.value));
-
-            rentEntries.forEach(entry => {
-                const rentSize = sizeScale(entry.value);
-                const offset = (incomeSize - rentSize) / 2;
-
-                group.append("rect")
-                    .attr("class", `rent-square rent-square--${entry.type}`)
-                    .attr("y", baseY)
-                    .attr("width", incomeSize)
-                    .attr("height", rentSize)
-                    .attr("fill", colors(entry.type))
-                    .attr("stroke", "#000000ff")
-                    .attr("stroke-width", 1);
+            .on('mouseleave', function () {
+                d3.select(this).classed('is-hovered', false);
+            })
+            .on('click', (_, [city, metrics]) => {
+                console.log(`City: ${city}`, metrics);
             });
 
-            rentEntries.slice().reverse().forEach((entry, idx) => {
-                group.append("text")
-                    .attr("class", "rent-label")
-                    .attr("x", incomeSize / 2)
-                    .attr("y", incomeSize + 42 + idx * 16 + baseY)
-                    .attr("text-anchor", "middle")
-                    .attr("fill", colors(entry.type))
-                    .text(`${entry.type.toUpperCase()}: ${this.formatCurrency(entry.value)}`);
-            });
+        cityGroupsMerged.select('.city-card-label')
+            .text(d => d[0]);
+        cityGroupsMerged.select('.city-card-bg')
+            .attr('height', ([, metrics]) => metrics.income ? vis.yScale(metrics.income) : 0)
+            .style('display', ([, metrics]) => metrics.income ? null : 'none');
+        cityGroupsMerged.select('.bachelor-block')
+            .attr('height', ([, metrics]) => {
+                const rentValue = metrics.rent[0];
+                return rentValue !== null ? vis.yScale(rentValue) : 0;
+            })
+            .style('display', ([, metrics]) => metrics.income ? null : 'none');
+        cityGroupsMerged.select('.onebr-block')
+            .attr('height', ([, metrics]) => {
+                const rentValue = metrics.rent[1];
+                return rentValue !== null ? vis.yScale(rentValue) : 0;
+            })
+            .style('display', ([, metrics]) => metrics.income ? null : 'none');
+        cityGroupsMerged.select('.twobr-block')
+            .attr('height', ([, metrics]) => {
+                const rentValue = metrics.rent[2];
+                return rentValue !== null ? vis.yScale(rentValue) : 0;
+            })
+            .style('display', ([, metrics]) => metrics.income ? null : 'none');
+        cityGroupsMerged.select('.threebr-block')
+            .attr('height', ([, metrics]) => {
+                const rentValue = metrics.rent[3];
+                return rentValue !== null ? vis.yScale(rentValue) : 0;
+            })
+            .style('display', ([, metrics]) => metrics.income ? null : 'none');
 
-            xOffset += incomeSize + 10;
+        cityGroupsMerged.select('.city-card-status')
+            .text(([, metrics]) => metrics.income ? '' : 'No data')
+            .style('display', ([, metrics]) => metrics.income ? 'none' : null);
+
+        if (cityEntries.length === 0) {
+            vis.svg.append('text')
+                .attr('class', 'vis-no-selection text-muted')
+                .attr('x', vis.width / 2)
+                .attr('y', vis.height / 2)
+                .attr('text-anchor', 'middle')
+                .attr('font-size', 18)
+                .text('Select a city to view data.');
+        }
+    }
+}
+
+class Caption {
+    constructor(config) {
+        this.config = config;
+        this.container = d3.select(this.config.parentElement);
+        this.text = this.config.text;
+        this.rentData = this.config.rentData;
+        this.incomeData = this.config.incomeData;
+        this.controls = {};
+        this.onCityChange = typeof this.config.onCityChange === 'function' ? this.config.onCityChange : () => { };
+        this.onHouseholdChange = typeof this.config.onHouseholdChange === 'function' ? this.config.onHouseholdChange : () => { };
+    }
+
+    init() {
+        const { cities, households } = this.collectOptions();
+        this.createCaption(cities, households);
+    }
+
+    collectOptions() {
+        const cities = Array.from(new Set(this.incomeData.map(d => d.cityLabel))).sort();
+        const households = Array.from(new Set(this.incomeData.map(d => d.familyType))).sort();
+        return { cities, households };
+    }
+
+    createCaption(cities, households) {
+        const container = this.container;
+
+        if (this.text) {
+            container.append('span')
+                .attr('class', 'fw-semibold me-2')
+                .text(this.text);
+        }
+
+        container.append('span').text('Compare affordability in');
+        const citySelection = createSelection(cities, 'Select cities', container, {
+            initialSelected: cities,
+            onChange: selected => this.handleCityChange(selected)
         });
 
-        const containerWidth = this.chartArea.node()?.clientWidth || 0;
-        const totalWidth = Math.max(xOffset, containerWidth);
-        svg.attr("width", totalWidth).style("min-width", `${totalWidth}px`);
+        container.append('span').text('for');
+        const householdDropdown = createDropdown(households, 'Select household type', container, {
+            initialSelected: households[0] || null,
+            onChange: selected => this.handleHouseholdChange(selected)
+        });
+
+        container.append('span').text('earning the typical local income.');
+
+        this.controls = { citySelection, householdDropdown };
+    }
+
+    handleCityChange(selectedCities) {
+        this.onCityChange(selectedCities);
+    }
+
+    handleHouseholdChange(selectedHousehold) {
+        this.onHouseholdChange(selectedHousehold);
+    }
+}
+
+class Slider {
+    constructor(config) {
+        this.config = config;
+        this.container = d3.select(this.config.parentElement);
+        this.min = 2000;
+        this.max = 2023;
+        this.onChange = typeof this.config.onChange === 'function' ? this.config.onChange : () => { };
+        const initialYear = Number(this.config.initialYear);
+        this.currentYear = Number.isFinite(initialYear) ? initialYear : this.max;
+        if (this.currentYear < this.min) {
+            this.currentYear = this.min;
+        }
+        if (this.currentYear > this.max) {
+            this.currentYear = this.max;
+        }
+        this.sliderInput = null;
+        this.valueDisplay = null;
+    }
+    init() {
+        if (this.container.empty()) {
+            console.error(`Slider: parent element '${this.config.parentElement}' not found.`);
+            return;
+        }
+
+        const wrapper = this.container.append('div')
+            .attr('class', 'year-slider d-flex align-items-center justify-content-center gap-3 mt-2 flex-wrap mx-auto px-3')
+            .style('max-width', '900px')
+            .style('width', '100%');
+
+        wrapper.append('span')
+            .attr('class', 'fw-semibold')
+            .text('Year');
+
+        this.valueDisplay = wrapper.append('span')
+            .attr('class', 'badge bg-primary')
+            .text(this.currentYear);
+
+        this.sliderInput = wrapper.append('input')
+            .attr('type', 'range')
+            .attr('class', 'form-range flex-grow-1')
+            .attr('min', this.min)
+            .attr('max', this.max)
+            .attr('step', 1)
+            .property('value', this.currentYear)
+            .on('input', event => this.handleInput(event.target.value));
+
+        this.onChange(this.currentYear);
+    }
+
+    handleInput(value) {
+        const year = Number(value);
+        if (!Number.isFinite(year)) {
+            return;
+        }
+        const clampedYear = Math.min(Math.max(year, this.min), this.max);
+        this.currentYear = clampedYear;
+        if (this.valueDisplay) {
+            this.valueDisplay.text(clampedYear);
+        }
+        this.onChange(clampedYear);
+    }
+
+    setYear(year) {
+        const numericYear = Number(year);
+        if (!Number.isFinite(numericYear)) {
+            return;
+        }
+        const clampedYear = Math.min(Math.max(numericYear, this.min), this.max);
+        this.currentYear = clampedYear;
+        if (this.sliderInput) {
+            this.sliderInput.property('value', clampedYear);
+        }
+        if (this.valueDisplay) {
+            this.valueDisplay.text(clampedYear);
+        }
+        this.onChange(clampedYear);
     }
 }
