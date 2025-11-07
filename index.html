@@ -113,6 +113,91 @@
                     </p>
                 </div>
 
+                <!-- Filters -->
+                <div class="filters-container">
+                    <!-- Filter Labels Row -->
+                    <div class="filter-labels-row">
+                        <div class="filter-label-item filter-label-location">
+                            <div class="label-text">Location Selection</div>
+                            <div class="selector-tabs">
+                                <button id="tab-cities" class="selector-tab active">Cities</button>
+                                <button id="tab-provinces" class="selector-tab">Provinces</button>
+                            </div>
+                        </div>
+                        <div class="filter-label-item">
+                            <div class="label-text">Unit Type</div>
+                        </div>
+                        <div class="filter-label-item">
+                            <div class="label-text">Vacancy Rate</div>
+                        </div>
+                        <div class="filter-label-item">
+                            <div class="label-text">Average Rent</div>
+                        </div>
+                        <div class="filter-label-item">
+                            <div class="label-text">Sort By</div>
+                        </div>
+                        <div class="filter-label-item filter-label-button">
+                            <div class="label-text">&nbsp;</div>
+                        </div>
+                    </div>
+
+                    <!-- Filter Inputs Row -->
+                    <div class="filter-inputs-row">
+                        <div class="filter-input-item filter-input-location">
+                            <div class="city-selector-container">
+                                <input type="text" id="city-search" class="city-search-input" placeholder="Search cities...">
+                                <select id="province-select" class="province-select" style="display: none;">
+                                    <option value="">Select a province...</option>
+                                </select>
+
+                                <div id="city-dropdown" class="city-dropdown" style="display: none;">
+                                    <div id="city-list" class="city-list"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="filter-input-item">
+                            <select id="unit-type-filter" class="filter-select">
+                                <option value="total" selected>All Units</option>
+                                <option value="bachelor">Bachelor</option>
+                                <option value="1_bedroom">1 Bedroom</option>
+                                <option value="2_bedroom">2 Bedroom</option>
+                                <option value="3_bedroom_plus">3+ Bedroom</option>
+                            </select>
+                        </div>
+                        <div class="filter-input-item">
+                            <select id="vacancy-filter" class="filter-select">
+                                <option value="all" selected>All Rates</option>
+                                <option value="high">High (>2%)</option>
+                                <option value="low">Low (≤2%)</option>
+                            </select>
+                        </div>
+                        <div class="filter-input-item">
+                            <select id="rent-filter" class="filter-select">
+                                <option value="all" selected>All Prices</option>
+                                <option value="high">High (>$1500)</option>
+                                <option value="medium">Medium ($1200-$1500)</option>
+                                <option value="low">Low (<$1200)</option>
+                            </select>
+                        </div>
+                        <div class="filter-input-item">
+                            <select id="sort-filter" class="filter-select">
+                                <option value="population" selected>Population</option>
+                                <option value="vacancy-high">Vacancy (High→Low)</option>
+                                <option value="vacancy-low">Vacancy (Low→High)</option>
+                                <option value="rent-high">Rent (High→Low)</option>
+                                <option value="rent-low">Rent (Low→High)</option>
+                                <option value="name">Name (A→Z)</option>
+                            </select>
+                        </div>
+                        <div class="filter-input-item filter-input-button">
+                            <button id="reset-filters" class="reset-btn">Reset Filters</button>
+                        </div>
+                    </div>
+
+                    <!-- Selected Cities Display -->
+                    <div id="selected-cities" class="selected-cities"></div>
+                </div>
+
                 <!-- Legend -->
                 <div class="legend">
                     <div class="legend-item">
@@ -273,7 +358,7 @@
                         </div>
                     </div>
 
-                    <div id="city-list"></div>
+                    <div id="vis5-city-list"></div>
 
                 </div>
 
