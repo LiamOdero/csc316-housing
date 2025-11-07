@@ -207,13 +207,106 @@ header .subtitle {
     stroke-width: 2;
     filter: brightness(1.05);
 }
-    .city-card.is-focused .city-card-bg,
-    .city-card.is-focused .bachelor-block,
-    .city-card.is-focused .onebr-block,
-    .city-card.is-focused .twobr-block,
-    .city-card.is-focused .threebr-block {
-        stroke-width: 2;
-    }
+
+.city-card.is-focused .city-card-bg,
+.city-card.is-focused .bachelor-block,
+.city-card.is-focused .onebr-block,
+.city-card.is-focused .twobr-block,
+.city-card.is-focused .threebr-block,
+.city-card.is-secondary .city-card-bg,
+.city-card.is-secondary .bachelor-block,
+.city-card.is-secondary .onebr-block,
+.city-card.is-secondary .twobr-block,
+.city-card.is-secondary .threebr-block {
+    stroke-width: 2;
+}
+
+.city-card.is-secondary .city-card-bg,
+.city-card.is-secondary .bachelor-block,
+.city-card.is-secondary .onebr-block,
+.city-card.is-secondary .twobr-block,
+.city-card.is-secondary .threebr-block {
+    stroke: #000000;
+    stroke-dasharray: 5;
+}
+
+#vis4-rentinfo .rent-info-wrapper {
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 18px;
+    padding: 20px 24px;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+    max-width: 1100px;
+    min-width: 1100px;
+    margin: 0 auto;
+    text-align: left;
+}
+
+#vis4-rentinfo .rent-info-content {
+    width: 100%;
+}
+
+#vis4-rentinfo .rent-info-card-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: space-between;
+    align-items: stretch;
+}
+
+#vis4-rentinfo .rent-info-content > .rent-info-card {
+    align-self: center;
+}
+
+#vis4-rentinfo .rent-info-card {
+    background-color: #f9fafb;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    padding: 16px 20px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+    min-width: 260px;
+    max-width: 340px;
+    flex: 1 1 30%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#vis4-rentinfo .rent-info-card-title {
+    font-weight: 600;
+    color: #111827;
+    font-size: 0.95rem;
+}
+
+#vis4-rentinfo .rent-info-card p {
+    margin: 0;
+    color: #1f2937;
+    font-size: 0.9rem;
+}
+
+#vis4-rentinfo .rent-info-card p + p {
+    margin-top: 6px;
+}
+
+#vis4-rentinfo .rent-info-card-primary {
+    border-top: 3px solid #2563eb;
+}
+
+#vis4-rentinfo .rent-info-card-secondary {
+    border-top: 3px solid #4b5563;
+}
+
+#vis4-rentinfo .rent-info-card-change {
+    border-top: 3px solid #059669;
+}
+
+#vis4-rentinfo .rent-info-card-empty {
+    border-style: dashed;
+    border-color: #d1d5db;
+    color: #6b7280;
+    align-items: center;
+    text-align: center;
+}
 
 #buildings-container {
     display: flex;
