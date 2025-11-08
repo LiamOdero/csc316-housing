@@ -117,12 +117,12 @@ function createSelection(data, defaultText, container, options = {}) {
 
     const menu = selectionDiv.append('div')
         .attr('class', 'dropdown-menu p-2');
-
+    
     const initialSelection = Array.isArray(options.initialSelected)
-        ? options.initialSelected
-        : options.initialSelected !== undefined
-            ? [options.initialSelected]
-            : data;
+        ? options.initialSelected.map(city => city)
+        : Array.isArray(options.initialSelected)
+            ? options.initialSelected
+            : [options.initialSelected];
     const selected = new Set(initialSelection);
     const onSelectionChange = typeof options.onChange === 'function' ? options.onChange : () => { };
 
@@ -132,10 +132,11 @@ function createSelection(data, defaultText, container, options = {}) {
             return;
         }
         if (selected.size === 1) {
-            button.text(Array.from(selected).join(', '));
+            const values = Array.from(selected).map(city => getCityLabel(city));
+            button.text(values.join(', '));
             return;
         }
-        const values = Array.from(selected);
+        const values = Array.from(selected).map(city => getCityLabel(city));
         button.text(`${values.slice(0, -1).join(', ')} and ${values[values.length - 1]}`);
     };
 
@@ -186,6 +187,7 @@ Promise.all([
     rentData.forEach(d => {
         d.type = normalizeRentType(d.type);
         d.cityLabel = getCityLabel(d.city);
+        d.totalLabel = d.cityLabel;
     });
 
     incomeData.forEach(d => {
@@ -247,7 +249,7 @@ class IncomeRentComparison {
         this.rentData = this.config.rentData;
         this.incomeData = this.config.incomeData;
         this.selectedApartmentTypes = new Set(this.rentData.map(d => d.type));
-        this.selectedCities = new Set(this.incomeData.map(d => d.cityLabel));
+        this.selectedCities = new Set(this.incomeData.map(d => d.city));
         this.selectedHousehold = null;
         this.cityMetrics = {};
         this.focusedCity = null;
@@ -344,6 +346,16 @@ class IncomeRentComparison {
             .attr('class', 'axis axis-y')
             .call(yAxis);
 
+        vis.yAxisGroup.append('text')
+            .attr('class', 'axis-label')
+            .attr('x', -vis.margin.left + 12)
+            .attr('y', -30)
+            .attr('text-anchor', 'start')
+            .attr('fill', '#111827')
+            .attr('font-size', 12)
+            .attr('font-weight', 600)
+            .text('Monthly Income / Rent (CAD)');
+
         const xDomain = [2000, 2023];
         const xTickValues = d3.range(xDomain[0], xDomain[1] + 1);
 
@@ -435,6 +447,9 @@ class IncomeRentComparison {
     setRentInfo(rentInfo) {
         this.rentInfo = rentInfo || null;
         if (this.rentInfo) {
+            if (typeof this.rentInfo.setLegendSources === 'function') {
+                this.rentInfo.setLegendSources(this.seriesColors, this.seriesTooltipLabels, this.seriesLabels);
+            }
             this.rentInfo.update(null);
         }
     }
@@ -454,7 +469,7 @@ class IncomeRentComparison {
     precomputeData() {
         const rentAccumulator = {};
         this.rentData.forEach(d => {
-            const city = d.cityLabel;
+            const city = d.city;
             const type = d.type;
             const year = Number(d.date);
             const value = Number(d.value);
@@ -485,7 +500,7 @@ class IncomeRentComparison {
 
         const incomeAccumulator = {};
         this.incomeData.forEach(d => {
-            const city = d.cityLabel;
+            const city = d.city;
             const familyType = d.familyType || 'Unknown';
             const year = Number(d.date);
             const value = Number(d.value);
@@ -639,14 +654,6 @@ class IncomeRentComparison {
             });
         });
 
-        const cityCount = cityKeys.length;
-        const typeCount = filteredRent.length > 0
-            ? new Set(filteredRent.map(d => d.type)).size
-            : 0;
-
-        const householdLabel = this.selectedHousehold ? ` for ${this.selectedHousehold}` : '';
-        const yearLabel = yearFilterActive ? `for ${this.selectedYear}` : 'across all years';
-
         const cityMetrics = {};
         cityKeys.forEach(city => {
             const yearsToAverageBase = cityYearScopes.get(city) || [];
@@ -676,21 +683,13 @@ class IncomeRentComparison {
 
         this.filteredRent = filteredRent;
         this.filteredIncome = filteredIncome;
-        this.latestSummary = {
-            rentRecords: rentRecordCount,
-            incomeRecords: incomeRecordCount,
-            cityCount,
-            typeCount,
-            household: this.selectedHousehold || null,
-            year: yearFilterActive ? this.selectedYear : null,
-            summaryText: `Showing ${rentRecordCount} rent records and ${incomeRecordCount} income records ${yearLabel} across ${cityCount} cities and ${typeCount} unit types${householdLabel}.`
-        };
 
     const baseBlockWidth = this.baseBlockWidth;
         const blockHeight = 80;
         const gap = 20;
         const startX = 10;
         const startY = 0;
+        let overviewStartX = startX;
 
         const cityEntries = Object.entries(this.cityMetrics);
         if (this.focusedCity && !this.cityMetrics[this.focusedCity]) {
@@ -748,9 +747,15 @@ class IncomeRentComparison {
 
         const blockWidth = hasFocusedCity ? this.focusCardFixedWidth : baseBlockWidth;
 
+        if (!hasFocusedCity && cityEntries.length > 0) {
+            const totalWidth = (cityEntries.length * baseBlockWidth) + ((cityEntries.length - 1) * gap);
+            const centeredX = (this.width - totalWidth) / 2;
+            overviewStartX = Math.max(0, centeredX);
+        }
+
         const computeCardLeft = year => {
             if (!hasFocusedCity || !Number.isFinite(year)) {
-                return startX;
+                return overviewStartX;
             }
             const desired = this.xScale(year) - (blockWidth / 2);
             return Math.max(0, Math.min(desired, this.width - blockWidth));
@@ -780,7 +785,7 @@ class IncomeRentComparison {
                     kind: 'overview',
                     year: null,
                     width: baseBlockWidth,
-                    leftX: startX + index * (baseBlockWidth + gap)
+                    leftX: overviewStartX + index * (baseBlockWidth + gap)
                 });
             });
         } else {
@@ -1639,6 +1644,15 @@ class RentInfo {
         this.container = d3.select(this.config.parentElement);
         this.content = null;
         this.defaultRentTypes = ['0br', '1br', '2br', '3br'];
+        this.seriesColors = this.config.seriesColors || null;
+        this.tooltipLabels = this.config.tooltipLabels || null;
+        this.defaultLabels = this.config.defaultLabels || {
+            '0br': 'Bachelor',
+            '1br': '1 Bedroom',
+            '2br': '2 Bedroom',
+            '3br': '3 Bedroom'
+        };
+        this.legendLabels = this.config.legendLabels || null;
     }
 
     init() {
@@ -1655,9 +1669,21 @@ class RentInfo {
 
         this.inner = this.content
             .append('div')
-            .attr('class', 'rent-info-content d-flex flex-column gap-1 align-items-stretch small');
+            .attr('class', 'rent-info-content d-flex flex-column gap-2 align-items-stretch small');
 
         this.update(null);
+    }
+
+    setLegendSources(seriesColors, tooltipLabels, legendLabels) {
+        if (seriesColors) {
+            this.seriesColors = seriesColors;
+        }
+        if (tooltipLabels) {
+            this.tooltipLabels = tooltipLabels;
+        }
+        if (legendLabels) {
+            this.legendLabels = legendLabels;
+        }
     }
 
     update(payload) {
@@ -1666,6 +1692,40 @@ class RentInfo {
         }
 
         this.inner.selectAll('*').remove();
+
+        const legendItems = [
+            { type: 'income', label: this.legendLabels?.income || this.tooltipLabels?.income || this.defaultLabels?.income || 'Income', color: this.seriesColors?.income },
+            { type: '0br', label: this.legendLabels?.['0br'] || this.tooltipLabels?.['0br'] || this.defaultLabels?.['0br'] || 'Bachelor', color: this.seriesColors?.['0br'] },
+            { type: '1br', label: this.legendLabels?.['1br'] || this.tooltipLabels?.['1br'] || this.defaultLabels?.['1br'] || '1 Bedroom', color: this.seriesColors?.['1br'] },
+            { type: '2br', label: this.legendLabels?.['2br'] || this.tooltipLabels?.['2br'] || this.defaultLabels?.['2br'] || '2 Bedroom', color: this.seriesColors?.['2br'] },
+            { type: '3br', label: this.legendLabels?.['3br'] || this.tooltipLabels?.['3br'] || this.defaultLabels?.['3br'] || '3 Bedroom', color: this.seriesColors?.['3br'] }
+        ].filter(item => item.color);
+
+        if (legendItems.length) {
+            const legendWrapper = this.inner.append('div')
+                .attr('class', 'rent-info-legend-wrapper d-flex flex-column align-items-center text-center w-100');
+
+            legendWrapper.append('span')
+                .attr('class', 'rent-info-legend-title fw-semibold text-uppercase')
+                .text('Rent Types');
+
+            const legendRow = legendWrapper.append('div')
+                .attr('class', 'rent-info-legend d-flex flex-wrap justify-content-center align-items-center gap-3');
+
+            const legendEntries = legendRow.selectAll('.rent-info-legend-item')
+                .data(legendItems)
+                .enter()
+                .append('span')
+                .attr('class', 'rent-info-legend-item d-flex align-items-center gap-2');
+
+            legendEntries.append('span')
+                .attr('class', 'rent-info-legend-swatch')
+                .style('background-color', d => d.color);
+
+            legendEntries.append('span')
+                .attr('class', 'rent-info-legend-text')
+                .text(d => d.label);
+        }
 
         const appendCard = (parent, title, lines, extraClass = '') => {
             const classes = ['rent-info-card'];
@@ -1684,20 +1744,19 @@ class RentInfo {
             return card;
         };
 
-        const row = this.inner.append('div').attr('class', 'rent-info-card-row');
-
         if (!payload || !payload.city || !payload.primary) {
-            appendCard(row, 'Select a city', [
-                'Choose a city to load income and rent details for the most recent year.'
-            ], 'rent-info-card-empty');
-            appendCard(row, 'Add a comparison year', [
-                'Click a different year on the chart to compare how affordability changes over time.'
-            ], 'rent-info-card-empty');
-            appendCard(row, 'Change summary', [
-                'Once two years are selected, we will summarize the income and rent changes here.'
-            ], 'rent-info-card-empty');
+            const promptWrapper = this.inner.append('div').attr('class', 'rent-info-legend-wrapper d-flex flex-column align-items-center text-center w-100');
+            promptWrapper.append('p')
+                .attr('class', 'graph-prompt-title')
+                .text('No city selected');
+            promptWrapper.append('p')
+                .attr('class', 'text-muted')
+                .text('Click on a city\'s rectangle to visualise the income and rent data of that city over time.');
+            
             return;
         }
+
+        const row = this.inner.append('div').attr('class', 'graph-prompt-row');
 
         const city = payload.city;
         const familyLabel = payload.familyType || 'All households';
@@ -1711,7 +1770,7 @@ class RentInfo {
         const activeRentTypes = Array.isArray(payload.activeRentTypes) && payload.activeRentTypes.length
             ? rentTypeOrder.filter(type => payload.activeRentTypes.includes(type))
             : rentTypeOrder;
-        const tooltipLabels = payload.tooltipLabels || {};
+    const tooltipLabels = payload.tooltipLabels || this.tooltipLabels || {};
 
         const rentIndex = new Map(rentTypeOrder.map((type, index) => [type, index]));
         const getRentValue = (metrics, type) => {
@@ -1736,7 +1795,7 @@ class RentInfo {
         const incomeAvailable = incomeValue !== null;
 
         if (incomeAvailable) {
-            primaryLines.push(`${familyLabel} living in ${city} made ${formatMoney(incomeValue)} in ${yearText}.`);
+            primaryLines.push(`${familyLabel} living in ${city} made ${formatMoney(incomeValue)} a month on average in ${yearText}.`);
         } else {
             primaryLines.push(`Income data for ${familyLabel} living in ${city} in ${yearText} is unavailable.`);
         }
@@ -1764,7 +1823,7 @@ class RentInfo {
         if (!hasComparison) {
             appendCard(row, `${familyLabel} in ${city} (${yearText})`, primaryLines, 'rent-info-card-primary');
             appendCard(row, 'Add a comparison year', [
-                'Click on another year in the chart to compare affordability for this household.'
+                'Click on the chart to compare metrics between the selected year and another year.'
             ], 'rent-info-card-empty');
             appendCard(row, 'Change summary', [
                 'Select a comparison year to see how incomes and rents change between years.'
@@ -1891,7 +1950,7 @@ class Caption {
     }
 
     collectOptions() {
-        const cities = Array.from(new Set(this.incomeData.map(d => d.cityLabel))).sort();
+        const cities = Array.from(new Set(this.incomeData.map(d => d.city))).sort();
         const households = Array.from(new Set(this.incomeData.map(d => d.familyType))).sort();
         return { cities, households };
     }
