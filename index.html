@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,6 +15,7 @@
     <!-- D3.js -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
+
 <body>
 
     <!-- Header -->
@@ -32,24 +34,28 @@
         <div class="row justify-content-center" style="margin-top: 60px; margin-bottom: 60px;">
             <div class="col-12 text-center">
                 <h2 style="color: #666; font-size: 2em; margin-bottom: 40px;">Did you know?</h2>
-                
+
                 <div class="row justify-content-center">
                     <div class="col-md-5">
-                        <h1 style="color: #48bb78; font-size: 3.5em; font-weight: bold; margin-bottom: 20px;">$230,134</h1>
+                        <h1 style="color: #48bb78; font-size: 3.5em; font-weight: bold; margin-bottom: 20px;">$230,134
+                        </h1>
                         <p style="font-size: 1.3em; color: #4a5568;">
                             The average price of a home in<br>September <strong>2000</strong>
                         </p>
                     </div>
                     <div class="col-md-5">
-                        <h1 style="color: #c53030; font-size: 3.5em; font-weight: bold; margin-bottom: 20px;">$938,334</h1>
+                        <h1 style="color: #c53030; font-size: 3.5em; font-weight: bold; margin-bottom: 20px;">$938,334
+                        </h1>
                         <p style="font-size: 1.3em; color: #4a5568;">
                             The average price of a home in<br>September <strong>2025</strong>
                         </p>
                     </div>
                 </div>
-                
-                <p style="font-size: 1.4em; color: #2d3748; margin-top: 40px; max-width: 900px; margin-left: auto; margin-right: auto; line-height: 1.6;">
-                    By now, most Canadians are intimately familiar with just how unaffordable housing has become, but how quickly did things actually go out of control?
+
+                <p
+                    style="font-size: 1.4em; color: #2d3748; margin-top: 40px; max-width: 900px; margin-left: auto; margin-right: auto; line-height: 1.6;">
+                    By now, most Canadians are intimately familiar with just how unaffordable housing has become, but
+                    how quickly did things actually go out of control?
                 </p>
             </div>
         </div>
@@ -177,18 +183,19 @@
         
         <!-- Visualization 3: Housing Vacancy vs Rent (Burak's visualization) -->
         <div class="viz-block">
-        <div class="row justify-content-center g-5" id="vis3">
-            <div class="col-12 visualization-section">
-                <div class="section-header">
-                    <h2 class="section-title">Visualization 3: Vacancy Rates and Average Rent in Major Canadian Cities (2023)</h2>
-                    <p class="section-description">
-                        Each building represents a major Canadian city. Building height shows population size,
-                        while windows represent housing units: <strong>lit windows are occupied</strong>,
-                        and <strong>dark windows are vacant</strong>. Chimney smoke indicates average
-                        rent prices—more smoke means higher rent. Cities with <strong>vacancy rates above 2%</strong>
-                        are highlighted in green.
-                    </p>
-                </div>
+            <div class="row justify-content-center g-5" id="vis3">
+                <div class="col-12 visualization-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Vacancy Rates and Average Rent in Major Canadian Cities (2023)</h2>
+                        <p class="section-description">
+                            Each building represents a major Canadian city. Building height shows population size,
+                            while windows represent housing units: <strong>lit windows are occupied</strong>,
+                            and <strong>dark windows are vacant</strong>. Chimney smoke indicates average
+                            rent prices—more smoke means higher rent. Cities with <strong>vacancy rates above
+                                2%</strong>
+                            are highlighted in green.
+                        </p>
+                    </div>
 
             <!-- Legend -->
             <div class="legend vis3-legend">
@@ -212,16 +219,16 @@
             </div>
 
 
-                <div id="buildings-container"></div>
+                    <!-- Buildings Container -->
+                    <div id="buildings-container"></div>
+                </div>
             </div>
-        </div>
-
-        <!-- Narrative after vis 5 -->
-        <div class="row justify-content-center">
-            <div class="col-12 col-md-8 narrative-text narrative-after">
-                <h3>Lower vacancy means lower affordability</h3>
+            <!-- Narrative after vis 3 -->
+            <div class="row justify-content-center">
+                <div class="col-12 col-md-8 narrative-text narrative-after">
+                    <h3>People are spending a big percentage of their income on rent</h3>
+                </div>
             </div>
-        </div>
         </div> <!-- /.viz-block -->
         
 
@@ -232,15 +239,31 @@
             </div>
         </div>
 
-        <!-- Visualization 4: Placeholder -->
-        <div class="row justify-content-center g-5" id="vis4">
+        <!-- Jeff's visualization -->
+        <!-- This is going to be shown OVER time as well, 
+          so we should get new data that isn't just from 2023. 
+          ALSO, to change the time selected, 
+          I will make a simple line graph with 2 lines showing average incomes and average rent prices in all the cities displayed, 
+          if we click on a node in the line, it takes us to the data for THAT SPECIFIC year.-->
+        <div class="row justify-content-center g-5">
             <div class="col-12 visualization-section">
-                <div class="section-header"><h2 class="section-title">Visualization 4</h2></div>
-                <div id="vis4-container"></div>
+                <div class="section-header">
+                    <h2 class="section-title">Can the people living in cities afford to rent?</h2>
+                </div>
+                
+                <div class="d-flex flex-column" style="min-height: 60vh;">
+                    <div class="vis4 mb-3 d-flex justify-content-center align-items-center flex-wrap gap-2 text-center px-3" id="vis4-caption"></div>
+                    <div class="vis4 mb-3 d-flex justify-content-center align-items-center flex-wrap gap-2 text-center px-3" id="vis4-slider"></div>
+                    <div class="flex-grow-1 d-flex" style="min-height: 0;">
+                        <div class="vis4 flex-grow-1 px-3" id="vis4-container"></div>
+                    </div>
+                </div>
+                <div class="vis4 mb-3 d-flex justify-content-center align-items-center flex-wrap gap-2 text-center px-3" id="vis4-rentinfo"></div>
             </div>
         </div>
 
-        <!-- Narrative after vis 3 -->
+
+        <!-- Narrative before vis 5 -->
         <div class="row justify-content-center">
             <div class="col-12 col-md-8 narrative-text narrative-after">
                 <h3>People are spending a big percentage of their income on rent</h3>
@@ -256,13 +279,13 @@
     </div>
 
 
-    <!-- Visualization 5: Placeholder -->
-    <div class="viz-block">
-    <div class="row justify-content-center g-5">
-    <div class="col-12 visualization-section" style="min-height: 70vh;">
-            <div class="section-header">
-            <h2 class="section-title">Visualization 5</h2>
-            </div>
+        <!-- Visualization 5: Placeholder -->
+        <div class="viz-block">
+            <div class="row justify-content-center g-5">
+                <div class="col-12 visualization-section" style="min-height: 70vh;">
+                    <div class="section-header">
+                        <h2 class="section-title">Visualization 5</h2>
+                    </div>
 
                 <div class="d-flex" style="height: 60vh; min-height: 400px; gap: 10px;">
                     <!-- Main Visualization Area -->
@@ -323,23 +346,23 @@
 
         <!-- Visualization 6: Placeholder -->
         <div class="viz-block">
-        <div class="row justify-content-center g-5" id="vis6">
-            <div class="col-12 visualization-section">
-                <div class="section-header">
-                    <h2 class="section-title">Visualization 6</h2>
-                </div>
-                <div class="vis-placeholder">
-                    <h3>Visualization Coming Soon</h3>
+            <div class="row justify-content-center g-5" id="vis6">
+                <div class="col-12 visualization-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Visualization 6</h2>
+                    </div>
+                    <div class="vis-placeholder">
+                        <h3>Visualization Coming Soon</h3>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Narrative after vis 6 -->
-        <div class="row justify-content-center">
-            <div class="col-12 col-md-8 narrative-text narrative-after">
-                <h3>Construction doesn't keep up with demand</h3>
+            <!-- Narrative after vis 6 -->
+            <div class="row justify-content-center">
+                <div class="col-12 col-md-8 narrative-text narrative-after">
+                    <h3>Construction doesn't keep up with demand</h3>
+                </div>
             </div>
-        </div>
         </div> <!-- /.viz-block -->
 
         <!-- Narrative after vis 6 -->
@@ -379,4 +402,5 @@
     <script src="js/visualization.js"></script>
 
 </body>
+
 </html>

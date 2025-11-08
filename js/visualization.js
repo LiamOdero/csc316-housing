@@ -334,26 +334,36 @@ function handleMouseMove(event) {
     const tooltipNode = tooltip.node();
     const tooltipWidth = tooltipNode ? tooltipNode.offsetWidth : 250;
     const tooltipHeight = tooltipNode ? tooltipNode.offsetHeight : 150;
-    
-    // Position tooltip to the right and slightly above the cursor
-    let left = event.pageX + 20;
-    let top = event.pageY - tooltipHeight / 2;
-    
-    // Check if tooltip would go off the right edge of the screen
-    if (left + tooltipWidth > window.innerWidth) {
-        left = event.pageX - tooltipWidth - 20; // Show on left side instead
+    const container = d3.select('.map-container').node();
+    if (!container) {
+        return;
     }
-    
-    // Check if tooltip would go off the top or bottom
-    if (top < 10) {
-        top = 10;
-    } else if (top + tooltipHeight > window.innerHeight) {
-        top = window.innerHeight - tooltipHeight - 10;
+
+    const [mouseX, mouseY] = d3.pointer(event, container);
+    const padding = 12;
+    const offset = 16;
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+
+    let left = mouseX + offset;
+    let top = mouseY - tooltipHeight / 2;
+
+    if (left + tooltipWidth > containerWidth - padding) {
+        left = mouseX - tooltipWidth - offset;
     }
-    
+    if (left < padding) {
+        left = padding;
+    }
+
+    if (top < padding) {
+        top = padding;
+    } else if (top + tooltipHeight > containerHeight - padding) {
+        top = containerHeight - tooltipHeight - padding;
+    }
+
     tooltip
-        .style('left', left + 'px')
-        .style('top', top + 'px');
+        .style('left', `${left}px`)
+        .style('top', `${top}px`);
 }
 
 function handleMouseOut(event) {
