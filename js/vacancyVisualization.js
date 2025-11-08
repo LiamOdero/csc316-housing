@@ -11,6 +11,17 @@ let currentFilters = {
   sort: "population",
 };
 
+let carouselViewport = null;
+let carouselPrevButton = null;
+let carouselNextButton = null;
+let currentCarouselIndex = 0;
+let cardsPerView = 1;
+let cardWidthWithGap = 0;
+let carouselSnapTimeout = null;
+let isProgrammaticCarouselScroll = false;
+
+setupCarouselControls();
+
 // Load and create the building visualization
 d3.json("data/BURAK_cities_data_multi_year.json")
   .then((data) => {
@@ -38,6 +49,142 @@ d3.json("data/BURAK_cities_data_multi_year.json")
           '<p style="color: #ff6b6b; text-align: center;">Error loading visualization data.</p>';
       });
   });
+
+function setupCarouselControls() {
+  carouselViewport = document.querySelector(".buildings-viewport");
+  carouselPrevButton = document.getElementById("buildings-prev");
+  carouselNextButton = document.getElementById("buildings-next");
+
+  if (!carouselViewport || !carouselPrevButton || !carouselNextButton) {
+    console.warn("Carousel elements not found for Visualization 3");
+    return;
+  }
+
+  carouselPrevButton.addEventListener("click", () => {
+    updateCarouselMetrics();
+    scrollToIndex(currentCarouselIndex - cardsPerView);
+  });
+
+  carouselNextButton.addEventListener("click", () => {
+    updateCarouselMetrics();
+    scrollToIndex(currentCarouselIndex + cardsPerView);
+  });
+
+  carouselViewport.addEventListener("scroll", () => {
+    if (carouselSnapTimeout) clearTimeout(carouselSnapTimeout);
+    carouselSnapTimeout = setTimeout(() => {
+      if (!isProgrammaticCarouselScroll) {
+        snapToNearestCard();
+      }
+    }, 120);
+    updateCarouselButtons();
+  });
+
+  window.addEventListener("resize", () => {
+    updateCarouselMetrics();
+    scrollToIndex(currentCarouselIndex, "auto");
+  });
+
+  updateCarouselMetrics();
+  updateCarouselButtons();
+}
+
+function updateCarouselButtons() {
+  if (!carouselViewport || !carouselPrevButton || !carouselNextButton) return;
+
+  const cards = carouselViewport.querySelectorAll(".city-building");
+  if (!cards.length) {
+    carouselPrevButton.disabled = true;
+    carouselNextButton.disabled = true;
+    return;
+  }
+
+  updateCarouselMetrics();
+
+  const maxIndex = Math.max(0, cards.length - cardsPerView);
+  carouselPrevButton.disabled = currentCarouselIndex <= 0;
+  carouselNextButton.disabled = currentCarouselIndex >= maxIndex;
+}
+
+function updateCarouselMetrics() {
+  if (!carouselViewport) return;
+  const container = document.getElementById("buildings-container");
+  if (!container) return;
+  const firstCard = container.querySelector(".city-building");
+  if (!firstCard) {
+    cardsPerView = 1;
+    cardWidthWithGap = 0;
+    return;
+  }
+
+  const cardWidth = firstCard.getBoundingClientRect().width;
+  const containerStyles = window.getComputedStyle(container);
+  const gapValueRaw =
+    containerStyles.columnGap || containerStyles.gap || containerStyles.rowGap || "0px";
+  const gapValue = parseFloat(gapValueRaw) || 0;
+
+  cardWidthWithGap = cardWidth + gapValue;
+
+  if (cardWidthWithGap <= 0) {
+    cardsPerView = 1;
+    return;
+  }
+
+  cardsPerView = Math.max(
+    1,
+    Math.floor((carouselViewport.clientWidth + gapValue) / cardWidthWithGap)
+  );
+}
+
+function resetCarouselPosition() {
+  if (!carouselViewport) return;
+  currentCarouselIndex = 0;
+  scrollToIndex(0, "auto");
+}
+
+function scrollToIndex(targetIndex, behavior = "smooth") {
+  if (!carouselViewport) return;
+  const cards = carouselViewport.querySelectorAll(".city-building");
+
+  if (!cards.length) {
+    currentCarouselIndex = 0;
+    carouselViewport.scrollTo({ left: 0, behavior: "auto" });
+    updateCarouselButtons();
+    return;
+  }
+
+  updateCarouselMetrics();
+
+  const maxIndex = Math.max(0, cards.length - cardsPerView);
+  const clampedIndex = Math.max(0, Math.min(targetIndex, maxIndex));
+  currentCarouselIndex = clampedIndex;
+
+  const targetCard = cards[clampedIndex];
+  const maxScrollLeft = Math.max(
+    0,
+    carouselViewport.scrollWidth - carouselViewport.clientWidth
+  );
+  let scrollLeft = targetCard.offsetLeft;
+  scrollLeft = Math.min(scrollLeft, maxScrollLeft);
+
+  isProgrammaticCarouselScroll = true;
+  carouselViewport.scrollTo({ left: scrollLeft, behavior });
+  const releaseDelay = behavior === "auto" ? 120 : 350;
+  setTimeout(() => {
+    isProgrammaticCarouselScroll = false;
+  }, releaseDelay);
+
+  updateCarouselButtons();
+}
+
+function snapToNearestCard() {
+  if (!carouselViewport || cardWidthWithGap <= 0) return;
+  const cards = carouselViewport.querySelectorAll(".city-building");
+  if (!cards.length) return;
+
+  const approximateIndex = Math.round(carouselViewport.scrollLeft / cardWidthWithGap);
+  scrollToIndex(approximateIndex);
+}
 
 // Setup filter event listeners
 function setupFilterListeners() {
@@ -392,6 +539,7 @@ function createBuildingVisualization(cities) {
       container.html(
         '<p style="color: #4a5568; text-align: center; width: 100%; padding: 40px;">No cities match the selected filters. Try adjusting your filter criteria.</p>'
       );
+      resetCarouselPosition();
       return;
     }
 
@@ -577,6 +725,7 @@ function createBuildingVisualization(cities) {
   });
 
   console.log("Visualization created successfully with", cities.length, "buildings");
+  resetCarouselPosition();
 
   } catch (error) {
     console.error("Error in createBuildingVisualization:", error);

@@ -164,14 +164,86 @@ header .subtitle {
     background: #e2e8f0;
 }
 
+.buildings-carousel {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+}
+
+.buildings-viewport {
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 40px 20px;
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: 1px;
+    scroll-padding-right: 1px;
+    scroll-behavior: smooth;
+}
+
+.buildings-viewport::-webkit-scrollbar {
+    height: 8px;
+}
+
+.buildings-viewport::-webkit-scrollbar-track {
+    background: #edf2f7;
+    border-radius: 999px;
+}
+
+.buildings-viewport::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 999px;
+}
+
+.buildings-viewport::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}
+
 #buildings-container {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: flex-end;
     gap: 25px;
-    flex-wrap: wrap;
-    padding: 40px 20px;
+    flex-wrap: nowrap;
     min-height: 500px;
+}
+
+.carousel-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    background: #edf2f7;
+    color: #2d3748;
+    font-size: 1.5em;
+    font-weight: 600;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
+}
+
+.carousel-btn:hover:not(:disabled) {
+    background: #e2e8f0;
+    transform: translateY(-2px);
+}
+
+.carousel-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+@media (max-width: 768px) {
+    .buildings-carousel {
+        gap: 10px;
+    }
+
+    .carousel-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2em;
+    }
 }
 
 .city-building {
@@ -180,6 +252,9 @@ header .subtitle {
     align-items: center;
     gap: 10px;
     transition: transform 0.3s ease;
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
 }
 
 .smoke-container {
@@ -892,4 +967,3 @@ footer .copyright {
         width: 100%;
     }
 }
-
