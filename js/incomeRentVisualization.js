@@ -261,6 +261,7 @@ class IncomeRentComparison {
         this.cardGroup = null;
         this.rentInfo = null;
         this.lineGenerator = null;
+        this.focusCardFixedWidth = null;
         this.seriesColors = {
             income: '#D9D9D9',
             '0br': '#77A372',
@@ -686,7 +687,7 @@ class IncomeRentComparison {
             summaryText: `Showing ${rentRecordCount} rent records and ${incomeRecordCount} income records ${yearLabel} across ${cityCount} cities and ${typeCount} unit types${householdLabel}.`
         };
 
-        const baseBlockWidth = this.baseBlockWidth;
+    const baseBlockWidth = this.baseBlockWidth;
         const blockHeight = 80;
         const gap = 20;
         const startX = 10;
@@ -711,22 +712,42 @@ class IncomeRentComparison {
             ? this.secondaryFocusYear
             : null;
 
-        let blockWidth = hasFocusedCity ? this.focusCardWidth : baseBlockWidth;
-        if (
-            hasFocusedCity
-            && Number.isFinite(focusYear)
-            && Number.isFinite(comparisonYear)
-            && comparisonYear !== focusYear
-            && this.xScale
-        ) {
-            const spacing = Math.abs(this.xScale(comparisonYear) - this.xScale(focusYear));
-            if (Number.isFinite(spacing) && spacing > 0) {
-                const minWidth = this.focusCardMinWidth;
-                blockWidth = spacing < minWidth
-                    ? Math.max(spacing, 1)
-                    : Math.min(this.focusCardWidth, Math.max(spacing, minWidth));
+        let computedFocusWidth = this.focusCardFixedWidth;
+        if (this.xScale) {
+            const domain = this.xScale.domain();
+            const domainStart = Number(domain[0]);
+            const domainEnd = Number(domain[1]);
+            if (Number.isFinite(domainStart) && Number.isFinite(domainEnd) && domainEnd > domainStart) {
+                const intervals = domainEnd - domainStart + 1;
+                const widthPerInterval = this.width / intervals;
+                if (Number.isFinite(widthPerInterval) && widthPerInterval > 0) {
+                    computedFocusWidth = widthPerInterval;
+                }
             }
         }
+
+        if (!Number.isFinite(computedFocusWidth) || computedFocusWidth <= 0) {
+            computedFocusWidth = this.focusCardWidth;
+        }
+
+        if (this.focusCardMinWidth) {
+            computedFocusWidth = Math.max(computedFocusWidth, this.focusCardMinWidth);
+        }
+
+        this.focusCardFixedWidth = computedFocusWidth;
+        this.focusCardHalfWidth = computedFocusWidth / 2;
+
+        if (this.xScale) {
+            const padding = Math.max(this.focusCardHalfWidth, 1);
+            this.xScale.range([padding, this.width - padding]);
+            if (this.xAxisGroup && this.xAxis) {
+                this.xAxisGroup.call(this.xAxis);
+                this.xAxisGroup.select('.domain')
+                    .attr('d', `M0.5,0.5H${this.width}`);
+            }
+        }
+
+        const blockWidth = hasFocusedCity ? this.focusCardFixedWidth : baseBlockWidth;
 
         const computeCardLeft = year => {
             if (!hasFocusedCity || !Number.isFinite(year)) {
@@ -876,6 +897,8 @@ class IncomeRentComparison {
                             .map(clonePoint);
 
                         if (leftValues.length) {
+                            const axisX = earliestCard.leftX;
+                            const centerX = this.xScale ? this.xScale(earliestCard.year) : null;
                             let lastPoint = leftValues[leftValues.length - 1];
                             if (lastPoint.year !== earliestCard.year) {
                                 const anchor = findAnchor(earliestCard.year);
@@ -884,8 +907,17 @@ class IncomeRentComparison {
                                     lastPoint = leftValues[leftValues.length - 1];
                                 }
                             }
+
                             if (lastPoint.year === earliestCard.year) {
-                                lastPoint.xOverride = earliestCard.leftX;
+                                const axisPoint = { ...lastPoint, xOverride: axisX };
+                                leftValues[leftValues.length - 1] = axisPoint;
+
+                                const hasDistinctCenter = Number.isFinite(centerX) && Math.abs(centerX - axisX) > 0.5;
+                                const centerPoint = {
+                                    ...axisPoint,
+                                    xOverride: hasDistinctCenter ? centerX : axisX + 0.5
+                                };
+                                leftValues.push(centerPoint);
                             }
                             if (leftValues.length >= 2) {
                                 focusLeftData.push({ key: series.key, color, values: leftValues });
@@ -937,6 +969,8 @@ class IncomeRentComparison {
                             .map(clonePoint);
 
                         if (rightValues.length) {
+                            const edgeX = latestCard.leftX + latestWidth;
+                            const centerX = this.xScale ? this.xScale(latestCard.year) : null;
                             let firstPoint = rightValues[0];
                             if (firstPoint.year !== latestCard.year) {
                                 const anchor = findAnchor(latestCard.year);
@@ -945,8 +979,16 @@ class IncomeRentComparison {
                                     firstPoint = rightValues[0];
                                 }
                             }
+
                             if (firstPoint.year === latestCard.year) {
-                                firstPoint.xOverride = latestCard.leftX + latestWidth;
+                                const hasDistinctCenter = Number.isFinite(centerX) && Math.abs(centerX - edgeX) > 0.5;
+                                const centerPoint = {
+                                    ...firstPoint,
+                                    xOverride: hasDistinctCenter ? centerX : edgeX - 0.5
+                                };
+                                const edgePoint = { ...firstPoint, xOverride: edgeX };
+                                rightValues[0] = centerPoint;
+                                rightValues.splice(1, 0, edgePoint);
                             }
                             if (rightValues.length >= 2) {
                                 focusRightData.push({ key: series.key, color, values: rightValues });
@@ -1292,12 +1334,17 @@ class IncomeRentComparison {
 
                 const tooltipWidth = tooltipData[0].width;
                 const maxValue = d3.max(tooltipData.map(d => d.value));
-                const tooltipOffsetX = Math.max(0, ((cardWidth) - tooltipWidth) / 2);
+                const tooltipOffsetX = Math.max(0, (cardWidth - tooltipWidth) / 2);
                 const baseY = Number.isFinite(maxValue) ? this.yScale(maxValue) : blockHeight;
+                const tooltipPadding = 12;
+                const tooltipHeight = d3.max(tooltipData, d => (d.offsetY ?? 0) + (d.height ?? 0)) || 0;
+                const baseTranslateY = baseY + tooltipPadding;
+                const maxTranslateY = this.height - tooltipHeight - tooltipPadding;
+                const translateY = Math.max(tooltipPadding, Math.min(baseTranslateY, maxTranslateY));
 
                 tooltipGroup
                     .style('display', null)
-                    .attr('transform', `translate(${tooltipOffsetX}, ${baseY + 12})`);
+                    .attr('transform', `translate(${tooltipOffsetX}, ${translateY})`);
 
                 const tooltipPills = tooltipGroup.selectAll('.tooltip-pill')
                     .data(tooltipData, d => d.key);
