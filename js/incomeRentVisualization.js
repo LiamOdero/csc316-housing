@@ -264,10 +264,10 @@ class IncomeRentComparison {
         this.focusCardFixedWidth = null;
         this.seriesColors = {
             income: '#D9D9D9',
-            '0br': '#77A372',
-            '1br': '#7296A3',
-            '2br': '#A272A3',
-            '3br': '#A37272'
+            '0br': '#5a9216',
+            '1br': '#ffc107',
+            '2br': '#ff6b35',
+            '3br': '#c1121f'
         };
         this.seriesLabels = {
             income: 'Monthly income',
@@ -448,7 +448,6 @@ class IncomeRentComparison {
             return;
         }
         this.selectedYear = numericYear;
-        this.secondaryFocusYear = null;
         this.update();
     }
 
