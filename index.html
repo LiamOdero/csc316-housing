@@ -279,63 +279,49 @@
     </div>
 
 
-        <!-- Visualization 5: Placeholder -->
-        <div class="viz-block">
-            <div class="row justify-content-center g-5">
-                <div class="col-12 visualization-section" style="min-height: 70vh;">
-                    <div class="section-header">
-                        <h2 class="section-title">Visualization 5</h2>
-                    </div>
+    <!-- Visualization 5 -->
+    <div class="viz-block">
+    <div class="row justify-content-center g-5">
+        <div class="col-12 visualization-section" style="min-height: 70vh;">
+        <div class="section-header">
+            <h2 class="section-title">Visualization 5</h2>
+        </div>
 
-                <div class="d-flex" style="height: 60vh; min-height: 400px; gap: 10px;">
-                    <!-- Main Visualization Area -->
-                    <div id="vis5" style="flex: 1; height: 100%; border: thin solid transparent;"></div>
+        <!-- ===== Filters Row ===== -->
+        <div id="vis5-filters"
+            style="display: flex; flex-wrap: wrap; gap: 15px; padding: 10px; border: thin solid rgb(49,49,49); border-radius: 5px; margin-bottom: 15px;">
 
-                    <!-- Sidebar -->
-                    <div style="width: 300px; height: 100%; border: thin solid rgb(49, 49, 49); border-radius: 5px; padding: 10px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto;">
-                        <h4 style="margin-bottom: 10px;">Filters:</h4>
-
-                        <div id="vis5-structure-filter" style="border: thin solid rgb(49, 49, 49); border-radius: 5px; padding: 5px; flex: 1 1 auto; overflow-y: auto;">
-                            <h6>Structure Types:</h6>
-                            <div><input type="checkbox" id="RA3P" checked /><label for="RA3P">Row and apartment structures of three units and over</label></div>
-                            <div><input type="checkbox" id="R3P" checked /><label for="R3P">Row structures of three units and over</label></div>
-                            <div><input type="checkbox" id="A3P" checked /><label for="A3P">Apartment structures of three units and over</label></div>
-                            <div><input type="checkbox" id="A6P" checked /><label for="A6P">Apartment structures of six units and over</label></div>
-                        </div>
-
-                        <div id="vis5-unit-filter" style="border: thin solid rgb(49, 49, 49); border-radius: 5px; padding: 5px; flex: 1 1 auto; overflow-y: auto;">
-                            <h6>Unit Types:</h6>
-                            <div><input type="checkbox" id="bachelor" checked /><label for="bachelor">Bachelor units</label></div>
-                            <div><input type="checkbox" id="onebed" checked /><label for="onebed">One bedroom units</label></div>
-                            <div><input type="checkbox" id="twobed" checked /><label for="twobed">Two bedroom units</label></div>
-                            <div><input type="checkbox" id="threebed" checked /><label for="threebed">Three bedroom units</label></div>
-                        </div>
-
-                        <div id="vis5-city-filter" style="border: thin solid rgb(49, 49, 49); border-radius: 5px; padding: 5px; flex: 1 1 auto; overflow-y: auto;">
-                            <h6>Province / City</h6>
-                            <select id="provinceSelect" class="form-select form-select-sm mb-2">
-                                <option value="All Provinces">All Provinces</option>
-                                <option value="Alberta">Alberta</option>
-                                <option value="British Columbia">British Columbia</option>
-                                <option value="Manitoba">Manitoba</option>
-                                <option value="New Brunswick">New Brunswick</option>
-                                <option value="Newfoundland and Labrador">Newfoundland and Labrador</option>
-                                <option value="Northwest Territories">Northwest Territories</option>
-                                <option value="Nova Scotia">Nova Scotia</option>
-                                <option value="Ontario">Ontario</option>
-                                <option value="Prince Edward Island">Prince Edward Island</option>
-                                <option value="Quebec">Quebec</option>
-                                <option value="Saskatchewan">Saskatchewan</option>
-                            </select>
-                            <div id="city-list"></div>
-                        </div>
-
-                    </div>
-                </div>
+            <!-- Province / City Filter -->
+            <div id="vis5-city-filter" style="flex: 1 1 250px;">
+            <h6>Province / City</h6>
+            <select id="provinceSelect" class="form-select form-select-sm mb-2">
+                <option value="All Provinces">All Provinces</option>
+                <option value="Alberta">Alberta</option>
+                <option value="British Columbia">British Columbia</option>
+                <option value="Manitoba">Manitoba</option>
+                <option value="New Brunswick">New Brunswick</option>
+                <option value="Newfoundland and Labrador">Newfoundland and Labrador</option>
+                <option value="Northwest Territories">Northwest Territories</option>
+                <option value="Nova Scotia">Nova Scotia</option>
+                <option value="Ontario">Ontario</option>
+                <option value="Prince Edward Island">Prince Edward Island</option>
+                <option value="Quebec">Quebec</option>
+                <option value="Saskatchewan">Saskatchewan</option>
+            </select>
+            
+            <div id="city-list"></div>
             </div>
         </div>
 
+        <!-- ===== Visualization Row ===== -->
+        <div id="vis5"
+            style="width: 100%; height: 60vh; min-height: 400px; border: thin solid transparent;">
+        </div>
+
+        </div>
     </div>
+    </div>
+
 
         <!-- Narrative before vis 6 -->
         <div class="row justify-content-center">

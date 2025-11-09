@@ -13,7 +13,7 @@ let NUM_CATEGORIES = 11;
 class PopulationRentChart {
 
 // constructor method to initialize PopulationRentChart object
-constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, data) {
+constructor(parentElement, provinceSelect, provinceFilterArea, data) {
     this.parentElement = parentElement;
 
     // sorting the data to make accumulation logic simpler
@@ -60,24 +60,11 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
     vis.avgColorScale = d3.scaleLinear()
         .range(["green", "yellow", "red"]);
 
-    this.structureIDMap = {RA3P: "Row and apartment structures of three units and over", 
-                          R3P: "Row structures of three units and over", 
-                          A3P: "Apartment structures of three units and over", 
-                          A6P: "Apartment structures of six units and over"};
-    this.structureFilters = data[1].data.reduce((acc, e) => {
-                                acc[e.structure] = true;
-                                return acc;
-                            }, {});
-
     this.unitIDMap = {bachelor: "Bachelor units", onebed: "One bedroom units", twobed: "Two bedroom units", threebed: "Three bedroom units"};
     this.unitFilters = data[3].data.reduce((acc, e) => {
                                 acc[e.unit] = true;
                                 return acc;
                             }, {});
-
-    filterElements.forEach(e => {
-        this.createBuildingListeners(e)
-    })
 
     // Listener for province selection
     this.provinceFilterArea = d3.select("#" + provinceFilterArea);
@@ -149,7 +136,7 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
         let vis = this;
         let newData = [];
 
-        // Collecting yearly averages across selected structure and unit types
+        // Collecting yearly averages across structure and unit types
         this.data.forEach(e =>  {
             let accAvg = 0;
             let num = 0;
@@ -157,7 +144,6 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
             let include = vis.cityFilter[e.province][e.city];
                 if (include)    {
                 e.data.forEach(e => {
-                    let include = vis.structureFilters[e.structure] && vis.unitFilters[e.unit]
                     accAvg += e.avg * include;
                     num += include;
                 })
@@ -257,21 +243,7 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
         vis.wrangleData();
     }
 
-    createBuildingListeners(checkbox)    {
-        let vis = this;
-        let check = d3.select("#" + checkbox)
-        check.property("checked", true)
-        
-        check.on("change", function(d)  {
-            if (checkbox.length < 5)    {
-                
-                vis.structureFilters[vis.structureIDMap[checkbox]] = this.checked;
-            }   else    {
-                vis.unitFilters[vis.unitIDMap[checkbox]] = this.checked;
-            }
-            vis.wrangleData();
-        })
-    }
+
     
     createProvinceFilters(province)    {
         let vis = this;
@@ -392,7 +364,7 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
             .transition()
             .duration(200)
             .style("opacity", 1);
-            }
+        }
 
 	/*
  	* Data wrangling
