@@ -13,7 +13,7 @@ let NUM_CATEGORIES = 11;
 class PopulationRentChart {
 
 // constructor method to initialize PopulationRentChart object
-constructor(parentElement, areaSearch, filterParent, selectionArea, data) {
+constructor(parentElement, areaSearch, filterParent, selectionArea, legendArea, data) {
     this.parentElement = parentElement;
 
     // sorting the data to make accumulation logic simpler
@@ -62,6 +62,7 @@ constructor(parentElement, areaSearch, filterParent, selectionArea, data) {
     this.selectionArea = selectionArea;
     this.areaSearch = d3.select("#" + areaSearch);
     this.filterParent = d3.select("#" + filterParent);
+    this.legendArea = d3.select("#" + legendArea);
 
 }
 
@@ -241,14 +242,13 @@ constructor(parentElement, areaSearch, filterParent, selectionArea, data) {
         })
 
         let categories = [];
-        
+        console.log(accumulatedData)
         // final average calculation
         accumulatedData.forEach((e, i) =>   {
             e.avg /= e.cityNum
 
-            // 2001 is the first year in the dataset, so exclude the change
             // For some reason Parksville has 0 in rent for 2001 which i somehow doubt is correct, so this is the bandaid fix
-            if (e.year == "2001" || (e.category == "Parksville" && e.year == "2002")) {
+            if (i == 0 || e.category != accumulatedData[i - 1].category || (e.category == "Parksville" && e.year == "2002")) {
                 e.popChange = 0;
                 e.avgChange = 0;
             }   else    {
@@ -256,7 +256,7 @@ constructor(parentElement, areaSearch, filterParent, selectionArea, data) {
                 e.avgChange = (e.avg - accumulatedData[i - 1].avg) / accumulatedData[i - 1].avg * 100;
             }
 
-            if (e.year == "2001")   {
+            if (i == 0 || e.categories != accumulatedData[i - 1].category)   {
                 categories.push(e.category)
             }
         })
@@ -347,7 +347,6 @@ constructor(parentElement, areaSearch, filterParent, selectionArea, data) {
                     d3.select(this).select("rect").style("fill", "#90EE90");
                 })
                 .on("click", function (event, d) {
-                    console.log(d.loc);
                     vis.toggleLocation(d.loc);
                 });
 
@@ -356,6 +355,8 @@ constructor(parentElement, areaSearch, filterParent, selectionArea, data) {
                 .attr("height", boxHeight)
                 .attr("x", d => vis.toggleX(d.i % NUM_COLS))
                 .attr("y", d => vis.toggleY(Math.floor(d.i / NUM_COLS)))
+                .attr("rx", Math.min(boxWidth, boxHeight) * 0.2) // 20% of smaller dimension
+                .attr("ry", Math.min(boxWidth, boxHeight) * 0.2)
                 .style("fill", "#90EE90");
 
             g.append("text")
@@ -363,7 +364,7 @@ constructor(parentElement, areaSearch, filterParent, selectionArea, data) {
                 .attr("y", d => vis.toggleY(Math.floor(d.i / NUM_COLS)) + boxHeight / 1.6)
                 .attr("text-anchor", "middle")
                 .attr("dominant-baseline", "middle")
-                .attr("font-size", Math.min(boxHeight * 0.5, boxWidth * 0.2)) // adaptive font size
+                .attr("font-size", Math.min(boxHeight * 0.45, boxWidth * 0.2)) // adaptive font size
                 .text(d => d.loc);
 
             return g;
@@ -441,83 +442,265 @@ constructor(parentElement, areaSearch, filterParent, selectionArea, data) {
 		vis.updateVis();
 	}
 
-	/*
-	 * The drawing function - should use the D3 update sequence (enter, update, exit)
- 	* Function parameters only needed if different kinds of updates are needed
- 	*/
+
+    // Draw a single row
+    drawRow(rowIndex, label, gradId, minValue, maxValue, svg) {
+        let vis = this;
+        const legendWidth = vis.legendArea.node().clientWidth;
+        const padding = 10;
+        const rowSpacing = 30;
+        const barHeight = 20;
+        const boxSize = 40;
+        const barWidth = (legendWidth - 6 * padding - boxSize) * 0.75; // keep bar proportional
+        const labelWidth = 60; // estimate label width
+        const spacingBoxBar = 10;
+        const spacingBarLabel = 10;
+
+        const rowY = padding + 30 + rowIndex * (boxSize + rowSpacing);
+
+        // Total row width
+        const totalRowWidth = boxSize + spacingBoxBar + barWidth + spacingBarLabel + labelWidth;
+        const xOffset = (legendWidth - totalRowWidth) / 2;
+
+        // Group for the row
+        const g = svg.append("g")
+            .attr("transform", `translate(${xOffset}, ${rowY})`);
+
+        const barY = (boxSize - barHeight)/2;
+
+        // Example box
+        g.append("rect")
+            .attr("width", boxSize)
+            .attr("height", boxSize)
+            .attr("fill", "none")
+            .attr("stroke", "#555");
+
+        // Triangles inside box
+            g.append("path")
+                .attr("d", `M0,${boxSize} L${boxSize},${boxSize} L0,0 Z`)
+                .attr("fill", (rowIndex == 1) ? "white" : "red"); 
+            g.append("path")
+                .attr("d", `M${boxSize},0 L${boxSize},${boxSize} L0,0 Z`)
+                .attr("fill", (rowIndex == 1) ? "red" : "white")
+
+        // Gradient bar
+        g.append("rect")
+            .attr("x", boxSize + spacingBoxBar)
+            .attr("y", barY)
+            .attr("width", barWidth)
+            .attr("height", barHeight)
+            .attr("fill", `url(#${gradId})`);
+
+        // Min/max numbers
+        g.append("text")
+            .attr("x", boxSize + spacingBoxBar)
+            .attr("y", barY - 2)
+            .attr("font-size", "12px")
+            .text(`${minValue.toFixed(2)}%`);
+        g.append("text")
+            .attr("x", boxSize + spacingBoxBar + barWidth)
+            .attr("y", barY - 2)
+            .attr("font-size", "12px")
+            .attr("text-anchor", "end")
+            .text(`${maxValue.toFixed(2)}%`);
+
+        // Row label
+        g.append("text")
+            .attr("x", boxSize + spacingBoxBar + barWidth + spacingBarLabel)
+            .attr("y", boxSize / 2)
+            .attr("dominant-baseline", "middle")
+            .attr("font-size", "16px")
+            .text(label);
+    }
+
+    createGradient(svg, id, colors) {
+
+            const grad = svg.append("defs")
+                .append("linearGradient")
+                .attr("id", id)
+                .attr("x1", "0%").attr("y1", "0%")
+                .attr("x2", "100%").attr("y2", "0%");
+            
+            grad.selectAll("stop")
+                .data(colors)
+                .enter()
+                .append("stop")
+                .attr("offset", (d, i) => `${i / (colors.length - 1) * 100}%`)
+                .attr("stop-color", d => d);
+        }
+
+    createLegend()  {
+       let vis = this;
+
+        const legendWidth = vis.legendArea.node().clientWidth;
+        const padding = 10;
+        const rowSpacing = 30;
+        const boxSize = 40;
+        const numRows = 2;
+
+        // Clear previous legend
+        vis.legendArea.selectAll("*").remove();
+
+        // Append SVG
+        const svg = vis.legendArea.append("svg")
+            .attr("width", legendWidth)
+            .attr("height", padding*2 + 30 + numRows*(boxSize + rowSpacing));
+
+        // Title
+        svg.append("text")
+            .attr("x", legendWidth / 2)
+            .attr("y", padding + 12)
+            .attr("text-anchor", "middle")
+            .attr("font-size", "20px")
+            .attr("font-weight", "bold")
+            .text("Legend");
+
+        vis.createGradient(svg, "popGrad", ["green","yellow","red"]);
+        vis.createGradient(svg, "rentGrad", ["green","yellow","red"]);
+
+        // Row 0: Population
+        vis.drawRow(0, "Population", "popGrad", d3.min(vis.displayData, d => d.popChange), d3.max(vis.displayData, d => d.popChange), svg);
+
+        // Row 1: Rent
+        vis.drawRow(1, "Rent", "rentGrad", d3.min(vis.displayData, d => d.avgChange), d3.max(vis.displayData, d => d.avgChange), svg);
+
+    }
+
 	updateVis(){
-		let vis = this;
-        vis.x.domain([...new Set(vis.displayData.map(item => item.year))]);
-        vis.y.domain(vis.displayCategories)
-        vis.popColorScale.domain([d3.min(vis.displayData, d => d.popChange),
-                               d3.median(vis.displayData, d => d.popChange),
-                               d3.max(vis.displayData, d => d.popChange)
-        ])
-        vis.avgColorScale.domain([d3.min(vis.displayData, d => d.avgChange),
-                               d3.median(vis.displayData, d => d.avgChange),
-                               d3.max(vis.displayData, d => d.avgChange)
-        ])
+        let vis = this;
+
+        // 1️⃣ Update scales
+        vis.x.domain([...new Set(vis.displayData.map(d => d.year))]);
+        vis.y.domain(vis.displayCategories); // includes new rows
+
+        vis.popColorScale.domain([
+            d3.min(vis.displayData, d => d.popChange),
+            d3.median(vis.displayData, d => d.popChange),
+            d3.max(vis.displayData, d => d.popChange)
+        ]);
+
+        vis.avgColorScale.domain([
+            d3.min(vis.displayData, d => d.avgChange),
+            d3.median(vis.displayData, d => d.avgChange),
+            d3.max(vis.displayData, d => d.avgChange)
+        ]);
 
         vis.createToggleDivs();
+        vis.createLegend();
 
-        // build gradients
-        vis.displayData.forEach(d => {
-            const gradId = `grad-${d.year}-${d.category.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
-            
-            let gradient = vis.defs.append("linearGradient")
-                .attr("id", gradId)
-                .attr("x1", "0%")
-                .attr("y1", "0%")
-                .attr("x2", "100%")
-                .attr("y2", "100%");
-            
-            gradient.append("stop")
-                .attr("offset", "0%")
-                .attr("stop-color", vis.avgColorScale(d.avgChange));
-            
-            gradient.append("stop")
-                .attr("offset", "100%")
-                .attr("stop-color", vis.popColorScale(d.popChange));
-        });
+        // 2️⃣ Bind data with join
+        vis.svg.selectAll(".box-group")
+            .data(vis.displayData, d => `${d.year}-${d.category}`)
+            .join(
+                enter => {
+                    const g = enter.append("g")
+                        .attr("class", "box-group")
+                        .attr("transform", d => `translate(${vis.x(d.year)}, ${vis.y(d.category)})`);
 
-        let boxes = vis.svg.selectAll("rect")
-                       .data(vis.displayData)
+                    // Dimensions
+                    const bw = vis.x.bandwidth();
+                    const bh = vis.y.bandwidth();
 
-        boxes.enter().append("rect")    
-                     .merge(boxes)
-                     .on("mouseover", function(d)   {
-                        d3.select(this)
-                          .style("stroke", "black")
-                          .style("stroke-width", 1)
-                        vis.tooltip.style("opacity", 1)
-                     })
-                     .on("mouseleave", function(d)   {
-                        d3.select(this)
-                          .style("stroke-width", 0)
-                        vis.tooltip.style("opacity", 0)
-                     })
-                     .on("mousemove", function(e, d)   {
-                        const [x, y] = d3.pointer(e);
+                    // Border rect
+                    g.append("rect")
+                        .attr("width", bw)
+                        .attr("height", bh)
+                        .style("fill", "none")
+                        .style("stroke", "#555")
+                        .style("stroke-width", 1);
+
+                    // Population triangle
+                    g.append("path")
+                        .attr("class", "pop-tri")
+                        .attr("d", `M0,${bh} L${bw},${bh} L0,0 Z`)
+                        .style("fill", d => vis.popColorScale(d.popChange));
+
+                    // Rent triangle
+                    g.append("path")
+                        .attr("class", "rent-tri")
+                        .attr("d", `M${bw},0 L${bw},${bh} L0,0 Z`)
+                        .style("fill", d => vis.avgColorScale(d.avgChange));
+
+                    // Diagonal line (hidden initially)
+                    g.append("line")
+                        .attr("class", "diag")
+                        .attr("x1", 0)
+                        .attr("y1", 0)
+                        .attr("x2", bw)
+                        .attr("y2", bh)
+                        .attr("stroke", "black")
+                        .attr("stroke-width", 1.5)
+                        .style("opacity", 0);
+
+                    // Hover events
+                    g.on("mouseover", function(event, d) {
+                        d3.select(this).select("rect")
+                            .style("stroke", "black")
+                            .style("stroke-width", 2);
+
+                        d3.select(this).select(".diag")
+                            .style("opacity", 1);
+
                         vis.tooltip
-                            .style("left", (e.pageX + 10) + "px")
-                            .style("top", (e.pageY + 10) + "px")
+                            .style("opacity", 1)
                             .html(`
-                            <strong>${d.category}</strong><br/>
-                            Year: ${d.year}<br/>
-                            Change in Rent Since: ${d.avgChange.toFixed(2)}%<br/>
-                            Change in Population: ${d.popChange.toFixed(2)}%
+                                <strong>${d.category}</strong><br/>
+                                Year: ${d.year}<br/>
+                                Change in Rent: ${d.avgChange.toFixed(2)}%<br/>
+                                Change in Population: ${d.popChange.toFixed(2)}%
                             `);
-                     })
-                     .transition(750)
-                     .attr("width", vis.x.bandwidth())
-                     .attr("height", vis.y.bandwidth())
-                     .attr("x", d => vis.x(d.year))
-                     .attr("y", d => vis.y(d.category))
-                     .style("fill", d => `url(#grad-${d.year}-${d.category.replace(/[^a-zA-Z0-9_-]/g, "_")})`)
-        boxes.exit().remove();  
+                    })
+                    .on("mousemove", function(event) {
+                        vis.tooltip
+                            .style("left", (event.pageX + 10) + "px")
+                            .style("top", (event.pageY + 10) + "px");
+                    })
+                    .on("mouseleave", function() {
+                        d3.select(this).select("rect")
+                            .style("stroke", "#555")
+                            .style("stroke-width", 1);
 
-		// Call axis functions with the new domain
-		vis.svg.select(".x-axis").call(vis.xAxis);
+                        d3.select(this).select(".diag")
+                            .style("opacity", 0);
+
+                        vis.tooltip.style("opacity", 0);
+                    });
+
+                    return g;
+                },
+                update => {
+                    // Update positions and dimensions
+                    const bw = vis.x.bandwidth();
+                    const bh = vis.y.bandwidth();
+
+                    update
+                        .attr("transform", d => `translate(${vis.x(d.year)}, ${vis.y(d.category)})`);
+
+                    update.select("rect")
+                        .attr("width", bw)
+                        .attr("height", bh);
+
+                    update.select(".pop-tri")
+                        .attr("d", `M0,${bh} L${bw},${bh} L0,0 Z`)
+                        .style("fill", d => vis.popColorScale(d.popChange));
+
+                    update.select(".rent-tri")
+                        .attr("d", `M${bw},0 L${bw},${bh} L0,0 Z`)
+                        .style("fill", d => vis.avgColorScale(d.avgChange));
+
+                    update.select(".diag")
+                        .attr("x2", bw)
+                        .attr("y2", bh);
+
+                    return update;
+                },
+                exit => exit.remove()
+            );
+
+        // 3️⃣ Update axes
+        vis.svg.select(".x-axis").call(vis.xAxis);
         vis.svg.select(".y-axis").call(vis.yAxis);
+
+
 	}
 }
