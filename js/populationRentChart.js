@@ -148,20 +148,21 @@ constructor(parentElement, areaSearch, filterParent, selectionArea, legendArea, 
         const parent = d3.select("#vis5-city-filter");
 
         // Create a dropdown container (shown when input is focused)
+        const inputNode = vis.areaSearch.node();
         vis.dropdown = parent.append("div")
-                             .attr("id", "vis5-area-dropdown")
-                             .style("position", "absolute")
-                             .style("top", "65px")
-                             .style("left", "10px")
-                             .style("width", "calc(100% - 20px)")
-                             .style("background", "white")
-                             .style("border", "1px solid #ccc")
-                             .style("border-radius", "4px")
-                             .style("max-height", "250px")
-                             .style("overflow-y", "auto")
-                             .style("display", "none")
-                             .style("z-index", "1000")
-                             .style("box-shadow", "0 2px 6px rgba(0,0,0,0.15)");
+                                .attr("id", "vis5-area-dropdown")
+                                .style("position", "absolute")
+                                .style("left", inputNode.offsetLeft + "px")
+                                .style("top", (inputNode.offsetTop + inputNode.offsetHeight) + "px")
+                                .style("width", inputNode.offsetWidth + "px")
+                                .style("background", "white")
+                                .style("border", "1px solid #ccc")
+                                .style("border-radius", "4px")
+                                .style("max-height", "250px")
+                                .style("overflow-y", "auto")
+                                .style("display", "none")
+                                .style("z-index", "1000")
+                                .style("box-shadow", "0 2px 6px rgba(0,0,0,0.15)");
 
         vis.createAreaFilters();
 
@@ -238,7 +239,7 @@ constructor(parentElement, areaSearch, filterParent, selectionArea, legendArea, 
         })
 
         accumulatedData = accumulatedData.sort(function(a, b) {
-            return a.category.localeCompare(b.category)
+            return b.category.localeCompare(a.category)
         })
 
         let categories = [];
@@ -340,6 +341,7 @@ constructor(parentElement, areaSearch, filterParent, selectionArea, legendArea, 
         enter => {
             let g = enter.append("g")
                 .attr("class", "toggle-group")
+                .style("cursor", "pointer")
                 .on("mouseover", function (event, d) {
                     d3.select(this).select("rect").style("fill", "#ff8686ff");
                 })
@@ -364,7 +366,7 @@ constructor(parentElement, areaSearch, filterParent, selectionArea, legendArea, 
                 .attr("y", d => vis.toggleY(Math.floor(d.i / NUM_COLS)) + boxHeight / 1.6)
                 .attr("text-anchor", "middle")
                 .attr("dominant-baseline", "middle")
-                .attr("font-size", Math.min(boxHeight * 0.45, boxWidth * 0.2)) // adaptive font size
+                .attr("font-size", Math.min(boxHeight * 0.45, boxWidth * 0.25)) // adaptive font size
                 .text(d => d.loc);
 
             return g;
@@ -527,7 +529,7 @@ constructor(parentElement, areaSearch, filterParent, selectionArea, legendArea, 
                 .append("stop")
                 .attr("offset", (d, i) => `${i / (colors.length - 1) * 100}%`)
                 .attr("stop-color", d => d);
-        }
+    }
 
     createLegend()  {
        let vis = this;
@@ -569,7 +571,6 @@ constructor(parentElement, areaSearch, filterParent, selectionArea, legendArea, 
 	updateVis(){
         let vis = this;
 
-        // 1️⃣ Update scales
         vis.x.domain([...new Set(vis.displayData.map(d => d.year))]);
         vis.y.domain(vis.displayCategories); // includes new rows
 
@@ -588,7 +589,6 @@ constructor(parentElement, areaSearch, filterParent, selectionArea, legendArea, 
         vis.createToggleDivs();
         vis.createLegend();
 
-        // 2️⃣ Bind data with join
         vis.svg.selectAll(".box-group")
             .data(vis.displayData, d => `${d.year}-${d.category}`)
             .join(
@@ -697,10 +697,8 @@ constructor(parentElement, areaSearch, filterParent, selectionArea, legendArea, 
                 exit => exit.remove()
             );
 
-        // 3️⃣ Update axes
         vis.svg.select(".x-axis").call(vis.xAxis);
         vis.svg.select(".y-axis").call(vis.yAxis);
-
 
 	}
 }
