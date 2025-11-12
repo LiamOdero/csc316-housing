@@ -243,7 +243,6 @@ constructor(parentElement, areaSearch, filterParent, selectionArea, legendArea, 
         })
 
         let categories = [];
-        console.log(accumulatedData)
         // final average calculation
         accumulatedData.forEach((e, i) =>   {
             e.avg /= e.cityNum
@@ -366,7 +365,7 @@ constructor(parentElement, areaSearch, filterParent, selectionArea, legendArea, 
                 .attr("y", d => vis.toggleY(Math.floor(d.i / NUM_COLS)) + boxHeight / 1.6)
                 .attr("text-anchor", "middle")
                 .attr("dominant-baseline", "middle")
-                .attr("font-size", Math.min(boxHeight * 0.45, boxWidth * 0.25)) // adaptive font size
+                .attr("font-size", boxWidth * 0.075) // adaptive font size
                 .text(d => d.loc);
 
             return g;
