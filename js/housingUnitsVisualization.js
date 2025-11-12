@@ -7,19 +7,29 @@ function initCityMap() {
 
     mapContainer.innerHTML = ''; // clear any existing content
 
-    // State for current selected year and city
+    // State for current selected year, city, and housing type filter
     let currentYear = 2024; // default to most recent year
     let selectedCity = null;
+    let selectedHousingType = 'All'; // 'All' or specific housing type
     
     // Placeholder functions that will be replaced after data loads
     let updateCityColors = function() {
-        console.warn('updateCityColors called before data loaded');
+        // no-op until data loads
+    };
+    
+    let recalculateRentData = function() {
+        // no-op until data loads
     };
     
     let getCityColor = function(cityName) {
         return '#999'; // gray until data loads
     };
     let rentalData = {}; // will store rental data by city
+    
+    // Shared legend/color state (must be outside Promise.all scope)
+    let globalMinRent = Infinity;
+    let globalMaxRent = -Infinity;
+    let rentColorScale; // initialized in recalculateRentData()
     
     // margin, width, and height might need to be adjusted
     const mapMargin = { top: 50, bottom: 50, right: 20, left: 20 };
@@ -58,7 +68,7 @@ function initCityMap() {
         .style('white-space', 'nowrap')
         .style('transition', 'opacity 0.2s');
 
-    // Add timeline button container at bottom-right
+    // Add timeline and filter container at bottom-right
     const timelineContainer = d3.select(mapContainer)
         .append('div')
         .attr('class', 'timeline-container')
@@ -71,13 +81,77 @@ function initCityMap() {
         .style('box-shadow', '0 2px 8px rgba(0,0,0,0.15)')
         .style('z-index', '1000')
         .style('display', 'flex')
+        .style('gap', '15px')
+        .style('align-items', 'center');
+
+    // Housing type filter section (LEFT side) - Dropdown
+    const housingFilterSection = timelineContainer.append('div')
+        .style('display', 'flex')
+        .style('gap', '8px')
+        .style('align-items', 'center')
+        .style('padding-right', '15px')
+        .style('border-right', '2px solid #e2e8f0');
+
+    housingFilterSection.append('span')
+        .style('font-size', '12px')
+        .style('font-weight', '600')
+        .style('color', '#2d3748')
+        .text('Housing Type:');
+
+    const filterHousingTypes = ['All', 'Bachelor units', 'One bedroom units', 'Two bedroom units', 'Three bedroom units'];
+    const filterHousingTypeLabels = {
+        'All': 'All Types (Average)',
+        'Bachelor units': 'Bachelor',
+        'One bedroom units': '1 Bedroom',
+        'Two bedroom units': '2 Bedrooms',
+        'Three bedroom units': '3 Bedrooms'
+    };
+
+    // Create select dropdown
+    const housingSelect = housingFilterSection.append('select')
+        .attr('class', 'housing-filter-select')
+        .style('padding', '6px 12px')
+        .style('border', '2px solid #cbd5e0')
+        .style('border-radius', '6px')
+        .style('background', 'white')
+        .style('color', '#2d3748')
+        .style('font-size', '13px')
+        .style('font-weight', '600')
+        .style('cursor', 'pointer')
+        .style('outline', 'none')
+        .style('transition', 'all 0.2s')
+        .on('change', function() {
+            selectedHousingType = this.value;
+            
+            // Recalculate colors and update map
+            recalculateRentData();
+            updateCityColors();
+        })
+        .on('focus', function() {
+            d3.select(this).style('border-color', '#4a5568');
+        })
+        .on('blur', function() {
+            d3.select(this).style('border-color', '#cbd5e0');
+        });
+
+    // Add options to select
+    housingSelect.selectAll('option')
+        .data(filterHousingTypes)
+        .join('option')
+        .attr('value', d => d)
+        .property('selected', d => d === selectedHousingType)
+        .text(d => filterHousingTypeLabels[d]);
+
+    // Year filter section (RIGHT side)
+    const yearFilterSection = timelineContainer.append('div')
+        .style('display', 'flex')
         .style('gap', '8px')
         .style('align-items', 'center');
 
     const years = [2020, 2021, 2022, 2023, 2024];
     
     // Add year label
-    timelineContainer.append('span')
+    yearFilterSection.append('span')
         .style('font-size', '14px')
         .style('font-weight', '600')
         .style('color', '#2d3748')
@@ -85,7 +159,7 @@ function initCityMap() {
         .text('Year:');
     
     // Create year buttons
-    const yearButtons = timelineContainer.selectAll('.year-btn')
+    const yearButtons = yearFilterSection.selectAll('.year-btn')
         .data(years)
         .join('button')
         .attr('class', 'year-btn')
@@ -267,6 +341,25 @@ function initCityMap() {
     const chartG = chartSvg.append('g')
         .attr('transform', `translate(${chartMargin.left},${chartMargin.top})`);
     
+    // Create tooltip for chart data points
+    const chartTooltip = d3.select('body')
+        .append('div')
+        .attr('class', 'chart-tooltip')
+        .style('position', 'fixed')
+        .style('pointer-events', 'none')
+        .style('background', 'rgba(0, 0, 0, 0.85)')
+        .style('color', '#fff')
+        .style('border-radius', '6px')
+        .style('padding', '8px 12px')
+        .style('font-size', '12px')
+        .style('font-weight', '600')
+        .style('box-shadow', '0 2px 8px rgba(0,0,0,0.2)')
+        .style('display', 'none')
+        .style('opacity', 0)
+        .style('z-index', '10001')
+        .style('white-space', 'nowrap')
+        .style('transition', 'opacity 0.2s');
+    
     // coordinates to draw canada
     const PROVINCES_URL = 'https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/canada.geojson';
 
@@ -372,8 +465,37 @@ function initCityMap() {
                     .attr('stroke', '#fff')
                     .attr('stroke-width', 1.5)
                     .style('cursor', 'pointer')
-                    .append('title')
-                    .text((d, i) => d !== undefined ? `${years[i]}: $${d}` : '');
+                    .on('mouseenter', function(event, d, i) {
+                        if (d !== undefined) {
+                            const yearIndex = typeData.indexOf(d);
+                            d3.select(this)
+                                .transition()
+                                .duration(100)
+                                .attr('r', 6);
+                            
+                            chartTooltip
+                                .html(`<strong>${type.replace(' units', '')}</strong><br/>${years[yearIndex]}: <strong>$${Math.round(d)}</strong>`)
+                                .style('display', 'block')
+                                .style('opacity', 1)
+                                .style('left', (event.clientX + 10) + 'px')
+                                .style('top', (event.clientY - 10) + 'px');
+                        }
+                    })
+                    .on('mousemove', function(event) {
+                        chartTooltip
+                            .style('left', (event.clientX + 10) + 'px')
+                            .style('top', (event.clientY - 10) + 'px');
+                    })
+                    .on('mouseleave', function() {
+                        d3.select(this)
+                            .transition()
+                            .duration(100)
+                            .attr('r', 4);
+                        
+                        chartTooltip
+                            .style('display', 'none')
+                            .style('opacity', 0);
+                    });
             }
         });
         
@@ -413,37 +535,157 @@ function initCityMap() {
         
         // Calculate average rent for each city-year and find global min/max for consistent color scale
         const cityAverageRents = {}; // { cityName: { year: avgRent } }
-        let globalMinRent = Infinity;
-        let globalMaxRent = -Infinity;
         
-        Object.keys(rentalData).forEach(cityName => {
-            cityAverageRents[cityName] = {};
-            Object.keys(rentalData[cityName]).forEach(year => {
-                const yearData = rentalData[cityName][year];
-                const rentValues = Object.values(yearData).filter(v => v > 0);
-                if (rentValues.length > 0) {
-                    const avgRent = rentValues.reduce((a, b) => a + b, 0) / rentValues.length;
-                    cityAverageRents[cityName][year] = avgRent;
-                    globalMinRent = Math.min(globalMinRent, avgRent);
-                    globalMaxRent = Math.max(globalMaxRent, avgRent);
-                }
-            });
-        });
+        const legendContainer = d3.select(mapContainer)
+            .append('div')
+            .attr('class', 'rent-legend')
+            .attr('id', 'rent-legend')
+            .style('position', 'absolute')
+            .style('bottom', '20px')
+            .style('left', '20px')
+            .style('background', 'rgba(255, 255, 255, 0.95)')
+            .style('padding', '15px')
+            .style('border-radius', '8px')
+            .style('box-shadow', '0 2px 8px rgba(0,0,0,0.15)')
+            .style('z-index', '1000')
+            .style('font-size', '12px')
+            .style('width', '280px');
         
-        // Create single-color continuous scale (light green to dark green)
-        // Low rent = light green, high rent = dark green
-        const rentColorScale = d3.scaleSequential()
-            .domain([globalMinRent, globalMaxRent])
-            .interpolator(d3.interpolateGreens)
-            .unknown('#999');
+        legendContainer.append('div')
+            .attr('class', 'legend-title')
+            .style('font-weight', '600')
+            .style('margin-bottom', '8px')
+            .style('color', '#2d3748')
+            .style('text-align', 'center')
+            .text('Average Rent/Month - All Types');
         
-        // Update the function to get color for a city based on current year's average rent
-        getCityColor = function(cityName) {
-            if (!cityAverageRents[cityName] || !cityAverageRents[cityName][currentYear]) {
-                return '#999'; // gray for no data
+        const legendSvg = legendContainer.append('svg')
+            .attr('width', 250)
+            .attr('height', 50)
+            .style('display', 'block')
+            .style('margin', '0 auto');
+        
+        // Create gradient for legend
+        const defs = legendSvg.append('defs');
+        defs.append('linearGradient')
+            .attr('id', 'rent-gradient-housing')
+            .attr('x1', '0%')
+            .attr('x2', '100%');
+        
+        // Draw gradient rectangle
+        legendSvg.append('rect')
+            .attr('x', 0)
+            .attr('y', 5)
+            .attr('width', 250)
+            .attr('height', 20)
+            .style('fill', 'url(#rent-gradient-housing)')
+            .style('stroke', '#ccc')
+            .style('stroke-width', 1);
+        
+        // Add labels (text will be updated by updateLegend)
+        legendSvg.append('text')
+            .attr('class', 'legend-min-label')
+            .attr('x', 0)
+            .attr('y', 38)
+            .style('font-size', '11px')
+            .style('fill', '#666');
+        
+        legendSvg.append('text')
+            .attr('class', 'legend-max-label')
+            .attr('x', 250)
+            .attr('y', 38)
+            .attr('text-anchor', 'end')
+            .style('font-size', '11px')
+            .style('fill', '#666');
+        
+    // Function to update the legend display
+    function updateLegend() {
+            // Update legend title with housing type
+            const filterHousingTypeLabels = {
+                'All': 'All Types (Average)',
+                'Bachelor units': 'Bachelor',
+                'One bedroom units': '1 Bedroom',
+                'Two bedroom units': '2 Bedrooms',
+                'Three bedroom units': '3 Bedrooms'
+            };
+            const housingLabel = filterHousingTypeLabels[selectedHousingType] || 'All Types';
+            const titleElement = d3.select('#rent-legend .legend-title');
+            titleElement.text(`Average Rent/Month - ${housingLabel}`);
+            
+            // Update legend labels with new min/max
+            const minLabel = d3.select('#rent-legend .legend-min-label');
+            const maxLabel = d3.select('#rent-legend .legend-max-label');
+            minLabel.text(`$${Math.round(globalMinRent)}`);
+            maxLabel.text(`$${Math.round(globalMaxRent)}`);
+            
+            // Update gradient stops
+            const linearGradient = d3.select('#rent-gradient-housing');
+            linearGradient.selectAll('stop').remove();
+            
+            const numStops = 10;
+            for (let i = 0; i <= numStops; i++) {
+                const offset = (i / numStops) * 100;
+                const value = globalMinRent + (globalMaxRent - globalMinRent) * (i / numStops);
+                linearGradient.append('stop')
+                    .attr('offset', `${offset}%`)
+                    .attr('stop-color', rentColorScale(value));
             }
-            return rentColorScale(cityAverageRents[cityName][currentYear]);
+        }        // Function to recalculate rent data based on current housing type filter
+        recalculateRentData = function() {
+            // Clear previous calculations
+            Object.keys(rentalData).forEach(cityName => {
+                cityAverageRents[cityName] = {};
+            });
+            globalMinRent = Infinity;
+            globalMaxRent = -Infinity;
+            
+            // Recalculate based on selected housing type
+            Object.keys(rentalData).forEach(cityName => {
+                Object.keys(rentalData[cityName]).forEach(year => {
+                    const yearData = rentalData[cityName][year];
+                    let rentValues;
+                    
+                    if (selectedHousingType === 'All') {
+                        // Average across all housing types
+                        rentValues = Object.values(yearData).filter(v => v > 0);
+                    } else {
+                        // Only use selected housing type
+                        if (yearData[selectedHousingType] && yearData[selectedHousingType] > 0) {
+                            rentValues = [yearData[selectedHousingType]];
+                        } else {
+                            rentValues = [];
+                        }
+                    }
+                    
+                    if (rentValues.length > 0) {
+                        const avgRent = rentValues.reduce((a, b) => a + b, 0) / rentValues.length;
+                        cityAverageRents[cityName][year] = avgRent;
+                        globalMinRent = Math.min(globalMinRent, avgRent);
+                        globalMaxRent = Math.max(globalMaxRent, avgRent);
+                    }
+                });
+            });
+            
+            // Recreate color scale with new min/max
+            rentColorScale = d3.scaleSequential()
+                .domain([globalMinRent, globalMaxRent])
+                .interpolator(d3.interpolateGreens)
+                .unknown('#999');
+            
+            // Update getCityColor to use new scale
+            getCityColor = function(cityName) {
+                if (!cityAverageRents[cityName] || !cityAverageRents[cityName][currentYear]) {
+                    return '#999'; // gray for no data
+                }
+                return rentColorScale(cityAverageRents[cityName][currentYear]);
+            };
+            
+            // Refresh legend with the new scale and ranges
+            updateLegend();
         };
+        
+        // Initial calculation with 'All' housing types
+        recalculateRentData();
         
         // Update the function to handle city color changes when year changes
         updateCityColors = function() {
@@ -481,71 +723,7 @@ function initCityMap() {
             });
         };
         
-        const legendContainer = d3.select(mapContainer)
-            .append('div')
-            .attr('class', 'rent-legend')
-            .style('position', 'absolute')
-            .style('bottom', '20px')
-            .style('left', '20px')
-            .style('background', 'rgba(255, 255, 255, 0.95)')
-            .style('padding', '15px')
-            .style('border-radius', '8px')
-            .style('box-shadow', '0 2px 8px rgba(0,0,0,0.15)')
-            .style('z-index', '1000')
-            .style('font-size', '12px');
-        
-        legendContainer.append('div')
-            .style('font-weight', '600')
-            .style('margin-bottom', '8px')
-            .style('color', '#2d3748')
-            .text('Average Rent/Month');
-        
-        const legendSvg = legendContainer.append('svg')
-            .attr('width', 200)
-            .attr('height', 50);
-        
-        // Create gradient for legend
-        const defs = legendSvg.append('defs');
-        const linearGradient = defs.append('linearGradient')
-            .attr('id', 'rent-gradient')
-            .attr('x1', '0%')
-            .attr('x2', '100%');
-        
-        // Add color stops
-        const numStops = 10;
-        for (let i = 0; i <= numStops; i++) {
-            const offset = (i / numStops) * 100;
-            const value = globalMinRent + (globalMaxRent - globalMinRent) * (i / numStops);
-            linearGradient.append('stop')
-                .attr('offset', `${offset}%`)
-                .attr('stop-color', rentColorScale(value));
-        }
-        
-        // Draw gradient rectangle
-        legendSvg.append('rect')
-            .attr('x', 0)
-            .attr('y', 5)
-            .attr('width', 200)
-            .attr('height', 20)
-            .style('fill', 'url(#rent-gradient)')
-            .style('stroke', '#ccc')
-            .style('stroke-width', 1);
-        
-        // Add labels
-        legendSvg.append('text')
-            .attr('x', 0)
-            .attr('y', 38)
-            .style('font-size', '11px')
-            .style('fill', '#666')
-            .text(`$${Math.round(globalMinRent)}`);
-        
-        legendSvg.append('text')
-            .attr('x', 200)
-            .attr('y', 38)
-            .attr('text-anchor', 'end')
-            .style('font-size', '11px')
-            .style('fill', '#666')
-            .text(`$${Math.round(globalMaxRent)}`);
+        // Legend was moved earlier in the code - removed duplicate here
 
         const projection = d3.geoMercator().fitSize([innerWidth, innerHeight], provincesGeo); // converts longtitude, latitude to x,y 
         const path = d3.geoPath().projection(projection); // path creator on the svg when given a geojson
@@ -567,19 +745,71 @@ function initCityMap() {
 
         const cityTransition = 300; // ms for city fade transitions
 
-        // Draw provinces (non-interactive, just for map outline)
+        // Draw provinces (now interactive - click to zoom)
         const provinceElements = gProvinces.selectAll('path.province')
             .data(provincesGeo.features)
             .join('path')
             .attr('class', 'province')
             .attr('d', path)
-            .attr('fill', '#f8f9fa')
-            .attr('stroke', '#333')
-            .attr('stroke-width', 0.5)
+            .attr('fill', '#d3d3d3')
+            .attr('stroke', '#ffffff')
+            .style('stroke-width', 0.8)
             .attr('stroke-linejoin', 'round')
             .attr('stroke-linecap', 'round')
             .style('shape-rendering', 'geometricPrecision')
-            .style('pointer-events', 'none'); // provinces are not clickable
+            .style('pointer-events', 'all')
+            .style('cursor', 'pointer')
+            .on('click', function(event, d) {
+                event.stopPropagation();
+                
+                // Calculate bounds of the clicked province
+                const bounds = path.bounds(d);
+                const dx = bounds[1][0] - bounds[0][0];
+                const dy = bounds[1][1] - bounds[0][1];
+                const x = (bounds[0][0] + bounds[1][0]) / 2;
+                const y = (bounds[0][1] + bounds[1][1]) / 2;
+                
+                // Calculate scale and translate to fit province
+                const scale = Math.min(8, 0.9 / Math.max(dx / innerWidth, dy / innerHeight));
+                const translate = [innerWidth / 2 - scale * x, innerHeight / 2 - scale * y];
+                
+                // Animate zoom to province
+                svg.transition()
+                    .duration(750)
+                    .call(
+                        zoom.transform,
+                        d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale)
+                    );
+            })
+            .on('mouseenter', function(event, d) {
+                d3.select(this)
+                    .transition()
+                    .duration(150)
+                    .attr('fill', '#c0c0c0');
+                
+                // Show province name in tooltip
+                tooltip
+                    .text(d.properties.name || 'Unknown Province')
+                    .style('display', 'block')
+                    .style('opacity', 1)
+                    .style('left', (event.clientX + 10) + 'px')
+                    .style('top', (event.clientY + 10) + 'px');
+            })
+            .on('mousemove', function(event, d) {
+                // Update tooltip position while hovering over province
+                tooltip
+                    .style('left', (event.clientX + 10) + 'px')
+                    .style('top', (event.clientY + 10) + 'px');
+            })
+            .on('mouseleave', function(event, d) {
+                d3.select(this)
+                    .transition()
+                    .duration(150)
+                    .attr('fill', '#d3d3d3');
+                
+                // Hide tooltip
+                tooltip.style('display', 'none').style('opacity', 0).text('');
+            });
 
         
         // Create city circles ONLY for cities that have valid rental data (non-zero prices)
@@ -632,22 +862,64 @@ function initCityMap() {
                 }
             })
             .on('mouseenter', function(event, d) {
-                // Show only city name in tooltip
+                const circle = d3.select(this);
+                const originalColor = circle.attr('fill');
+                
+                // Store original color and change to hover color
+                circle.attr('data-original-color', originalColor);
+                circle.transition()
+                    .duration(150)
+                    .attr('fill', '#ff6b35')
+                    .attr('r', d => {
+                        const currentTransform = d3.zoomTransform(svg.node());
+                        const baseRadius = 4;
+                        const minVisualRadius = 0.3;
+                        const scaledRadius = Math.max(minVisualRadius, baseRadius / currentTransform.k);
+                        return scaledRadius * 1.5; // Make it 50% larger on hover
+                    });
+                
+                // Show only city name in tooltip (use clientX/clientY for fixed positioning)
                 tooltip
                     .text(d.city)
                     .style('display', 'block')
                     .style('opacity', 1)
-                    .style('left', (event.pageX + 10) + 'px')
-                    .style('top', (event.pageY + 10) + 'px');
+                    .style('left', (event.clientX + 10) + 'px')
+                    .style('top', (event.clientY + 10) + 'px');
             })
             .on('mousemove', function(event, d) {
-                // update tooltip position while hovering
+                // update tooltip position while hovering (use clientX/clientY for fixed positioning)
                 tooltip
-                    .style('left', (event.pageX + 10) + 'px')
-                    .style('top', (event.pageY + 10) + 'px');
+                    .style('left', (event.clientX + 10) + 'px')
+                    .style('top', (event.clientY + 10) + 'px');
             })
             .on('mouseleave', function(event, d) {
-                // no stroke to reset on leave
+                const circle = d3.select(this);
+                const originalColor = circle.attr('data-original-color');
+                
+                // Only restore color and size if this city is NOT currently selected
+                if (!selectedCity || selectedCity.city !== d.city) {
+                    circle.transition()
+                        .duration(150)
+                        .attr('fill', originalColor)
+                        .attr('r', d => {
+                            const currentTransform = d3.zoomTransform(svg.node());
+                            const baseRadius = 4;
+                            const minVisualRadius = 0.3;
+                            return Math.max(minVisualRadius, baseRadius / currentTransform.k);
+                        });
+                } else {
+                    // Keep selected color but restore size
+                    circle.transition()
+                        .duration(150)
+                        .attr('r', d => {
+                            const currentTransform = d3.zoomTransform(svg.node());
+                            const baseRadius = 4;
+                            const minVisualRadius = 0.3;
+                            return Math.max(minVisualRadius, baseRadius / currentTransform.k);
+                        });
+                }
+                
+                // Hide tooltip
                 tooltip.style('display', 'none').style('opacity', 0).text('');
             });
 
@@ -664,9 +936,23 @@ function initCityMap() {
 
                 // Update all city circles (re-select to ensure we get current circles)
                 gCities.selectAll('circle.city').attr('r', scaledRadius);
+                
+                // Scale province stroke-width with k^2 so it gets thinner faster when zooming in
+                const baseStrokeWidth = 1.2; // base at k=1
+                const minStrokeWidth = 0.05; // Minimum border thickness when fully zoomed in
+                const scaledStrokeWidth = Math.max(minStrokeWidth, baseStrokeWidth / (event.transform.k * event.transform.k));
+                gProvinces.selectAll('path.province').style('stroke-width', scaledStrokeWidth);
             });
 
         svg.call(zoom);
+        
+        // Click on empty space to reset zoom
+        svg.on('click', function(event) {
+            // Only reset if clicking directly on SVG (not on provinces or cities)
+            if (event.target === this || event.target.tagName === 'svg') {
+                svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity);
+            }
+        });
 
         zoomInBtn.on('click', function() {
             svg.transition().duration(300).call(zoom.scaleBy, 1.3);
@@ -681,7 +967,6 @@ function initCityMap() {
         });
 
     }).catch(function(err) {
-        // eslint-disable-next-line no-console
         console.error('Failed to load map data:', err);
     });
 }
