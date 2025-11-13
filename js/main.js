@@ -4,6 +4,9 @@
 let currTabNum = 0
 let popChart;
 let cleanedPopData;
+let incomeRentData;
+let incomeVisData;
+
 loadData();
 
 function loadData() {
@@ -15,6 +18,17 @@ function loadData() {
         d3.json('data/vacancy_data.json').then(data => {
             createBuildingVisualization(data);
             initControl()
+
+            Promise.all([
+                d3.csv("data/jeff/rent-prices.csv").then(rows => rows.map(row => mapRowBySchema(row, RENT_DATA_MAP))),
+                d3.csv("data/jeff/u65incomedata.csv").then(rows => rows.filter(row => ['A', 'B', 'C', 'D', 'E'].includes(row.STATUS))
+                    .map(row => mapRowBySchema(row, INCOME_DATA_MAP)))
+            ]).then(([rawRentData, rawIncomeData]) => {
+                incomeRentData = rawRentData;
+                incomeVisData = rawIncomeData;
+            }).catch(error => {
+                console.error("Failed to load income/rent datasets", error);
+            });
         }).catch(error => {
             console.error('Error loading data:', error);
             document.getElementById('buildings-container').innerHTML =
@@ -95,16 +109,18 @@ function changePage(page)   {
     let newVis = d3.select('[data-content="vis' + page + '"]');
     newVis.attr("class", "content active")
 
-
-    if (currTabNum == 5)   {
-        console.log("test")
-        popChart.destructVis()
+    if (currTabNum == 4)    {
+        destructIncomeVis();
+    }   else if (currTabNum == 5)   {
+        popChart.destructVis();
     }
 
     currTabNum = page;
-    if (page == 5)  {
+    if (page == 4)  {
+        initIncomeVis(incomeRentData, incomeVisData);
+    }   else if (page == 5)  {
         popChart.initVis();
-    }
+    }   
 }
 
 // Initialize the housing units map visualization

@@ -179,11 +179,9 @@ function createSelection(data, defaultText, container, options = {}) {
     };
 }
 
-Promise.all([
-    d3.csv("data/jeff/rent-prices.csv").then(rows => rows.map(row => mapRowBySchema(row, RENT_DATA_MAP))),
-    d3.csv("data/jeff/u65incomedata.csv").then(rows => rows.filter(row => ['A', 'B', 'C', 'D', 'E'].includes(row.STATUS))
-        .map(row => mapRowBySchema(row, INCOME_DATA_MAP)))
-]).then(([rentData, incomeData]) => {
+let vis, caption, rentInfo, slider, rentData, incomeData;
+
+function initIncomeVis(rentData, incomeData)  {
     rentData.forEach(d => {
         d.type = normalizeRentType(d.type);
         d.cityLabel = getCityLabel(d.city);
@@ -202,14 +200,14 @@ Promise.all([
     const minYear = yearValues[0] ?? 2000;
     const maxYear = yearValues[yearValues.length - 1] ?? 2023;
 
-    const vis = new IncomeRentComparison({
+    vis = new IncomeRentComparison({
         parentElement: "#vis4-container",
         rentData,
         incomeData,
         initialYear: maxYear
     });
 
-    const caption = new Caption({
+    caption = new Caption({
         parentElement: "#vis4-caption",
         text: "",
         rentData,
@@ -221,14 +219,14 @@ Promise.all([
     vis.init();
     caption.init();
 
-    const rentInfo = new RentInfo({
+    rentInfo = new RentInfo({
         parentElement: "#vis4-rentinfo"
     });
 
     rentInfo.init();
     vis.setRentInfo(rentInfo);
 
-    const slider = new Slider({
+    slider = new Slider({
         parentElement: "#vis4-slider",
         min: minYear,
         max: maxYear,
@@ -237,9 +235,14 @@ Promise.all([
     });
 
     slider.init();
-}).catch(error => {
-    console.error("Failed to load income/rent datasets", error);
-});
+}
+
+function destructIncomeVis()    {
+    d3.select("#vis4-container",).selectAll("*").remove();
+    d3.select("#vis4-caption").selectAll("*").remove();
+    d3.select("#vis4-rentinfo").selectAll("*").remove();
+    d3.select("#vis4-slider").selectAll("*").remove();
+}
 
 class IncomeRentComparison {
     constructor(config) {
@@ -288,7 +291,7 @@ class IncomeRentComparison {
         this.baseBlockWidth = 180;
         this.focusCardWidth = 130;
         this.focusCardHalfWidth = this.focusCardWidth / 2;
-    this.focusCardMinWidth = 40;
+        this.focusCardMinWidth = 40;
         this.rentAggregates = {};
         this.incomeAggregates = {};
         const yearSet = new Set([
@@ -349,7 +352,7 @@ class IncomeRentComparison {
         vis.yAxisGroup.append('text')
             .attr('class', 'axis-label')
             .attr('x', -vis.margin.left + 12)
-            .attr('y', -30)
+            .attr('y', -50)
             .attr('text-anchor', 'start')
             .attr('fill', '#111827')
             .attr('font-size', 12)
@@ -684,7 +687,7 @@ class IncomeRentComparison {
         this.filteredRent = filteredRent;
         this.filteredIncome = filteredIncome;
 
-    const baseBlockWidth = this.baseBlockWidth;
+    const baseBlockWidth = this.baseBlockWidth / 4 * 3;
         const blockHeight = 80;
         const gap = 20;
         const startX = 10;
@@ -1207,7 +1210,7 @@ class IncomeRentComparison {
             .attr('text-anchor', 'middle')
             .attr('fill', '#1f2937')
             .attr('font-weight', '600')
-            .attr('font-size', 14);
+            .attr('font-size', 12);
 
         cityGroupsEnter.append('text')
             .attr('class', 'city-card-status')
