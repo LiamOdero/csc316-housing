@@ -2,25 +2,27 @@
 // Start application by loading the data
 
 let currTabNum = 0
+let popChart;
+let cleanedPopData;
 loadData();
-initControl()
 
 function loadData() {
     d3.csv("data/avg_rent_by_pop.csv"). then(data=>{
-        cleaned_data = preparePopRentData(data);
-        let popChart = new PopulationRentChart("vis5", "vis5-area-search", "vis5-area-list", "vis5-selections", "vis5-legend", cleaned_data)
+        cleanedPopData = preparePopRentData(data);
+        popChart = new PopulationRentChart("vis5-area", "vis5-area-search", "vis5-area-list", "vis5-selections", "vis5-legend", cleanedPopData)
 
-        popChart.initVis();
+        // Load and create the building visualization
+        d3.json('data/vacancy_data.json').then(data => {
+            createBuildingVisualization(data);
+            initControl()
+        }).catch(error => {
+            console.error('Error loading data:', error);
+            document.getElementById('buildings-container').innerHTML =
+                '<p style="color: #ff6b6b; text-align: center;">Error loading visualization data.</p>';
+        });
     })
 
-    // Load and create the building visualization
-    d3.json('data/vacancy_data.json').then(data => {
-        createBuildingVisualization(data);
-    }).catch(error => {
-        console.error('Error loading data:', error);
-        document.getElementById('buildings-container').innerHTML =
-            '<p style="color: #ff6b6b; text-align: center;">Error loading visualization data.</p>';
-    });
+
 }
 
 function preparePopRentData(data){
@@ -79,6 +81,8 @@ function changePage(page)   {
         changePage(page + 1, page)
     })
 
+
+
     let currTab = d3.select('[data-target="vis' + currTabNum + '"]');
     currTab.attr("class", "tab")
 
@@ -90,7 +94,17 @@ function changePage(page)   {
 
     let newVis = d3.select('[data-content="vis' + page + '"]');
     newVis.attr("class", "content active")
+
+
+    if (currTabNum == 5)   {
+        console.log("test")
+        popChart.destructVis()
+    }
+
     currTabNum = page;
+    if (page == 5)  {
+        popChart.initVis();
+    }
 }
 
 // Initialize the housing units map visualization

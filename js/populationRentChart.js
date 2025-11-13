@@ -567,6 +567,13 @@ constructor(parentElement, areaSearch, filterParent, selectionArea, legendArea, 
 
     }
 
+    destructVis()   {
+        let vis = this;
+        d3.select("#" + vis.selectionArea).selectAll("*").remove();
+        vis.legendArea.selectAll("*").remove();
+        d3.select("#" + vis.parentElement).selectAll("*").remove();
+    }
+
 	updateVis(){
         let vis = this;
 
