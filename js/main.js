@@ -2,6 +2,7 @@
 // Start application by loading the data
 
 let currTabNum = 0
+let pageCount = 1;
 let popChart;
 let cleanedPopData;
 let incomeRentData;
@@ -64,11 +65,14 @@ function initControl()  {
 
     // idk why but select by id doesnt work
     for (let i = 0; i < 8; i++) {
-    let currTab = d3.select('[data-target="vis' + i + '"]');
-    currTab.on("click", function() {
-        changePage(i)
-    });
-    }
+        let currTab = d3.select('[data-target="vis' + i + '"]');
+        currTab.on("click", function() {
+            changePage(i)
+        });
+        if (i > 1)  {
+            currTab.style("display", "none")
+        }
+        }
     let rightBend = d3.select('#right-bend');
     rightBend.on("click", function() {
         changePage(1, 0)
@@ -96,7 +100,6 @@ function changePage(page)   {
     })
 
 
-
     let currTab = d3.select('[data-target="vis' + currTabNum + '"]');
     currTab.attr("class", "tab")
 
@@ -121,6 +124,12 @@ function changePage(page)   {
     }   else if (page == 5)  {
         popChart.initVis();
     }   
+
+    pageCount += 1;
+    if (pageCount < 8)  {
+        let nextTab = d3.select('[data-target="vis' + pageCount + '"]');
+        nextTab.style("display", "block")
+    }
 }
 
 // Initialize the housing units map visualization
