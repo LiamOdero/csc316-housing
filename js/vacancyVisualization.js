@@ -23,7 +23,7 @@ let isProgrammaticCarouselScroll = false;
 setupCarouselControls();
 
 // Load and create the building visualization
-d3.json("data/BURAK_cities_data_multi_year.json")
+d3.json("data/BURAK_cities_data_by_unit_type.json")
   .then((data) => {
     console.log("Data loaded successfully:", data.length, "cities");
     allCitiesData = data;
