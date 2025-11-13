@@ -16,8 +16,8 @@ function loadData() {
         popChart = new PopulationRentChart("vis5-area", "vis5-area-search", "vis5-area-list", "vis5-selections", "vis5-legend", cleanedPopData)
 
         // Load and create the building visualization
-        d3.json('data/vacancy_data.json').then(data => {
-            createBuildingVisualization(data);
+        d3.json("data/BURAK_cities_data_multi_year.json").then(data => {
+            initVacancyVis(data);
             initControl()
 
             Promise.all([
@@ -36,7 +36,6 @@ function loadData() {
                 '<p style="color: #ff6b6b; text-align: center;">Error loading visualization data.</p>';
         });
     })
-
 
 }
 
