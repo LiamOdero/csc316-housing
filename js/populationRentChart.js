@@ -134,7 +134,7 @@ constructor(parentElement, areaSearch, filterParent, selectionArea, legendArea, 
         // create a tooltip
         vis.tooltip = d3.select("body")
             .append("div")
-            .style("opacity", 1)
+            .style("opacity", 0)
             .attr("class", "tooltip")
             .style("background-color", "white")
             .style("border", "solid")

@@ -917,3 +917,212 @@ footer {
     width: 130px; 
 }
 
+:root {
+            --folder-color: #ffffc2; /* Manila Yellow */
+            --tab-color: #fffaaa;
+            --active-tab-color: #ffffff; /* White Paper */
+            --page-color: #ffffff;
+            --border-color: #ccc;
+            --shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            --folder-margin: 10px; /* Define the gap size */
+
+            /* Corner bend specific colors */
+            --corner-size: 50px; /* Size of the bend */
+            --corner-color: #e0e0e0; /* Color of the bent-over part (grey) */
+            --corner-shadow: rgba(0, 0, 0, 0.3); /* Stronger shadow */
+        }
+
+        /* Allows main browser scrollbar */
+        html, body {
+            margin: 0;
+            
+        }
+
+/* --- CRITICAL FIX: ABSOLUTE WIDTH STABILITY --- */
+/* Remove 'overflow-y: scroll' from HTML if it was there */
+
+#folder-container {
+    position: relative; 
+    
+    /* Revert to wide percentage for dynamic size */
+    width: 95%; 
+    max-width: 1400px; 
+    
+    /* CRITICAL: Remove fixed height and overflow: hidden */
+    height: auto; /* Let content dictate height */
+    min-height: 50vh; /* Minimum height ensures it's visible */
+    overflow: visible; /* Allows content to push height without internal scroll */
+    
+    /* Centering remains based on margin: auto */
+    margin: 5vh auto; 
+    
+    display: flex;
+    flex-direction: column;
+    transform: perspective(1000px) rotateX(1deg); 
+    box-sizing: border-box;
+
+    background-color: var(--folder-color); 
+    padding: var(--folder-margin); 
+    border: 1px solid var(--border-color); 
+    border-radius: 4px;
+}
+    /* --- TAB BAR STYLING (Margin Management) --- */
+    #tab-bar {
+        display: flex;
+        gap: 0;
+        z-index: 2;
+        position: relative;
+        padding-left: 20px;
+        background-color: transparent;
+        border-bottom: 2px solid var(--border-color);
+
+        /* Margin still needs to compensate for container padding */
+        margin-top: calc(-1 * var(--folder-margin)); 
+        margin-left: calc(-1 * var(--folder-margin));
+        margin-right: calc(-1 * var(--folder-margin));
+        
+        /* CRITICAL: Width must be 100% of the fixed container plus margins */
+        width: calc(100% + (2 * var(--folder-margin)));
+        padding-right: calc(var(--folder-margin) * 2);
+        box-sizing: border-box;
+    }
+
+        .tab {
+            padding: 8px 20px;
+            background-color: var(--tab-color);
+            border: 1px solid var(--border-color);
+            border-bottom: none;
+            border-radius: 6px 6px 0 0;
+            cursor: pointer;
+            font-weight: bold;
+            color: #444;
+            transition: background-color 0.2s;
+            user-select: none;
+            margin-right: -1px;
+        }
+
+        .active-tab {
+            background-color: var(--active-tab-color);
+            color: #000;
+            border-color: var(--border-color);
+            z-index: 3;
+            transform: translateY(-2px);
+            box-shadow: 0 -3px 5px rgba(0, 0, 0, 0.1);
+        }
+
+    /* 2. FOLDER PAGE STYLING (The White Paper) */
+    #folder-page {
+        /* Set flex-grow to 0 so the container height is determined by the content */
+        flex-grow: 0; 
+        
+        position: relative; 
+        background-color: var(--page-color);
+        border: 1px solid var(--border-color);
+        border-top: none; 
+        padding: 30px;
+        box-shadow: var(--shadow);
+        z-index: 1;
+        
+        overflow: visible; 
+    }
+
+    /* The illusion of the yellow folder behind the white paper (NO CHANGE) */
+    #folder-page::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: transparent; 
+        border: none;
+        z-index: -1; 
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+            /* 3. VISUALIZATION AREA STYLING (NO CHANGE) */
+    .content {
+        display: none; 
+        padding: 10px;
+        height: auto; /* Content dictates size */
+        box-sizing: border-box;
+        border: 1px dashed #eee; 
+    }
+
+    .content.active {
+        display: block; 
+    }
+
+        :root {
+            /* Ensure these variables are correctly defined in your main :root block */
+            --page-color: #ffffff;
+            --corner-color: #e0e0e0;
+            --corner-shadow: rgba(0, 0, 0, 0.3);
+            --bend-size: 50px; 
+        }
+
+        .page-corner-bend {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            z-index: 10;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out; 
+            
+            /* 1. Create the main triangle shape using borders */
+            width: 0;
+            height: 0;
+            border-style: solid;
+            --bend-size: 50px; 
+
+            /* CRITICAL: Border colors define the fold appearance (bottom-right fold) */
+            /* bottom = folded color (grey) */
+            /* right = page color (white) */
+            border-width: 0 0 var(--bend-size) var(--bend-size);
+            border-color: transparent transparent var(--corner-color) var(--page-color);
+            
+            /* Apply shadow for depth */
+            box-shadow: -5px 5px 10px var(--corner-shadow);
+        }
+
+        /* --- HOVER EFFECT --- */
+        .page-corner-bend:hover {
+            /* Slightly increase the bend size */
+            --bend-size: 60px;
+            /* Update the border width based on the new bend size */
+            border-width: 0 0 var(--bend-size) var(--bend-size);
+            /* Make the shadow more pronounced */
+            box-shadow: -8px 8px 15px var(--corner-shadow);
+        }
+
+   
+        .page-corner-bend-left {
+            position: absolute;
+            bottom: 0;
+            left: 0; /* Positioned on the left side */
+            z-index: 10;
+            cursor: pointer;
+            width: 0; /* Set to 0 for border triangle */
+            height: 0;
+            transition: all 0.3s ease-in-out; 
+            
+            /* Inherit the size variable */
+            --bend-size: 50px; 
+            border-style: solid;
+            
+
+            border-width: 0 var(--bend-size) var(--bend-size) 0;
+            border-color: transparent var(--page-color) var(--corner-color) transparent;
+            
+            /* Shadow falls to the bottom-right of the fold (correct for left corner) */
+            box-shadow: 5px 5px 10px var(--corner-shadow); 
+        }
+
+        /* We don't need a separate ::after element */
+
+        /* HOVER EFFECT FOR LEFT CORNER */
+        .page-corner-bend-left:hover {
+            --bend-size: 60px; /* Increase size on hover */
+            border-width: 0 var(--bend-size) var(--bend-size) 0;
+            box-shadow: 8px 8px 15px var(--corner-shadow);
+        }

@@ -1,6 +1,9 @@
 
 // Start application by loading the data
+
+let currTabNum = 0
 loadData();
+initControl()
 
 function loadData() {
     d3.csv("data/avg_rent_by_pop.csv"). then(data=>{
@@ -39,6 +42,55 @@ function preparePopRentData(data){
         }        
     });
     return cleaned_data;
+}
+
+function initControl()  {
+
+    // idk why but select by id doesnt work
+    for (let i = 0; i < 8; i++) {
+    let currTab = d3.select('[data-target="vis' + i + '"]');
+    currTab.on("click", function() {
+        changePage(i)
+    });
+    }
+    let rightBend = d3.select('#right-bend');
+    rightBend.on("click", function() {
+        changePage(1, 0)
+    })
+}
+
+function changePage(page)   {
+    let leftBend = d3.select('#left-bend');
+    let rightBend = d3.select('#right-bend');
+    if (page == 0)  {
+        rightBend.style("display", "block")
+        leftBend.style("display", "none")
+    }   else if (page == 7) {
+        leftBend.style("display", "block")
+        rightBend.style("display", "none")
+    }   else    {
+        leftBend.style("display", "block")
+        rightBend.style("display", "block")
+    }
+    leftBend.on("click", function() {
+        changePage(page - 1, page)
+    })
+    rightBend.on("click", function() {
+        changePage(page + 1, page)
+    })
+
+    let currTab = d3.select('[data-target="vis' + currTabNum + '"]');
+    currTab.attr("class", "tab")
+
+    let newTab = d3.select('[data-target="vis' + page + '"]');
+    newTab.attr("class", "tab active-tab")
+
+    let currVis = d3.select('[data-content="vis' + currTabNum + '"]');
+    currVis.attr("class", "content")
+
+    let newVis = d3.select('[data-content="vis' + page + '"]');
+    newVis.attr("class", "content active")
+    currTabNum = page;
 }
 
 // Initialize the housing units map visualization
