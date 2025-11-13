@@ -1,6 +1,25 @@
 // Set current year in footer
 document.getElementById("current-year").textContent = new Date().getFullYear();
 
+// Province name mapping
+const provinceNames = {
+  "Alta": "Alberta",
+  "B.C.": "British Columbia",
+  "Man.": "Manitoba",
+  "N.B.": "New Brunswick",
+  "N.S.": "Nova Scotia",
+  "N.W.T.": "Northwest Territories",
+  "Nfld.Lab.": "Newfoundland and Labrador",
+  "Ont.": "Ontario",
+  "P.E.I.": "Prince Edward Island",
+  "Que": "Quebec",
+  "Sask.": "Saskatchewan"
+};
+
+function getFullProvinceName(abbreviation) {
+  return provinceNames[abbreviation] || abbreviation;
+}
+
 // Global variables
 let allCitiesData = [];
 let selectedCities = [];
@@ -321,7 +340,7 @@ function populateProvinceDropdown() {
   provinces.forEach(([province, count]) => {
     const option = document.createElement("option");
     option.value = province;
-    option.textContent = `${province} (${count} cities)`;
+    option.textContent = `${getFullProvinceName(province)} (${count} cities)`;
     provinceSelect.appendChild(option);
   });
 }
@@ -404,7 +423,7 @@ function updateCityDropdown(searchTerm) {
     // Province header
     const provinceHeader = document.createElement("div");
     provinceHeader.className = "province-group-header";
-    provinceHeader.textContent = `${province} (${
+    provinceHeader.textContent = `${getFullProvinceName(province)} (${
       citiesByProvince.get(province).length
     })`;
     cityList.appendChild(provinceHeader);
