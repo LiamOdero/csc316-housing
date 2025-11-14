@@ -5,20 +5,13 @@ loadData();
 function loadData() {
     d3.csv("data/avg_rent_by_pop.csv"). then(data=>{
         cleaned_data = preparePopRentData(data);
-        let popChart = new PopulationRentChart("vis5", ["RA3P", "R3P", "A3P", "A6P", "bachelor", "onebed", "twobed", "threebed"], 
-                                               "provinceSelect", "city-list", cleaned_data)
+        let popChart = new PopulationRentChart("vis5", ["RA3P", "R3P", "A3P", "A6P", "bachelor", "onebed", "twobed", "threebed"],
+                                               "provinceSelect", "vis5-city-list", cleaned_data)
 
         popChart.initVis();
     })
 
-    // Load and create the building visualization
-    d3.json('data/vacancy_data.json').then(data => {
-        createBuildingVisualization(data);
-    }).catch(error => {
-        console.error('Error loading data:', error);
-        document.getElementById('buildings-container').innerHTML =
-            '<p style="color: #ff6b6b; text-align: center;">Error loading visualization data.</p>';
-    });
+    // Note: Visualization 3 (building visualization) is now loaded by vacancyVisualization.js
 }
 
 function preparePopRentData(data){
