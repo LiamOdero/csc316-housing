@@ -53,7 +53,7 @@ function setupCarouselControls() {
     if (carouselSnapTimeout) clearTimeout(carouselSnapTimeout);
     carouselSnapTimeout = setTimeout(() => {
       if (!isProgrammaticCarouselScroll) {
-        snapToNearestCard();
+        //snapToNearestCard();
       }
     }, 120);
     updateCarouselButtons();
