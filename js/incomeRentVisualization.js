@@ -5,11 +5,14 @@
     familyType: "Economic family type"
 };
 
+const RENT_STRUCTURE_FILTER = "Row and apartment structures of three units and over";
+
 const RENT_DATA_MAP = {
     city: "GEO",
     date: "REF_DATE",
     value: "VALUE",
-    type: "Type of unit"
+    type: "Type of unit",
+    structure: "Type of structure"
 };
 
 function getCityLabel(value) {
