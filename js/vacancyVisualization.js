@@ -374,7 +374,6 @@ function updateCityDropdown(searchTerm) {
     }
     citiesByProvince.get(city.province).push(city);
   });
-
   // Sort provinces
   const sortedProvinces = Array.from(citiesByProvince.keys()).sort();
 
@@ -466,12 +465,10 @@ function updateSelectedCitiesDisplay() {
 function applyFilters() {
   let filteredData = allCitiesData;
 
-  console.log("applyFilters called, total cities:", filteredData.length);
 
   // Filter out cities that don't have data for the selected unit type
   const unitType = currentFilters.unitType;
   filteredData = filteredData.filter((d) => d.data && d.data[unitType]);
-  console.log("After unit type filter:", filteredData.length, "cities");
 
   // City selection filter (highest priority)
   if (selectedCities.length > 0) {
@@ -507,7 +504,6 @@ function applyFilters() {
 
 function createBuildingVisualization(cities) {
   try {
-    console.log("createBuildingVisualization called with", cities.length, "cities");
     const container = d3.select("#buildings-container");
 
     // Clear existing buildings
@@ -524,7 +520,6 @@ function createBuildingVisualization(cities) {
 
     // Get the current unit type
     const unitType = currentFilters.unitType;
-    console.log("Creating visualization for unit type:", unitType);
 
   // Apply sorting based on current filter
   switch (currentFilters.sort) {
@@ -703,7 +698,6 @@ function createBuildingVisualization(cities) {
     // The green styling is applied via the 'high-vacancy' class on the label
   });
 
-  console.log("Visualization created successfully with", cities.length, "buildings");
   resetCarouselPosition();
 
   } catch (error) {

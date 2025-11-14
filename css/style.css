@@ -1632,3 +1632,81 @@ footer {
             border-width: 0 var(--bend-size) var(--bend-size) 0;
             box-shadow: 8px 8px 15px var(--corner-shadow);
         }
+        
+
+/* Container for the Button */
+#vis5-legend {
+    /* Anchors the container to the bottom-left of the parent */
+    position: absolute; 
+    bottom: 0;
+    left: 0;
+    
+    position: relative; 
+    /* Use 'em' for padding so it scales with text size */
+    padding: 0.8em 1em; 
+    z-index: 999; 
+    height: auto; 
+}
+
+/* The Toggle Button */
+#legend-toggle-button {
+    /* Use 'em' for padding for better scaling */
+    padding: 0.5em 1em;
+    font-size: 1em; /* Baseline text size */
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 1001;
+}
+
+/* The Expanded Overlay Legend Container */
+#expanded-legend-overlay {
+    /* CRITICAL ALIGNMENT: Must match vis5-legend's bottom/left offset (padding) */
+    position: absolute;
+    bottom: 0.8em; 
+    left: 1em; 
+    
+    /* REDUCED WIDTH: Adjusting to 35% of the parent width for desktop/larger screens */
+    width: 35%; 
+    /* Set max-width to a reasonable pixel limit for very large screens */
+    max-width: 450px; 
+    max-height: 80vh; /* Responsive height */
+    
+    background-color: white;
+    border: 1px solid #333;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    padding: 1.5em; 
+    /* We keep overflow-y: auto for vertical scroll if content is too tall */
+    overflow-y: auto;
+    /* Remove overflow-x property or set to hidden if you're certain it shouldn't scroll horizontally */
+    overflow-x: hidden; /* Added this to ensure no horizontal scrollbar appears */
+    z-index: 1000; 
+    display: none; 
+}
+
+/* Responsive adjustment for small screens */
+@media (max-width: 600px) {
+    #expanded-legend-overlay {
+        /* On small screens, keep it wide enough to be useful, but cap it */
+        width: 80%; 
+        max-width: none; /* Remove max-width limit on small screens */
+        bottom: 0.5em;
+        left: 0.5em;
+    }
+}
+
+/* Close Button CSS (Remains the same) */
+#close-legend-button {
+    position: absolute; 
+    top: 10px;
+    right: 10px;
+    padding: 5px 10px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 1002;
+}
