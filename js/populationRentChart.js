@@ -67,7 +67,8 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
     this.dropdown = d3.select("#" + dropdown);
     this.filterParent = d3.select("#" + filterParent);
     document.getElementById("vis5-city-search").value = "";
-
+    this.highlight = d3.select("#vis4-highlight")
+    this.highlight.property("value", "none")
     this.initLegend();
 }
 
@@ -133,6 +134,7 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
                     vis.cityFilter[p][c] = false;
                 })
             })
+            vis.highlight.property("value", "none")
             vis.wrangleData();
         })
 
@@ -165,8 +167,9 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
                 e.target.value = ""; // Reset dropdown
             }
         });
-
-
+        vis.highlight.on("change", function()  {
+            vis.updateVis()
+        })
         vis.createAreaFilters();
         vis.wrangleData();
 	}
@@ -733,6 +736,25 @@ createLegend() {
             d3.max(vis.displayData, d => d.avgChange)
         ]);
 
+        let highlighted = []
+        let popThreshold = d3.max(vis.displayData, d => d.popChange) * 0.5
+        let avgThreshold = d3.max(vis.displayData, d => d.avgChange) * 0.5
+        vis.displayData.forEach(e =>    {
+            if (vis.highlight.property("value") == "pop")   {
+                if (e.popChange >= popThreshold)    {
+                    highlighted.push(e)
+                }
+            }   else if (vis.highlight.property("value") == "avg")   {
+                if (e.avgChange >= avgThreshold)    {
+                    highlighted.push(e)
+                }
+            }   else if (vis.highlight.property("value") == "both")   {
+                if (e.popChange >= popThreshold && e.avgChange >= avgThreshold)    {
+                    highlighted.push(e)
+                }
+            }
+        })
+
         vis.updateSelectedCitiesDisplay()
         vis.createLegend();
 
@@ -767,6 +789,7 @@ createLegend() {
                         .attr("class", "rent-tri")
                         .attr("d", `M${bw},0 L${bw},${bh} L0,0 Z`)
                         .style("fill", d => vis.avgColorScale(d.avgChange));
+                        
 
                     // Diagonal line (hidden initially)
                     g.append("line")
@@ -777,7 +800,7 @@ createLegend() {
                         .attr("y2", bh)
                         .attr("stroke", "black")
                         .attr("stroke-width", 1.5)
-                        .style("opacity", 0);
+                        .style("opacity", 0)
 
                     // Hover events
                     g.on("mouseover", function(event, d) {
@@ -821,21 +844,28 @@ createLegend() {
                     const bh = vis.y.bandwidth();
 
                     update
+                    .transition()
                         .attr("transform", d => `translate(${vis.x(d.year)}, ${vis.y(d.category)})`);
 
                     update.select("rect")
+                        .transition()
                         .attr("width", bw)
                         .attr("height", bh);
 
                     update.select(".pop-tri")
+                    .transition()
                         .attr("d", `M0,${bh} L${bw},${bh} L0,0 Z`)
-                        .style("fill", d => vis.popColorScale(d.popChange));
+                        .style("fill", d => vis.popColorScale(d.popChange))
+                        .style("opacity", d => (highlighted.length > 0 && !(highlighted.includes(d))) ? 0.4 : 1);
 
                     update.select(".rent-tri")
+                    .transition()
                         .attr("d", `M${bw},0 L${bw},${bh} L0,0 Z`)
-                        .style("fill", d => vis.avgColorScale(d.avgChange));
+                        .style("fill", d => vis.avgColorScale(d.avgChange))
+                        .style("opacity", d => (highlighted.length > 0 && !(highlighted.includes(d))) ? 0.4 : 1);
 
                     update.select(".diag")
+                    .transition()
                         .attr("x2", bw)
                         .attr("y2", bh);
 
