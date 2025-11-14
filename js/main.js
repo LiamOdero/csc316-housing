@@ -71,9 +71,6 @@ function initControl()  {
         currTab.on("click", function() {
             changePage(i)
         });
-        if (i > 1)  {
-            //currTab.style("display", "none")
-        }
         }
     let rightBend = d3.select('#right-bend');
     rightBend.on("click", function() {
