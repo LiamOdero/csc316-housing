@@ -9,6 +9,8 @@ let currentQuarterIndex = 51;  // Start at 2025 Q2
 let isPlaying = false;
 let animationInterval = null;
 let svg, projection, path, g;
+let mortgageVisInitialized = false;
+let currentZoomScale = 1;  // Track current zoom level
 
 // Color scale for affordability (green = affordable, red = unaffordable)
 const colorScale = d3.scaleThreshold()
@@ -16,7 +18,13 @@ const colorScale = d3.scaleThreshold()
     .range(['#2d5016', '#5a9216', '#ffc107', '#ff6b35', '#c1121f']);
 
 // Initialize the visualization
-async function init() {
+async function initMortgageVisualization() {
+    // Prevent double initialization
+    if (mortgageVisInitialized) {
+        console.log('Mortgage visualization already initialized');
+        return;
+    }
+    
     try {
         // Load data
         timeseriesData = await d3.json('data/mortgage_timeseries.json');
@@ -36,6 +44,7 @@ async function init() {
         // Update displays
         updateAllDisplays();
         
+        mortgageVisInitialized = true;
         console.log('Visualization initialized successfully');
         console.log(`Loaded ${timeseriesData.quarters.length} quarters of data`);
     } catch (error) {
@@ -77,7 +86,7 @@ function getCurrentQuarterData() {
 function setupSVG() {
     const container = d3.select('#canada-map');
     const width = 1400;
-    const height = 900;
+    const height = 1000;
     
     svg = container
         .attr('width', width)
@@ -90,7 +99,7 @@ function setupSVG() {
         .center([0, 58])
         .rotate([96, 0])
         .parallels([49, 77])
-        .scale(1100)
+        .scale(1500)
         .translate([width / 2, height / 2]);
     
     path = d3.geoPath().projection(projection);
@@ -104,15 +113,31 @@ function setupSVG() {
         .on('zoom', (event) => {
             g.attr('transform', event.transform);
             
-            // Scale strokes, circles, and text inversely to zoom level
-            const scale = event.transform.k;
+            // Update current zoom scale
+            currentZoomScale = event.transform.k;
+            const scale = currentZoomScale;
+            
             g.selectAll('.province')
                 .attr('stroke-width', 2 / scale);
             
             g.selectAll('.cma-marker')
-                .attr('r', function() {
-                    const baseRadius = d3.select(this).attr('data-base-radius');
-                    return baseRadius / scale;
+                .each(function() {
+                    const circle = d3.select(this);
+                    const baseRadius = parseFloat(circle.attr('data-base-radius'));
+                    const currentRadius = parseFloat(circle.attr('r'));
+                    const expectedScaledRadius = baseRadius / scale;
+                    const expectedHoveredRadius = (baseRadius * 1.3) / scale;
+                    
+                    // Check if currently in hover state (within tolerance of 1.3x scaled radius)
+                    const isHovered = Math.abs(currentRadius - expectedHoveredRadius) < 0.5;
+                    
+                    if (isHovered) {
+                        // Maintain hover state with new zoom
+                        circle.attr('r', expectedHoveredRadius);
+                    } else {
+                        // Normal state
+                        circle.attr('r', expectedScaledRadius);
+                    }
                 })
                 .attr('stroke-width', 2 / scale);
             
@@ -322,11 +347,15 @@ function handleCMAMouseOver(event, d) {
     `)
     .classed('visible', true);
     
-    d3.select(event.currentTarget)
-        .attr('r', function() {
-            const currentRadius = parseFloat(d3.select(this).attr('r'));
-            return currentRadius * 1.3;
-        });
+    const circle = d3.select(event.currentTarget);
+    // Cancel any ongoing transitions first
+    circle.interrupt();
+    const baseRadius = parseFloat(circle.attr('data-base-radius'));
+    // Account for current zoom level
+    const targetRadius = (baseRadius * 1.3) / currentZoomScale;
+    circle.transition()
+        .duration(150)
+        .attr('r', targetRadius);
 }
 
 function handleMouseMove(event) {
@@ -369,15 +398,23 @@ function handleMouseMove(event) {
 function handleMouseOut(event) {
     d3.select('#tooltip').classed('visible', false);
     
-    // Reset province opacity
-    d3.select(event.currentTarget)
-        .style('opacity', 1);
+    const element = d3.select(event.currentTarget);
     
-    // Reset CMA circle size
+    // Reset province opacity
+    element.style('opacity', 1);
+    
+    // Reset CMA circle size with smooth transition
     if (event.currentTarget.tagName === 'circle' && event.currentTarget.classList.contains('cma-marker')) {
-        const payment = d3.select(event.currentTarget).datum().payment;
-        d3.select(event.currentTarget)
-            .attr('r', Math.max(4, Math.min(12, payment / 300)));
+        // Cancel any ongoing transitions first
+        element.interrupt();
+        const baseRadius = parseFloat(element.attr('data-base-radius'));
+        if (baseRadius && !isNaN(baseRadius)) {
+            // Account for current zoom level
+            const targetRadius = baseRadius / currentZoomScale;
+            element.transition()
+                .duration(150)
+                .attr('r', targetRadius);
+        }
     }
 }
 
@@ -483,8 +520,12 @@ function updateVisualization() {
             return provinceData ? getColor(provinceData.payment, currentIncome) : '#cccccc';
         });
     
-    // Remove old CMAs
-    g.selectAll('.cma-group').remove();
+    // Remove old CMAs (cancel any transitions first)
+    g.selectAll('.cma-group')
+        .each(function() {
+            d3.select(this).selectAll('circle').interrupt();
+        })
+        .remove();
     g.selectAll('.cma-line').remove();
     
     // Redraw CMAs with new data
@@ -621,5 +662,13 @@ function updateDataTable() {
         });
 }
 
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', init);
+// Cleanup function when leaving the visualization
+function destructMortgageVisualization() {
+    if (isPlaying) {
+        stopAnimation();
+    }
+}
+
+// Make functions globally available for main.js to call
+window.initMortgageVisualization = initMortgageVisualization;
+window.destructMortgageVisualization = destructMortgageVisualization;
