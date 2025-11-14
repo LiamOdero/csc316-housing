@@ -174,9 +174,8 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
     initLegend() {
         let vis = this;
         const legendContainer = document.getElementById('vis5-legend');
-        const parentContainer = legendContainer ? legendContainer.parentElement : null;
 
-        if (legendContainer && parentContainer) {
+        if (legendContainer) {
             // 1. Create the Toggle Button (Opens/Closes)
             const button = document.createElement('button');
             button.id = 'legend-toggle-button';
@@ -186,7 +185,8 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
             // 2. Create the Expanded Legend Overlay Div
             const overlayDiv = document.createElement('div');
             overlayDiv.id = 'expanded-legend-overlay';
-            parentContainer.appendChild(overlayDiv);
+            legendContainer.appendChild(overlayDiv);
+            overlayDiv.style.transform = 'translateY(50px)';
 
             // --- NEW: Create the Close Button inside the overlay ---
             const closeButton = document.createElement('button');

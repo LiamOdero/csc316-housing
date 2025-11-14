@@ -112,16 +112,16 @@ function changePage(page)   {
     let newVis = d3.select('[data-content="vis' + page + '"]');
     newVis.attr("class", "content active")
 
-    if (currTabNum == 4)    {
+    if (currTabNum == 3)    {
         destructIncomeVis();
-    }   else if (currTabNum == 5)   {
+    }   else if (currTabNum == 4)   {
         popChart.destructVis();
     }
 
     currTabNum = page;
-    if (page == 4)  {
+    if (page == 3)  {
         initIncomeVis(incomeRentData, incomeVisData);
-    }   else if (page == 5)  {
+    }   else if (page == 4)  {
         popChart.initVis();
     }   
 

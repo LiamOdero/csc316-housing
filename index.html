@@ -78,18 +78,12 @@
             <div id="visualization-area-1" class="content" data-content="vis1">
                 <!-- Visualization 1: Canada Mortgage Affordability Heatmap -->
                 <div class="row justify-content-center g-5" id="vis1">
-                    <div class="col-12 visualization-section">
-                        <div class="section-header">
-                            <h2 class="section-title">Visualization 1: Canada Mortgage Affordability Heatmap</h2>
-                        </div>
-                        <div class="vis-placeholder">
+                            <header>
+                                <h1>How Quickly Have Mortgage Rates Increased?</h1>
+                                <p class="subtitle">Interactive exploration of housing costs across provinces · 2012—2025</p>
+                            </header>
+                            
                             <div class="container">
-                                <header>
-                                    <div class="header-badge">Live Data Visualization</div>
-                                    <h1>Canada Mortgage Affordability</h1>
-                                    <p class="subtitle">Interactive exploration of housing costs across provinces · 2012—2025</p>
-                                </header>
-
                                 <div class="controls-section">
                                     <div class="income-control">
                                         <label for="income-slider">Annual Income</label>
@@ -137,7 +131,7 @@
                                     <div class="info-card"><h3>Least Affordable</h3><p class="province-name" id="least-affordable-province">Loading...</p><p class="payment-amount" id="least-affordable-payment"></p></div>
                                 </div>
 
-                                <div class="data-table-section">
+                                <div class="data-table-section" style="display: none">
                                     <h2>Provincial Breakdown</h2>
                                     <div class="table-wrapper">
                                         <table id="data-table">
@@ -154,42 +148,164 @@
                                     </div>
                                 </div>
 
+                                <div class="data-table-section">
+                                    <p>For most of the 2010's, affordability was steadily decreasing over time for those with incomes under 100k,
+                                        but has since been in freefall since the start of the pandemic. For example, an income of 60k / year 
+                                        would make housing comfortably affordable for individuals in 2012 in most of the country, but would 
+                                        now make housing borderline to actually unaffordable for Canadians in most provinces.
+                                    </p>
+                                </div>
+
                                 <footer>
                                     <p>Data Source: Equifax Canada via Canada Mortgage and Housing Corporation (CMHC) | Last Updated: September 2025</p>
                                     <p>Affordability calculation based on the 30% rule: housing costs should not exceed 30% of gross monthly income</p>
                                 </footer>
                             </div>
-                        </div>
-                    </div>
                 </div>
 
             </div>
 
             <div id="visualization-area-2" class="content" data-content="vis2">
                 <!-- Visualization 2: Canadian Rental Price Explorer -->
+                <header>
+                    <h1>How Quickly Has Rent Increased?</h1>
+                </header>
                 <div class="row justify-content-center g-5" id="vis2">
-                    <div class="col-12 visualization-section">
-                        <div class="section-header">
-                            <h2 class="section-title">Visualization 2</h2>
-                        </div>
-                        <div id="map" style="min-height: 700px;"></div>
+
+                    <div id="map" style="min-height: 700px;"></div>
+
+                    <div class="data-table-section">
+                         <p>The rental market hasn't faired any better, with 
+                        </p>
                     </div>
                 </div>
             </div>
 
             <div id="visualization-area-3" class="content" data-content="vis3">
-                <div class="row justify-content-center g-5" id="vis3">
+                <!-- Jeff's visualization -->
+                <!-- This is going to be shown OVER time as well, 
+                so we should get new data that isn't just from 2023. 
+                ALSO, to change the time selected, 
+                I will make a simple line graph with 2 lines showing average incomes and average rent prices in all the cities displayed, 
+                if we click on a node in the line, it takes us to the data for THAT SPECIFIC year.-->
+                <div class="row justify-content-center g-5" id="vis3"> 
+                    <header>
+                        <h1>Can the people living in cities afford to rent?</h1>
+                    </header>
+
                     <div class="col-12 visualization-section">
-                        <div class="section-header">
-                            <h2 class="section-title">Visualization 3: Vacancy Rates and Average Rent in Major Canadian Cities (2023)</h2>
-                            <p class="section-description">
-                                Each building represents a major Canadian city. Building height shows population size,
-                                while windows represent housing units: <strong>lit windows are occupied</strong>,
-                                and <strong>dark windows are vacant</strong>. Chimney smoke indicates average
-                                rent prices—more smoke means higher rent. Cities with <strong>vacancy rates above 2%</strong>
-                                are highlighted in green.
+                        
+                        <div class="d-flex flex-column" style="min-height: 60vh;">
+                            <div class="vis4 mb-3 d-flex justify-content-center align-items-center flex-wrap gap-2 text-center px-3" id="vis4-caption"></div>
+                            <div class="vis4 mb-3 d-flex justify-content-center align-items-center flex-wrap gap-2 text-center px-3" id="vis4-slider"></div>
+                            <div class="flex-grow-1 d-flex" style="min-height: 0;">
+                                <div class="vis4 flex-grow-1 px-3" id="vis4-container"></div>
+                            </div>
+                        </div>
+                        <div class="vis4 mb-3 d-flex justify-content-center align-items-center flex-wrap gap-2 text-center px-3" id="vis4-rentinfo"></div>
+                    </div>
+
+                    <div class="data-table-section">
+                         <p>Across these cities, wages have been increasing steadily over time, however rent has been increasing at a much faster rate.
+                            In Toronto, wages have increased from 5-20% between 2000 to 2023, and yet rent has increased by 84-180% for various unit types. 
+                            Even in places like Alberta, where couples saw a 36% increase in income from 2000 to 2023, rent saw a 128-154% increase in rent. 
+                            As such, a key part of the affordability crisis is that wages have not kept up with increases in rent. This begs a different question 
+                            however, why has rent gone up by so much?
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="visualization-area-5" class="content" data-content="vis4">
+                <!-- Visualization 5 -->
+                <div class="viz-block" id="vis4">
+                    <header>
+                        <h1>How Have Rent Responded to Population Changes?</h1>
+                    </header>
+                    <div class="row justify-content-center g-5">
+                        <div class="col-12 visualization-section" style="min-height: 70vh;">
+
+                        <!-- Filters -->
+                        <div class="filters-container">
+                            <div class="filter-labels-row">
+                                <div class="filter-label-item filter-label-location">
+                                    <div class="label-text">Location Selection</div>
+                                    <div class="selector-tabs">
+                                        <button id="vis5-tab-cities" class="selector-tab active">Cities</button>
+                                        <button id="vis5-tab-provinces" class="selector-tab">Provinces</button>
+                                    </div>
+                                </div>
+                                <div class="filter-label-item filter-label-button">
+                                    <div class="label-text">&nbsp;</div>
+                                </div>
+                                <div class="filter-label-item filter-label-button">
+                                    <div class="label-text">&nbsp;</div>
+                                </div>
+                                <div class="filter-label-item filter-label-button">
+                                    <div class="label-text">&nbsp;</div>
+                                </div>
+                                <div class="filter-label-item filter-label-button">
+                                    <div class="label-text">&nbsp;</div>
+                                </div>
+                                <div class="filter-label-item filter-label-button">
+                                    <div class="label-text">&nbsp;</div>
+                                </div>
+                            </div>
+
+                            <!-- Filter Inputs Row -->
+                            <div class="filter-inputs-row">
+                                <div class="filter-input-item filter-input-location">
+                                    <div class="city-selector-container">
+                                        <input type="text" id="vis5-city-search" class="city-search-input" placeholder="Search cities...">
+                                        <select id="vis5-province-select" class="province-select" style="display: none;">
+                                            <option value="">Select a province...</option>
+                                        </select>
+                                        <div id="vis5-city-dropdown" class="city-dropdown" style="display: none;">
+                                            <div id="vis5-city-list" class="city-list"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="filter-input-item filter-input-button">
+                                    <button id="vis5-reset-filters" class="reset-btn">Reset Filters</button>
+                                </div>
+                            </div>
+
+                            <!-- Selected Cities Display -->
+                            <div id="vis5-selected-cities" class="selected-cities"></div>
+                        </div>
+
+                        <div id="vis5-area"
+                            style="width: 100%; height: 60vh; min-height: 400px; border: thin solid transparent;">
+                        </div>
+
+                        <div id="vis5-legend" style="height: 5vh"></div>
+                        <div class="data-table-section">
+                            <p>Overall, most years and locations in which there is a high percentage increase in rent also see a corresponding increase 
+                                in population. There are of course exceptions, such as PEI in 2023 which saw a mere 0.93% increase in average rent despite 
+                                a 4.52% increase in population, or Ontario in 2022 which saw a 7% increase in average rent with only a 0.27% increase in population. 
+                                However, positive correlation between population and average rent increases suggests that supply is struggling to keep up with demand,
+                                driving up prices. 
                             </p>
                         </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="visualization-area-4" class="content" data-content="vis5">
+                <header>
+                    <h1>What are the Vacancy Rates of the Most Expensive Cities?</h1>
+                    <p class="subtitle">                                
+                            Each building represents a major Canadian city. Building height shows population size,
+                            while windows represent housing units: <strong>lit windows are occupied</strong>,
+                            and <strong>dark windows are vacant</strong>. Chimney smoke indicates average
+                            rent prices—more smoke means higher rent. Cities with <strong>vacancy rates above 2%</strong>
+                            are highlighted in green.</p>
+                </header>
+                <div class="row justify-content-center g-5" id="vis5">
+
+                    <div class="col-12 visualization-section">
+                        
 
                         <!-- Filters -->
                         <div class="filters-container">
@@ -309,99 +425,12 @@
                                 &#8250;
                             </button>
                         </div>
-                    </div>
-                </div>
-            </div>
 
-            <div id="visualization-area-4" class="content" data-content="vis4">
-                <!-- Jeff's visualization -->
-                <!-- This is going to be shown OVER time as well, 
-                so we should get new data that isn't just from 2023. 
-                ALSO, to change the time selected, 
-                I will make a simple line graph with 2 lines showing average incomes and average rent prices in all the cities displayed, 
-                if we click on a node in the line, it takes us to the data for THAT SPECIFIC year.-->
-                <div class="row justify-content-center g-5" id="vis4"> 
-                    <div class="col-12 visualization-section">
-                        <div class="section-header">
-                            <h2 class="section-title">Can the people living in cities afford to rent?</h2>
-                        </div>
-                        
-                        <div class="d-flex flex-column" style="min-height: 60vh;">
-                            <div class="vis4 mb-3 d-flex justify-content-center align-items-center flex-wrap gap-2 text-center px-3" id="vis4-caption"></div>
-                            <div class="vis4 mb-3 d-flex justify-content-center align-items-center flex-wrap gap-2 text-center px-3" id="vis4-slider"></div>
-                            <div class="flex-grow-1 d-flex" style="min-height: 0;">
-                                <div class="vis4 flex-grow-1 px-3" id="vis4-container"></div>
-                            </div>
-                        </div>
-                        <div class="vis4 mb-3 d-flex justify-content-center align-items-center flex-wrap gap-2 text-center px-3" id="vis4-rentinfo"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="visualization-area-5" class="content" data-content="vis5">
-                <!-- Visualization 5 -->
-                <div class="viz-block" id="vis5">
-                    <div class="row justify-content-center g-5">
-                        <div class="col-12 visualization-section" style="min-height: 70vh;">
-                            <div class="section-header">
-                                <h2 class="section-title">What is the relationship between population and rent?</h2>
-                            </div>
-
-                        <!-- Filters -->
-                        <div class="filters-container">
-                            <div class="filter-labels-row">
-                                <div class="filter-label-item filter-label-location">
-                                    <div class="label-text">Location Selection</div>
-                                    <div class="selector-tabs">
-                                        <button id="vis5-tab-cities" class="selector-tab active">Cities</button>
-                                        <button id="vis5-tab-provinces" class="selector-tab">Provinces</button>
-                                    </div>
-                                </div>
-                                <div class="filter-label-item filter-label-button">
-                                    <div class="label-text">&nbsp;</div>
-                                </div>
-                                <div class="filter-label-item filter-label-button">
-                                    <div class="label-text">&nbsp;</div>
-                                </div>
-                                <div class="filter-label-item filter-label-button">
-                                    <div class="label-text">&nbsp;</div>
-                                </div>
-                                <div class="filter-label-item filter-label-button">
-                                    <div class="label-text">&nbsp;</div>
-                                </div>
-                                <div class="filter-label-item filter-label-button">
-                                    <div class="label-text">&nbsp;</div>
-                                </div>
-                            </div>
-
-                            <!-- Filter Inputs Row -->
-                            <div class="filter-inputs-row">
-                                <div class="filter-input-item filter-input-location">
-                                    <div class="city-selector-container">
-                                        <input type="text" id="vis5-city-search" class="city-search-input" placeholder="Search cities...">
-                                        <select id="vis5-province-select" class="province-select" style="display: none;">
-                                            <option value="">Select a province...</option>
-                                        </select>
-                                        <div id="vis5-city-dropdown" class="city-dropdown" style="display: none;">
-                                            <div id="vis5-city-list" class="city-list"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="filter-input-item filter-input-button">
-                                    <button id="vis5-reset-filters" class="reset-btn">Reset Filters</button>
-                                </div>
-                            </div>
-
-                            <!-- Selected Cities Display -->
-                            <div id="vis5-selected-cities" class="selected-cities"></div>
-                        </div>
-
-                        <div id="vis5-area"
-                            style="width: 100%; height: 60vh; min-height: 400px; border: thin solid transparent;">
-                        </div>
-
-                        <div id="vis5-legend" style="height: 5vh"></div>
-
+                        <div class="data-table-section">
+                            <p> Out of the 17 cities with the highest rent (above $1500 / month) only one has a vacancy rate above 3%. Looking at the 
+                                other cities with lower rent, it can be seen that there is an increase in cities with vacancy rates above 3% as rent decreases. As such,
+                                it can be seen that there is some correlation between vacancy rates and rent, further indicating there are problems with supply. 
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -431,7 +460,18 @@
             </div>
             
             <div id="visualization-area-7" class="content" data-content="vis7">
-                <p style="text-align: center; color: #555;">[ Your JavaScript Visualization 3 Goes Here ]</p>
+                                <!-- Opening Hook Section -->
+                <div class="row justify-content-center" style="margin-top: 60px; margin-bottom: 60px;">
+                    <div class="col-12 text-center">
+                        <p
+                            style="font-size: 1.4em; color: #2d3748; margin-top: 40px; max-width: 900px; margin-left: auto; margin-right: auto; line-height: 1.6;">
+                            In conclusion, the current housing crisis can be seen as a crisis of the government failing Canadians. Construction of housing has failed 
+                            to keep up with increases in population, which has driven up prices nationwide. Meanwhile, wages have increased at a much slower rate, making 
+                            housing unnaffordable for an increasing amount of Canadians. In order to stem this crisis, the Canadian government needs to increase housing supply 
+                            or limit the rate at which the population grows, and should aid in ensuring that wages and housing prices change at proportional rates.
+                        </p>
+                    </div>
+                </div>
             </div>
 
             <div id="right-bend" class="page-corner-bend"></div>
