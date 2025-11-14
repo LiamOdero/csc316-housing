@@ -13,7 +13,8 @@ loadData();
 function loadData() {
     d3.csv("data/avg_rent_by_pop.csv"). then(data=>{
         cleanedPopData = preparePopRentData(data);
-        popChart = new PopulationRentChart("vis5-area", "vis5-area-search", "vis5-area-list", "vis5-selections", "vis5-legend", cleanedPopData)
+        popChart = new PopulationRentChart("vis5-area", "vis5-city-search", "vis5-city-list", "vis5-city-dropdown", "vis5-area-list", 
+                                            "vis5-selected-cities", cleanedPopData)
 
         // Load and create the building visualization
         d3.json("data/BURAK_cities_data_multi_year.json").then(data => {
@@ -69,7 +70,7 @@ function initControl()  {
             changePage(i)
         });
         if (i > 1)  {
-            currTab.style("display", "none")
+            //currTab.style("display", "none")
         }
         }
     let rightBend = d3.select('#right-bend');

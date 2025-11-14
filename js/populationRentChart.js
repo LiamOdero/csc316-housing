@@ -13,7 +13,7 @@ let NUM_CATEGORIES = 11;
 class PopulationRentChart {
 
 // constructor method to initialize PopulationRentChart object
-constructor(parentElement, areaSearch, filterParent, selectionArea, legendArea, data) {
+constructor(parentElement, citySearch, cityList, dropdown, filterParent, selectionArea, data) {
     this.parentElement = parentElement;
 
     // sorting the data to make accumulation logic simpler
@@ -25,7 +25,6 @@ constructor(parentElement, areaSearch, filterParent, selectionArea, legendArea, 
 
     // A list of all provinces in the dataset
     this.provinces = [...new Set(data.map(item => item.province))];
-
     // Has all cities / provinces currently displayed in the chart
     this.displayCategories = this.provinces
 
@@ -41,14 +40,17 @@ constructor(parentElement, areaSearch, filterParent, selectionArea, legendArea, 
 
     // Inverse mapping of cities to provinces
     this.cityProvinceMap = {}
+    this.provinceCityMap = {}
     let vis = this;
 
     this.provinces.forEach(e => {
         let citySet = [...new Set(this.cityFilter[e])];
         let currObj = {"self": true};
+        this.provinceCityMap[e] = [];
         citySet.forEach(c =>    {
             currObj[c] = false;
-            vis.cityProvinceMap[c.toLowerCase()] = e;
+            vis.cityProvinceMap[c] = e;
+            vis.provinceCityMap[e].push(c)
         })
         this.cityFilter[e] = currObj;
     })
@@ -60,10 +62,11 @@ constructor(parentElement, areaSearch, filterParent, selectionArea, legendArea, 
         .range(["green", "yellow", "red"]);
 
     this.selectionArea = selectionArea;
-    this.areaSearch = d3.select("#" + areaSearch);
+    this.areaSearch = d3.select("#" + citySearch);
+    this.cityList = document.getElementById(cityList);
+    this.dropdown = d3.select("#" + dropdown);
     this.filterParent = d3.select("#" + filterParent);
-    this.legendArea = d3.select("#" + legendArea);
-
+    document.getElementById("vis5-city-search").value = "";
 }
 
 	/*
@@ -105,31 +108,6 @@ constructor(parentElement, areaSearch, filterParent, selectionArea, legendArea, 
 		vis.svg.append("g")
 			.attr("class", "y-axis axis")
 
-        vis.toggleWidth = document.getElementById(vis.selectionArea).getBoundingClientRect().width - 20;
-        vis.toggleHeight = document.getElementById(vis.selectionArea).getBoundingClientRect().height - 20;
-        vis.selectionSVG = d3.select("#" + vis.selectionArea).append("svg")
-        	.attr("width", vis.toggleWidth + 20)
-			.attr("height", vis.toggleHeight + 20)
-			.append("g")
-			.attr("transform", "translate(" + 10 + "," + 10 + ")");
-        vis.toggleX = d3.scaleLinear()
-			      .range([0, vis.toggleWidth])
-
-		vis.toggleY = d3.scaleLinear()
-                  .range([vis.toggleHeight, 0])
-
-		vis.toggleXAxis = d3.axisBottom()
-			          .scale(vis.toggleX);
-
-		vis.toggleYAxis = d3.axisLeft()
-			          .scale(vis.toggleY)
-
-		vis.selectionSVG.append("g")
-			   .attr("class", "x-axis axis")
-			   .attr("transform", "translate(0," + vis.toggleHeight + ")");
-
-		vis.selectionSVG.append("g")
-			   .attr("class", "y-axis axis")
 
         // create a tooltip
         vis.tooltip = d3.select("body")
@@ -145,27 +123,48 @@ constructor(parentElement, areaSearch, filterParent, selectionArea, legendArea, 
             .style("color", "black")
         vis.defs = vis.svg.append("defs");
 
-        const parent = d3.select("#vis5-city-filter");
+        let resetButton = d3.select("#vis5-reset-filters");
+        resetButton.on("click", function()  {
+            
+            Object.keys(vis.cityFilter).forEach((p) =>    {
+                Object.keys(vis.cityFilter[p]).forEach((c) => {
+                    vis.cityFilter[p][c] = false;
+                })
+            })
+            vis.wrangleData();
+        })
 
-        // Create a dropdown container (shown when input is focused)
-        const inputNode = vis.areaSearch.node();
-        vis.dropdown = parent.append("div")
-                                .attr("id", "vis5-area-dropdown")
-                                .style("position", "absolute")
-                                .style("left", inputNode.offsetLeft + "px")
-                                .style("top", (inputNode.offsetTop + inputNode.offsetHeight) + "px")
-                                .style("width", inputNode.offsetWidth + "px")
-                                .style("background", "white")
-                                .style("border", "1px solid #ccc")
-                                .style("border-radius", "4px")
-                                .style("max-height", "250px")
-                                .style("overflow-y", "auto")
-                                .style("display", "none")
-                                .style("z-index", "1000")
-                                .style("box-shadow", "0 2px 6px rgba(0,0,0,0.15)");
+        const tabCities = document.getElementById("vis5-tab-cities");
+        const tabProvinces = document.getElementById("vis5-tab-provinces");
+        const provinceSelect = document.getElementById("vis5-province-select");
+        vis.populateProvinceDropdown();
+
+        // Tab switching
+        tabCities.addEventListener("click", () => {
+            tabCities.classList.add("active");
+            tabProvinces.classList.remove("active");
+            vis.areaSearch.style("display", "block")
+            provinceSelect.style.display = "none";
+        });
+
+        tabProvinces.addEventListener("click", () => {
+            tabProvinces.classList.add("active");
+            tabCities.classList.remove("active");
+            vis.areaSearch.style("display", "none")
+            provinceSelect.style.display = "block";
+            vis.dropdown.style("display", "none")
+        });
+
+        // Province selection
+        provinceSelect.addEventListener("change", (e) => {
+            const province = e.target.value;
+            if (province) {
+                vis.toggleLocation(province);
+                e.target.value = ""; // Reset dropdown
+            }
+        });
 
         vis.createAreaFilters();
-
         vis.wrangleData();
 	}
 
@@ -274,162 +273,198 @@ constructor(parentElement, areaSearch, filterParent, selectionArea, legendArea, 
 
     }
 
-    populateDropdown(list) {
-        let vis = this;
-        vis.dropdown.selectAll("div").remove();
-        vis.dropdown.selectAll("div")
-            .data(list)
-            .enter()
-            .append("div")
-            .text(d => d)
-            .style("padding", "6px 8px")
-            .style("cursor", "pointer")
-            .on("click", function(event, d) {
-                vis.dropdown.style("display", "none");
 
-                vis.toggleLocation(d);
-            })
-            .on("mouseover", function() {
-                d3.select(this).style("background", "#eee");
-            })
-            .on("mouseout", function() {
-                d3.select(this).style("background", "white");
-            });
-    }
-
-    toggleLocation(loc) {
+    // Update city dropdown list
+    updateCityDropdown(searchTerm) {
         let vis = this;
-        if (Object.keys(vis.cityFilter).includes(loc))  {
-            vis.cityFilter[loc].self = !vis.cityFilter[loc].self;
-        }   else    {
-            vis.cityFilter[vis.cityProvinceMap[loc.toLowerCase()]][loc] = !vis.cityFilter[vis.cityProvinceMap[loc.toLowerCase()]][loc];
-        }
-        vis.wrangleData();
-    }
 
-    createToggleDivs()  {
-        let vis = this;
+        d3.select("#vis5-city-list").selectAll("*").remove();
 
         let toggled = []
         Object.keys(vis.cityFilter).forEach((p) =>    {
             Object.keys(vis.cityFilter[p]).forEach((c) => {
                 if (vis.cityFilter[p][c])   {
                     if (c == "self")    {
-                        toggled.push({"loc": p, i: toggled.length});
+                        toggled.push(p);
                     }   else     {
-                        toggled.push({"loc": c, i: toggled.length});
+                        toggled.push(c);
                     }
                 }
             })
         })
 
-        const NUM_LOCS = 145
-        const NUM_COLS = 8;
-        const NUM_ROWS = Math.ceil(NUM_LOCS / 40)
-
-        let boxWidth = vis.toggleWidth / NUM_COLS - 20;
-        let boxHeight = vis.toggleHeight / NUM_ROWS - 20;
-        
-        vis.toggleX.domain([0, NUM_COLS]);
-        vis.toggleY.domain([NUM_ROWS, 0])
-
-        let groups = vis.selectionSVG.selectAll(".toggle-group")
-    .data(toggled, d => d.i);
-
-    groups.join(
-        enter => {
-            let g = enter.append("g")
-                .attr("class", "toggle-group")
-                .style("cursor", "pointer")
-                .on("mouseover", function (event, d) {
-                    d3.select(this).select("rect").style("fill", "#ff8686ff");
-                })
-                .on("mouseout", function (event, d) {
-                    d3.select(this).select("rect").style("fill", "#90EE90");
-                })
-                .on("click", function (event, d) {
-                    vis.toggleLocation(d.loc);
-                });
-
-            g.append("rect")
-                .attr("width", boxWidth)
-                .attr("height", boxHeight)
-                .attr("x", d => vis.toggleX(d.i % NUM_COLS))
-                .attr("y", d => vis.toggleY(Math.floor(d.i / NUM_COLS)))
-                .attr("rx", Math.min(boxWidth, boxHeight) * 0.2) // 20% of smaller dimension
-                .attr("ry", Math.min(boxWidth, boxHeight) * 0.2)
-                .style("fill", "#90EE90");
-
-            g.append("text")
-                .attr("x", d => vis.toggleX(d.i % NUM_COLS) + boxWidth / 2)
-                .attr("y", d => vis.toggleY(Math.floor(d.i / NUM_COLS)) + boxHeight / 1.6)
-                .attr("text-anchor", "middle")
-                .attr("dominant-baseline", "middle")
-                .attr("font-size", boxWidth * 0.075) // adaptive font size
-                .text(d => d.loc);
-
-            return g;
-        },
-        update => {
-            update.select("rect")
-                .attr("x", d => vis.toggleX(d.i % NUM_COLS))
-                .attr("y", d => vis.toggleY(Math.floor(d.i / NUM_COLS)));
-
-            update.select("text")
-                .attr("x", d => vis.toggleX(d.i % NUM_COLS) + boxWidth / 2)
-                .attr("y", d => vis.toggleY(Math.floor(d.i / NUM_COLS)) + boxHeight / 1.6)
-                .text(d => d.loc);
-
-            return update;
-        },
-        exit => exit.remove()
-    );
-}
-
-    createAreaFilters()    {
-        let vis = this;
-
-        let categories = [];
-        Object.keys(vis.cityFilter).forEach(p => {
-            categories.push(p);
-            Object.keys(vis.cityFilter[p]).forEach(c => {
-                if (c != "self")    {
-                    categories.push(c);
-                }
-            });
-        });
-
-        // Show dropdown on focus
-        vis.areaSearch.on("focus", () => {
-            vis.populateDropdown(categories);
-            vis.dropdown.style("display", "block");
-        });
-
-        // Filter dropdown as user types
-        vis.areaSearch.on("input", () => {
-            const query = vis.areaSearch.property("value").toLowerCase();
-
-            const filtered = categories.filter(function (d) {
-
-                if (d.toLowerCase().includes(query))    {
+        let availableCities = Object.keys(vis.cityProvinceMap);
+        // Filter by search term
+        if (searchTerm) {
+            availableCities = availableCities.filter(function (d) {
+                if (d.toLowerCase().includes(searchTerm))    {
                     return true;
                 }   
+
                 let provinceQuery = vis.cityProvinceMap[d.toLowerCase()]
-                if (provinceQuery != undefined && provinceQuery.toLowerCase().includes(query))    {
+                if (provinceQuery != undefined && provinceQuery.toLowerCase().includes(searchTerm))    {
                     return true;
                 }
 
                 return false;
             });
-            vis.populateDropdown(filtered);
-            vis.dropdown.style("display", filtered.length ? "block" : "none");
+        }
+
+        // Add header
+        const header = document.createElement("div");
+        header.className = "dropdown-header";
+        header.textContent = (searchTerm) ? `${availableCities.length} cities found` : `All ${Object.keys(vis.cityProvinceMap).length} cities`;
+        vis.cityList.appendChild(header);
+
+        if (availableCities.length === 0) {
+            vis.cityList.innerHTML +=
+            '<div style="padding: 20px; text-align: center; color: #718096;">No cities match your search</div>';
+            return;
+        }
+
+        let currProvinces = []
+        availableCities.forEach(e =>    {
+            if (!(currProvinces.includes(vis.cityProvinceMap[e])) )   {
+                currProvinces.push(vis.cityProvinceMap[e])
+            }
+        })
+
+        // Display cities grouped by province
+        currProvinces.forEach((province) => {
+            // Province header
+            const provinceHeader = document.createElement("div");
+            provinceHeader.className = "province-group-header";
+
+            let currCities = []
+            availableCities.forEach(e =>    {
+                if (vis.cityProvinceMap[e] == province) {
+                    currCities.push(e);
+                }
+            })
+
+            provinceHeader.textContent = `${province} (${
+                currCities.length
+            })`;
+            vis.cityList.appendChild(provinceHeader);
+
+            // Cities in this province (sorted alphabetically)
+            const cities = vis.provinceCityMap[province].sort((a, b) => a.localeCompare(b));
+
+            currCities.forEach((city) => {
+                const isSelected = toggled.includes(city);
+
+                const option = document.createElement("div");
+                option.className = "city-option";
+
+                if (isSelected) {
+                    option.classList.add("selected");
+                } 
+
+                // Create city name span
+                const cityName = document.createElement("span");
+                cityName.textContent = city;
+                option.appendChild(cityName);
+
+                // All cities are clickable
+                option.addEventListener("click", () => {
+                    vis.toggleLocation(city)
+                    document.getElementById("vis5-city-search").value = "";
+                    vis.updateCityDropdown("")
+                    vis.dropdown.style("display", "none");
+                });
+
+                vis.cityList.appendChild(option);
+            });
+        });
+    }
+
+    // Populate province dropdown with all provinces
+    populateProvinceDropdown() {
+        let vis = this;
+        const provinceSelect = document.getElementById("vis5-province-select");
+
+        // Add provinces to dropdown
+        vis.provinces.forEach((province) => {
+            const option = document.createElement("option");
+            option.value = province;
+            option.textContent = `${province}`;
+            provinceSelect.appendChild(option);
+        });
+    }
+
+
+
+    toggleLocation(loc) {
+        let vis = this;
+        if (Object.keys(vis.cityFilter).includes(loc))  {
+            vis.cityFilter[loc].self = !vis.cityFilter[loc].self;
+        }   else    {
+            vis.cityFilter[vis.cityProvinceMap[loc]][loc] = !vis.cityFilter[vis.cityProvinceMap[loc]][loc];
+        }
+        vis.wrangleData();
+    }
+
+    // Update selected cities display
+    updateSelectedCitiesDisplay() {
+        let vis = this;
+        const container = document.getElementById(vis.selectionArea);
+        container.innerHTML = "";
+
+        let toggled = []
+        Object.keys(vis.cityFilter).forEach((p) =>    {
+            Object.keys(vis.cityFilter[p]).forEach((c) => {
+                if (vis.cityFilter[p][c])   {
+                    if (c == "self")    {
+                        toggled.push(p);
+                    }   else     {
+                        toggled.push(c);
+                    }
+                }
+            })
+        })
+        if (toggled.length === 0) {
+            container.innerHTML =
+            '<div style="color: #718096; font-size: 0.9em; padding: 5px;">No cities selected</div>';
+            return;
+        }
+
+        toggled.forEach((cityName) => {
+            const tag = document.createElement("div");
+            tag.className = "selected-city-tag";
+            tag.innerHTML = `
+                    <span>${cityName}</span>
+                    <span class="remove-city" data-city="${cityName}">×</span>
+                `;
+
+            tag.querySelector(".remove-city").addEventListener("click", (e) => {
+                e.stopPropagation();
+                vis.toggleLocation(cityName)
+            });
+
+            container.appendChild(tag);
+        });
+    }
+
+
+    createAreaFilters()    {
+        let vis = this;
+
+        // Show dropdown on focus
+        vis.areaSearch.on("focus", () => {
+            vis.updateCityDropdown("")
+            vis.dropdown.style("display", "block");
         });
 
-        // Hide dropdown when clicking outside
-        d3.select("body").on("click", (event) => {
-            if (!event.target.closest("#vis5-city-filter")) {
+        vis.areaSearch.on("focusout", (d) => {
+            if (d.explicitOriginalTarget.className != "city-option" && d.explicitOriginalTarget.className !=  "city-option selected")    {
                 vis.dropdown.style("display", "none");
             }
+            
+        });
+
+        // Filter dropdown as user types
+        vis.areaSearch.on("input", (e, d) => {
+            vis.updateCityDropdown(vis.areaSearch.property("value").toLowerCase())
         });
 
     }
@@ -560,17 +595,16 @@ constructor(parentElement, areaSearch, filterParent, selectionArea, legendArea, 
         vis.createGradient(svg, "rentGrad", ["green","yellow","red"]);
 
         // Row 0: Population
-        vis.drawRow(0, "Population", "popGrad", d3.min(vis.displayData, d => d.popChange), d3.max(vis.displayData, d => d.popChange), svg);
+        //vis.drawRow(0, "Population", "popGrad", d3.min(vis.displayData, d => d.popChange), d3.max(vis.displayData, d => d.popChange), svg);
 
         // Row 1: Rent
-        vis.drawRow(1, "Rent", "rentGrad", d3.min(vis.displayData, d => d.avgChange), d3.max(vis.displayData, d => d.avgChange), svg);
+        //vis.drawRow(1, "Rent", "rentGrad", d3.min(vis.displayData, d => d.avgChange), d3.max(vis.displayData, d => d.avgChange), svg);
 
     }
 
     destructVis()   {
         let vis = this;
         d3.select("#" + vis.selectionArea).selectAll("*").remove();
-        vis.legendArea.selectAll("*").remove();
         d3.select("#" + vis.parentElement).selectAll("*").remove();
     }
 
@@ -592,9 +626,8 @@ constructor(parentElement, areaSearch, filterParent, selectionArea, legendArea, 
             d3.max(vis.displayData, d => d.avgChange)
         ]);
 
-        vis.createToggleDivs();
-        vis.createLegend();
-
+        vis.updateSelectedCitiesDisplay()
+        
         vis.svg.selectAll(".box-group")
             .data(vis.displayData, d => `${d.year}-${d.category}`)
             .join(
