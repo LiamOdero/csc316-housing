@@ -116,6 +116,8 @@ function changePage(page)   {
         destructIncomeVis();
     }   else if (currTabNum == 4)   {
         popChart.destructVis();
+    }   else if (currTabNum == 6)   {
+        // Destruct construction vis if needed
     }
 
     currTabNum = page;
@@ -123,6 +125,8 @@ function changePage(page)   {
         initIncomeVis(incomeRentData, incomeVisData);
     }   else if (page == 4)  {
         popChart.initVis();
+    }   else if (page == 6)  {
+        initConstructionVisualization();
     }   
 
     pageCount += 1;
