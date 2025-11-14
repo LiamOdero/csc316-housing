@@ -112,7 +112,12 @@ function changePage(page)   {
     let newVis = d3.select('[data-content="vis' + page + '"]');
     newVis.attr("class", "content active")
 
-    if (currTabNum == 3)    {
+    if (currTabNum == 1)    {
+        // Cleanup mortgage visualization
+        if (typeof destructMortgageVisualization !== 'undefined') {
+            destructMortgageVisualization();
+        }
+    }   else if (currTabNum == 3)    {
         destructIncomeVis();
     }   else if (currTabNum == 4)   {
         popChart.destructVis();
@@ -121,7 +126,12 @@ function changePage(page)   {
     }
 
     currTabNum = page;
-    if (page == 3)  {
+    if (page == 1)  {
+        // Initialize mortgage visualization (vis1)
+        if (typeof initMortgageVisualization !== 'undefined') {
+            initMortgageVisualization();
+        }
+    }   else if (page == 3)  {
         initIncomeVis(incomeRentData, incomeVisData);
     }   else if (page == 4)  {
         popChart.initVis();
