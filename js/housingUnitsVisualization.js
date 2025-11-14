@@ -6,6 +6,12 @@ function initCityMap() {
     }
 
     mapContainer.innerHTML = ''; // clear any existing content
+    
+    // Set container styles to prevent overflow
+    mapContainer.style.position = 'relative';
+    mapContainer.style.overflow = 'hidden';
+    mapContainer.style.width = '100%';
+    mapContainer.style.height = '900px';
 
     // State for current selected year, city, and housing type filter
     let currentYear = 2024; // default to most recent year
@@ -31,25 +37,21 @@ function initCityMap() {
     let globalMaxRent = -Infinity;
     let rentColorScale; // initialized in recalculateRentData()
     
-    // margin, width, and height might need to be adjusted
-    const mapMargin = { top: 50, bottom: 50, right: 20, left: 20 };
-    const width = 900;
-    const height = 600;
-    const innerWidth = width - mapMargin.left - mapMargin.right;
-    const innerHeight = height - mapMargin.top - mapMargin.bottom;
+    // Match first visualization structure
+    const width = 1400;
+    const height = 900;
 
     const svg = d3.select(mapContainer)
         .append('svg')
-        .attr('width', '100%')
+        .attr('width', width)
         .attr('height', height)
-        .attr('viewBox', '0 0 ' + width + ' ' + height) // internal coordinate system for the SVG - allows for shapes inside it to scale proportionally with it
-        .attr('preserveAspectRatio', 'xMidYMid meet'); // map stays centered
+        .attr('viewBox', `0 0 ${width} ${height}`)
+        .attr('preserveAspectRatio', 'xMidYMid meet');
 
-    // group for ALL shapes
-    const outer = svg.append('g').attr('class', 'map-margin').attr('transform', `translate(${mapMargin.left}, ${mapMargin.top})`);                 
-    const gRoot = outer.append('g').attr('class', 'map-root'); // sub group for the map
-    const gProvinces = gRoot.append('g').attr('class', 'province-layer'); // provinces
-    const gCities = gRoot.append('g').attr('class', 'city-layer'); // cities
+    // Create main group for zoom (simplified structure like first visualization)
+    const g = svg.append('g');
+    const gProvinces = g.append('g').attr('class', 'province-layer');
+    const gCities = g.append('g').attr('class', 'city-layer');
 
     const tooltip = d3.select('body')
         .append('div')
@@ -142,45 +144,59 @@ function initCityMap() {
         .property('selected', d => d === selectedHousingType)
         .text(d => filterHousingTypeLabels[d]);
 
-    // Year filter section (RIGHT side)
+    // Year filter section (RIGHT side) - Now with slider
     const yearFilterSection = timelineContainer.append('div')
         .style('display', 'flex')
-        .style('gap', '8px')
+        .style('gap', '12px')
         .style('align-items', 'center');
 
-    const years = [2020, 2021, 2022, 2023, 2024];
+    const years = d3.range(2010, 2025); // Generate array [2010, 2011, ..., 2024]
     
     // Add year label
     yearFilterSection.append('span')
         .style('font-size', '14px')
         .style('font-weight', '600')
         .style('color', '#2d3748')
-        .style('margin-right', '5px')
         .text('Year:');
     
-    // Create year buttons
-    const yearButtons = yearFilterSection.selectAll('.year-btn')
-        .data(years)
-        .join('button')
-        .attr('class', 'year-btn')
-        .style('padding', '6px 12px')
-        .style('border', '2px solid #cbd5e0')
-        .style('border-radius', '6px')
-        .style('background', d => d === currentYear ? '#4a5568' : 'white')
-        .style('color', d => d === currentYear ? 'white' : '#2d3748')
-        .style('font-size', '14px')
-        .style('font-weight', '600')
+    // Create year display
+    const yearDisplay = yearFilterSection.append('span')
+        .style('font-size', '16px')
+        .style('font-weight', '700')
+        .style('color', '#4a5568')
+        .style('min-width', '45px')
+        .style('text-align', 'center')
+        .text(currentYear);
+    
+    // Create slider container
+    const sliderContainer = yearFilterSection.append('div')
+        .style('display', 'flex')
+        .style('align-items', 'center')
+        .style('gap', '8px');
+    
+    // Min year label
+    sliderContainer.append('span')
+        .style('font-size', '12px')
+        .style('color', '#718096')
+        .text('2010');
+    
+    // Create range slider
+    const yearSlider = sliderContainer.append('input')
+        .attr('type', 'range')
+        .attr('min', 2010)
+        .attr('max', 2024)
+        .attr('value', currentYear)
+        .attr('step', 1)
+        .style('width', '200px')
         .style('cursor', 'pointer')
-        .style('transition', 'all 0.2s')
-        .text(d => d)
-        .on('click', function(event, year) {
-            if (year !== currentYear) {
-                currentYear = year;
+        .style('accent-color', '#4a5568')
+        .on('input', function() {
+            const newYear = +this.value;
+            if (newYear !== currentYear) {
+                currentYear = newYear;
                 
-                // Update button styles
-                yearButtons
-                    .style('background', d => d === currentYear ? '#4a5568' : 'white')
-                    .style('color', d => d === currentYear ? 'white' : '#2d3748');
+                // Update year display
+                yearDisplay.text(currentYear);
                 
                 // Update city colors and visibility for new year
                 updateCityColors();
@@ -190,21 +206,13 @@ function initCityMap() {
                     updateLineChart(selectedCity);
                 }
             }
-        })
-        .on('mouseenter', function(event, year) {
-            if (year !== currentYear) {
-                d3.select(this)
-                    .style('background', '#e2e8f0')
-                    .style('border-color', '#a0aec0');
-            }
-        })
-        .on('mouseleave', function(event, year) {
-            if (year !== currentYear) {
-                d3.select(this)
-                    .style('background', 'white')
-                    .style('border-color', '#cbd5e0');
-            }
         });
+    
+    // Max year label
+    sliderContainer.append('span')
+        .style('font-size', '12px')
+        .style('color', '#718096')
+        .text('2024');
 
     // Add zoom controls container
     const controlsContainer = d3.select(mapContainer)
@@ -243,7 +251,7 @@ function initCityMap() {
         .style('position', 'absolute')
         .style('right', '20px')
         .style('top', '80px')
-        .style('width', '400px')
+        .style('width', '560px')
         .style('background', 'rgba(255, 255, 255, 0.98)')
         .style('border-radius', '10px')
         .style('box-shadow', '0 4px 16px rgba(0,0,0,0.2)')
@@ -289,7 +297,7 @@ function initCityMap() {
     const togglesContainer = chartContainer.append('div')
         .attr('class', 'housing-toggles')
         .style('display', 'flex')
-        .style('flex-wrap', 'wrap')
+        .style('flex-wrap', 'nowrap')
         .style('gap', '8px')
         .style('margin-bottom', '15px');
     
@@ -331,11 +339,11 @@ function initCityMap() {
     
     // SVG for line chart
     const chartSvg = chartContainer.append('svg')
-        .attr('width', 360)
+        .attr('width', 520)
         .attr('height', 250);
     
     const chartMargin = { top: 10, right: 30, bottom: 30, left: 50 };
-    const chartWidth = 360 - chartMargin.left - chartMargin.right;
+    const chartWidth = 520 - chartMargin.left - chartMargin.right;
     const chartHeight = 250 - chartMargin.top - chartMargin.bottom;
     
     const chartG = chartSvg.append('g')
@@ -372,8 +380,11 @@ function initCityMap() {
         
         const cityRentalData = rentalData[city.city];
         
+        // Use all years 2010-2024 for the line chart
+        const allYears = d3.range(2010, 2025);
+        
         // Filter and prepare data for visible housing types
-        const filteredData = years.map(year => {
+        const filteredData = allYears.map(year => {
             const yearData = { year };
             housingTypes.forEach(type => {
                 if (visibleHousingTypes.has(type) && cityRentalData[year] && cityRentalData[year][type]) {
@@ -388,7 +399,7 @@ function initCityMap() {
         
         // Scales
         const xScale = d3.scaleLinear()
-            .domain([2020, 2024])
+            .domain([2010, 2024])
             .range([0, chartWidth]);
         
         const allValues = filteredData.flatMap(d => 
@@ -435,7 +446,7 @@ function initCityMap() {
         // Line generator
         const line = d3.line()
             .defined(d => d !== undefined)
-            .x((d, i) => xScale(years[i]))
+            .x((d, i) => xScale(allYears[i]))
             .y(d => yScale(d));
         
         // Draw lines for each housing type
@@ -458,7 +469,7 @@ function initCityMap() {
                     .data(typeData)
                     .join('circle')
                     .attr('class', `point-${type.replace(/\s+/g, '-')}`)
-                    .attr('cx', (d, i) => xScale(years[i]))
+                    .attr('cx', (d, i) => xScale(allYears[i]))
                     .attr('cy', d => d !== undefined ? yScale(d) : null)
                     .attr('r', d => d !== undefined ? 4 : 0)
                     .attr('fill', housingTypeColors[type])
@@ -474,7 +485,7 @@ function initCityMap() {
                                 .attr('r', 6);
                             
                             chartTooltip
-                                .html(`<strong>${type.replace(' units', '')}</strong><br/>${years[yearIndex]}: <strong>$${Math.round(d)}</strong>`)
+                                .html(`<strong>${type.replace(' units', '')}</strong><br/>${allYears[yearIndex]}: <strong>$${Math.round(d)}</strong>`)
                                 .style('display', 'block')
                                 .style('opacity', 1)
                                 .style('left', (event.clientX + 10) + 'px')
@@ -725,8 +736,14 @@ function initCityMap() {
         
         // Legend was moved earlier in the code - removed duplicate here
 
-        const projection = d3.geoMercator().fitSize([innerWidth, innerHeight], provincesGeo); // converts longtitude, latitude to x,y 
-        const path = d3.geoPath().projection(projection); // path creator on the svg when given a geojson
+        // Use same projection as first visualization, adjusted for centering
+        const projection = d3.geoAlbers()
+            .center([0, 58])
+            .rotate([96, 0])
+            .parallels([49, 77])
+            .scale(1300)
+            .translate([width / 2 - 100, height / 2]);
+        const path = d3.geoPath().projection(projection);
 
         // filter city data
         const cities = rows.map(function(r) {
@@ -924,24 +941,22 @@ function initCityMap() {
             });
 
         const zoom = d3.zoom()
-            .scaleExtent([1, 20])
-            .translateExtent([[0, 0], [innerWidth, innerHeight]])
+            .scaleExtent([1, 8])
+            .translateExtent([[0, 0], [width, height]])
             .on('zoom', function(event) {
-                gRoot.attr('transform', event.transform);
+                g.attr('transform', event.transform);
 
-                // Scale circles inversely so they appear smaller as you zoom in (reduces overlap)
-                const baseRadius = 4;
-                const minVisualRadius = 0.3; // Allow circles to get quite small when fully zoomed
-                const scaledRadius = Math.max(minVisualRadius, baseRadius / event.transform.k);
-
-                // Update all city circles (re-select to ensure we get current circles)
-                gCities.selectAll('circle.city').attr('r', scaledRadius);
+                const scale = event.transform.k;
                 
-                // Scale province stroke-width with k^2 so it gets thinner faster when zooming in
-                const baseStrokeWidth = 1.2; // base at k=1
-                const minStrokeWidth = 0.05; // Minimum border thickness when fully zoomed in
-                const scaledStrokeWidth = Math.max(minStrokeWidth, baseStrokeWidth / (event.transform.k * event.transform.k));
-                gProvinces.selectAll('path.province').style('stroke-width', scaledStrokeWidth);
+                // Scale province stroke width
+                gProvinces.selectAll('path.province')
+                    .attr('stroke-width', 2 / scale);
+                
+                // Scale city circles inversely
+                const baseRadius = 4;
+                const minVisualRadius = 0.3;
+                const scaledRadius = Math.max(minVisualRadius, baseRadius / scale);
+                gCities.selectAll('circle.city').attr('r', scaledRadius);
             });
 
         svg.call(zoom);
