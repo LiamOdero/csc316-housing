@@ -335,6 +335,24 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
             return d.year != "2001"
         })
 
+        vis.displayData = vis.displayData.sort(function(a, b)   {
+            if (a.province < b.province) {
+                return -1;  
+            }
+            if (a.province > b.province) {
+                return 1;   
+            }
+
+            if (a.city < b.city) {
+                return -1;  
+            }
+            if (a.city > b.city) {
+                return 1;  
+            }
+
+            return a.year - b.year;
+        })
+
     }
 
 
