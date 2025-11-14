@@ -5,11 +5,14 @@
     familyType: "Economic family type"
 };
 
+const RENT_STRUCTURE_FILTER = "Row and apartment structures of three units and over";
+
 const RENT_DATA_MAP = {
     city: "GEO",
     date: "REF_DATE",
     value: "VALUE",
-    type: "Type of unit"
+    type: "Type of unit",
+    structure: "Type of structure"
 };
 
 function getCityLabel(value) {
@@ -180,7 +183,9 @@ function createSelection(data, defaultText, container, options = {}) {
 }
 
 Promise.all([
-    d3.csv("data/jeff/rent-prices.csv").then(rows => rows.map(row => mapRowBySchema(row, RENT_DATA_MAP))),
+    d3.csv("data/jeff/rent-prices.csv").then(rows => rows
+        .map(row => mapRowBySchema(row, RENT_DATA_MAP))
+        .filter(row => row.structure === RENT_STRUCTURE_FILTER)),
     d3.csv("data/jeff/u65incomedata.csv").then(rows => rows.filter(row => ['A', 'B', 'C', 'D', 'E'].includes(row.STATUS))
         .map(row => mapRowBySchema(row, INCOME_DATA_MAP)))
 ]).then(([rentData, incomeData]) => {
