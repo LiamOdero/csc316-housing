@@ -224,80 +224,78 @@
                 <div class="viz-block" id="vis4">
                     <header>
                         <h1>How Have Rent Responded to Population Changes?</h1>
-                    </header>
-                    <div class="row justify-content-center g-5">
-                        <div class="col-12 visualization-section" style="min-height: 70vh;">
-
-                        <!-- Filters -->
-                        <div class="filters-container">
-                            <div class="filter-labels-row">
-                                <div class="filter-label-item filter-label-location">
-                                    <div class="label-text">Location Selection</div>
-                                    <div class="selector-tabs">
-                                        <button id="vis5-tab-cities" class="selector-tab active">Cities</button>
-                                        <button id="vis5-tab-provinces" class="selector-tab">Provinces</button>
-                                    </div>
-                                </div>
-                                <div class="filter-label-item">
-                                    <div class="label-text">Highlight Change</div>
-                                </div>
-                                <div class="filter-label-item filter-label-button">
-                                    <div class="label-text">&nbsp;</div>
-                                </div>
-                                <div class="filter-label-item filter-label-button">
-                                    <div class="label-text">&nbsp;</div>
-                                </div>
-                                <div class="filter-label-item filter-label-button">
-                                    <div class="label-text">&nbsp;</div>
-                                </div>
-                                <div class="filter-label-item filter-label-button">
-                                    <div class="label-text">&nbsp;</div>
-                                </div>
-                            </div>
-
-                            <!-- Filter Inputs Row -->
-                            <div class="filter-inputs-row">
-                                <div class="filter-input-item filter-input-location">
-                                    <div class="city-selector-container">
-                                        <input type="text" id="vis5-city-search" class="city-search-input" placeholder="Search cities...">
-                                        <select id="vis5-province-select" class="province-select" style="display: none;">
-                                            <option value="">Select a province...</option>
-                                        </select>
-                                        <div id="vis5-city-dropdown" class="city-dropdown" style="display: none;">
-                                            <div id="vis5-city-list" class="city-list"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="filter-input-item">
-                                    <select id="vis4-highlight" class="filter-select">
-                                        <option value="none" selected>None</option>
-                                        <option value="pop" selected>High Population</option>
-                                        <option value="avg">High Average Rent</option>
-                                        <option value="both">High Population and Average Rent</option>
-                                    </select>
-                                </div>
-                                <div class="filter-input-item filter-input-button">
-                                    <button id="vis5-reset-filters" class="reset-btn">Reset Filters</button>
-                                </div>
-                            </div>
-
-                            <!-- Selected Cities Display -->
-                            <div id="vis5-selected-cities" class="selected-cities"></div>
-                        </div>
-
-                        <div id="vis5-area"
-                            style="width: 100%; height: 60vh; min-height: 400px; border: thin solid transparent;">
-                        </div>
-
-                        <div id="vis5-legend" style="height: 5vh"></div>
-                        <div class="data-table-section">
                             <p>Overall, most years and locations in which there is a high percentage increase in rent also see a corresponding increase 
                                 in population. There are of course exceptions, such as PEI in 2023 which saw a mere 0.93% increase in average rent despite 
                                 a 4.52% increase in population, or Ontario in 2022 which saw a 7% increase in average rent with only a 0.27% increase in population. 
                                 However, positive correlation between population and average rent increases suggests that supply is struggling to keep up with demand,
                                 driving up prices. 
                             </p>
+                    </header>
+                    <div class="row justify-content-center g-5">
+                        <div class="col-12 visualization-section" style="min-height: 70vh;">
+
+                        <!-- Filters -->
+                        <div id="vis4-filters-container" class="filters-container">
+                            <div class="filter-labels-row">
+                                <div class="filter-label-item filter-label-location">
+                                    <div class="label-text">Location Selection</div>
+                                    <div class="selector-tabs">
+                                        <button id="vis5-tab-provinces" class="selector-tab active">Provinces</button>
+                                        <button id="vis5-tab-cities" class="selector-tab">Cities</button>
+                                    </div>
+                                </div>
+                                 <select id="vis4-highlight" class="filter-select" style="height:95%">
+                                    <option value="none" selected>Highlight: None</option>
+                                    <option value="pop" selected> Highlight: High Population</option>
+                                    <option value="avg"> Highlight: High Average Rent</option>
+                                    <option value="both">Highlight: High Population and Average Rent</option>
+                                </select>
+                                <div class="filter-label-item filter-label-button">
+                                    <div class="label-text">&nbsp;</div>
+                                </div>
+                                <div class="filter-label-item filter-label-button">
+                                    <div class="label-text">&nbsp;</div>
+                                </div>
+                                <div class="filter-label-item filter-label-button">
+                                    <div class="label-text">&nbsp;</div>
+                                </div>
+                                <div class="filter-label-item filter-label-button">
+                                    <div class="label-text">&nbsp;</div>
+                                </div>
+                            </div>
+
+                            <div class="filter-labels-row">
+                                <div class="label-text">Legend</div>
+                                <div class="filter-label-item filter-label-button">
+                                    <div class="label-text">&nbsp;</div>
+                                </div>
+                                <div class="filter-label-item filter-label-button">
+                                    <div class="label-text">&nbsp;</div>
+                                </div>
+                                <div class="filter-label-item filter-label-button">
+                                    <div class="label-text">&nbsp;</div>
+                                </div>
+                                <div class="filter-label-item filter-label-button">
+                                    <div class="label-text">&nbsp;</div>
+                                </div>
+                                <div class="filter-label-item filter-label-button">
+                                    <div class="label-text">&nbsp;</div>
+                                </div>
+                            </div>
+
+                            <div class="filter-inputs-row">
+
+                                <div class="filter-input-item">
+                                    <div id="vis5-legend" class="vis5-legend"></div>
+                                </div>
+                            </div>
+                            
                         </div>
+                        
+                        <div id="vis5-area"
+                            style="width: 100%; height: 60vh; min-height: 400px; border: thin solid transparent;">
+                        </div>
+
                         </div>
                     </div>
                 </div>
