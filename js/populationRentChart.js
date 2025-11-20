@@ -68,7 +68,7 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
     this.cityList = document.getElementById(cityList);
     this.dropdown = d3.select("#" + dropdown);
     this.filterParent = d3.select("#" + filterParent);
-    this.highlight = d3.select("#vis4-highlight")
+    this.highlight = d3.select("#vis5-highlight")
     this.highlight.property("value", "none")
     vis.legendArea = d3.select("#vis5-legend");
 }
@@ -135,7 +135,6 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
 
             Object.keys(vis.cityFilter).forEach(p => {
                 Object.keys(vis.cityFilter[p]).forEach(c => {
-                    console.log(c)
                     if (c == "self")    {
                         vis.cityFilter[p][c] = false;
                     }   else if (vis.cityVis.includes(c))    {
@@ -305,7 +304,7 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
     drawRow(rowIndex, label, gradId, minValue, maxValue, svg) {
         let vis = this;
         const legendWidth = vis.legendArea.node().clientWidth;
-        const containerWidth = d3.select("#vis4-filters-container").node().clientWidth * 0.65;
+        const containerWidth = d3.select("#vis5-filters-container").node().clientWidth * 0.65;
 
         // --- Responsive Constants ---
         const rowHeight = 60; 
@@ -425,7 +424,7 @@ createLegend() {
 
 
     // It's critical to get the clientWidth dynamically for responsiveness
-    const legendWidth = d3.select("#vis4-filters-container").node().clientWidth * 0.85;
+    const legendWidth = d3.select("#vis5-filters-container").node().clientWidth * 0.85;
     const padding = 10;
     const rowHeight = 60; // Now using a fixed row height
     const numRows = 2;
