@@ -57,11 +57,14 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
         this.cityFilter[e] = currObj;
     })
 
+    vis.mutedPalette = ["rgb(193, 191, 94)", "#f9dc5c", "#E97451"]
+    vis.highlightPalette = ["#6f9460", "#f9dc5c", "red"]
+
     // Set ordinal color scale
     vis.popColorScale = d3.scaleLinear()
-        .range(["green", "yellow", "red"]);
+        .range(vis.highlightPalette);
     vis.avgColorScale = d3.scaleLinear()
-        .range(["green", "yellow", "red"]);
+        .range(vis.highlightPalette);
 
     this.selectionArea = selectionArea;
     this.areaSearch = d3.select("#" + citySearch);
@@ -69,7 +72,7 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
     this.dropdown = d3.select("#" + dropdown);
     this.filterParent = d3.select("#" + filterParent);
     this.highlight = d3.select("#vis5-highlight")
-    this.highlight.property("value", "none")
+    this.highlight.property("value", "both")
     vis.legendArea = d3.select("#vis5-legend");
 }
 
@@ -162,7 +165,7 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
         });
 
         vis.highlight.on("change", function()  {
-            vis.updateVis()
+            vis.wrangleData()
         })
         vis.wrangleData();
 	}
@@ -331,7 +334,7 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
         const barWidth = containerWidth;
         
         // Calculate X offset to center the content
-        const xOffset = (legendWidth - totalContentWidth) / 2;
+        const xOffset = (legendWidth - totalContentWidth) / 2 + 50;
 
         // Group for the row
         const g = svg.append("g")
@@ -401,56 +404,57 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
             .attr("stop-color", d => d);
     }
 
-// Function to set up the legend area
-createLegend() {
-    let vis = this;
+    // Function to set up the legend area
+    createLegend() {
+        let vis = this;
 
-    // --- Bug Fix: Data Check and Safe Fallback ---
-    const dataExists = vis.displayData && vis.displayData.length > 0;
-    
-    // Define safe fallback values in case data is missing
-    let popMin = 0, popMax = 100;
-    let rentMin = 0, rentMax = 100;
+        // --- Bug Fix: Data Check and Safe Fallback ---
+        const dataExists = vis.displayData && vis.displayData.length > 0;
+        
+        // Define safe fallback values in case data is missing
+        let popMin = 0, popMax = 100;
+        let rentMin = 0, rentMax = 100;
 
-    if (dataExists) {
-        popMin = d3.min(vis.displayData, d => d.popChange);
-        popMax = d3.max(vis.displayData, d => d.popChange);
-        rentMin = d3.min(vis.displayData, d => d.avgChange);
-        rentMax = d3.max(vis.displayData, d => d.avgChange);
-    } else {
-        console.warn("vis.displayData is empty or null. Displaying default range (0% to 100%).");
+        if (dataExists) {
+            popMin = d3.min(vis.displayData, d => d.popChange);
+            popMax = d3.max(vis.displayData, d => d.popChange);
+            rentMin = d3.min(vis.displayData, d => d.avgChange);
+            rentMax = d3.max(vis.displayData, d => d.avgChange);
+        } else {
+            console.warn("vis.displayData is empty or null. Displaying default range (0% to 100%).");
+        }
+        // --- End Bug Fix ---
+
+
+        // It's critical to get the clientWidth dynamically for responsiveness
+        const legendWidth = d3.select("#vis5-filters-container").node().clientWidth * 0.85;
+        const padding = 10;
+        const rowHeight = 60; // Now using a fixed row height
+        const numRows = 2;
+
+        // Clear previous legend
+        vis.legendArea.selectAll("*").remove();
+
+        // Calculate total height dynamically
+        const totalHeight = padding * 1.5 + numRows * rowHeight;
+
+        // Append SVG
+        const svg = vis.legendArea.append("svg")
+            .attr("width", legendWidth)
+            .attr("height", totalHeight);
+
+        vis.createGradient(svg, "popGrad", vis.popColorScale.range());
+        vis.createGradient(svg, "rentGrad", vis.avgColorScale.range());
+
+        // Use the calculated safe min/max values in drawRow calls
+        vis.drawRow(0, "Population", "popGrad", popMin, popMax, svg);
+        vis.drawRow(1, "Rent", "rentGrad", rentMin, rentMax, svg);
     }
-    // --- End Bug Fix ---
 
-
-    // It's critical to get the clientWidth dynamically for responsiveness
-    const legendWidth = d3.select("#vis5-filters-container").node().clientWidth * 0.85;
-    const padding = 10;
-    const rowHeight = 60; // Now using a fixed row height
-    const numRows = 2;
-
-    // Clear previous legend
-    vis.legendArea.selectAll("*").remove();
-
-    // Calculate total height dynamically
-    const totalHeight = padding * 1.5 + numRows * rowHeight;
-
-    // Append SVG
-    const svg = vis.legendArea.append("svg")
-        .attr("width", legendWidth)
-        .attr("height", totalHeight);
-
-    vis.createGradient(svg, "popGrad", ["green","yellow","red"]);
-    vis.createGradient(svg, "rentGrad", ["green","yellow","red"]);
-
-    // Use the calculated safe min/max values in drawRow calls
-    vis.drawRow(0, "Population", "popGrad", popMin, popMax, svg);
-    vis.drawRow(1, "Rent", "rentGrad", rentMin, rentMax, svg);
-}
-destructVis()   {
-    let vis = this;
-    d3.select("#" + vis.parentElement).selectAll("*").remove();
-}
+    destructVis()   {
+        let vis = this;
+        d3.select("#" + vis.parentElement).selectAll("*").remove();
+    }
 
 	updateVis(){
         let vis = this;
@@ -470,27 +474,19 @@ destructVis()   {
             d3.max(vis.displayData, d => d.avgChange)
         ]);
 
-        let highlighted = []
-        let popThreshold = d3.max(vis.displayData, d => d.popChange) * 0.5
-        let avgThreshold = d3.max(vis.displayData, d => d.avgChange) * 0.5
-        vis.displayData.forEach(e =>    {
-            if (vis.highlight.property("value") == "pop")   {
-                if (e.popChange >= popThreshold)    {
-                    highlighted.push(e)
-                }
-            }   else if (vis.highlight.property("value") == "avg")   {
-                if (e.avgChange >= avgThreshold)    {
-                    highlighted.push(e)
-                }
-            }   else if (vis.highlight.property("value") == "both")   {
-                if (e.popChange >= popThreshold && e.avgChange >= avgThreshold)    {
-                    highlighted.push(e)
-                }
-            }
-        })
+        if (vis.highlight.property("value") == "pop")   {
+            vis.popColorScale.range(vis.highlightPalette);
+            vis.avgColorScale.range(vis.mutedPalette);
+        }   else if (vis.highlight.property("value") == "avg")   {
+            vis.popColorScale.range(vis.mutedPalette);
+            vis.avgColorScale.range(vis.highlightPalette);
+        }   else if (vis.highlight.property("value") == "both")   {
+            vis.popColorScale.range(vis.highlightPalette);
+            vis.avgColorScale.range(vis.highlightPalette);
+
+        }
 
         vis.createLegend();
-
         vis.svg.selectAll(".box-group")
             .data(vis.displayData, d => `${d.year}-${d.category}`)
             .join(
@@ -588,14 +584,12 @@ destructVis()   {
                     update.select(".pop-tri")
                     .transition()
                         .attr("d", `M0,${bh} L${bw},${bh} L0,0 Z`)
-                        .style("fill", d => vis.popColorScale(d.popChange))
-                        .style("opacity", d => (highlighted.length > 0 && !(highlighted.includes(d))) ? 0.4 : 1);
+                        .style("fill", d => vis.popColorScale(d.popChange));
 
                     update.select(".rent-tri")
                     .transition()
                         .attr("d", `M${bw},0 L${bw},${bh} L0,0 Z`)
-                        .style("fill", d => vis.avgColorScale(d.avgChange))
-                        .style("opacity", d => (highlighted.length > 0 && !(highlighted.includes(d))) ? 0.4 : 1);
+                        .style("fill", d => vis.avgColorScale(d.avgChange));
 
                     update.select(".diag")
                     .transition()
