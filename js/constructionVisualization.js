@@ -111,7 +111,13 @@ function initConstructionVisualization() {
 
         const years = Array.from(new Set(housingData.map(d => +d.Year))).filter(y => y >= 2013 && y <= 2023).sort();
         const allProvinces = Array.from(new Set(housingData.map(d => d.Province).filter(p => p)));
-        
+        const defaultProvinces = []
+        allProvinces.forEach(e =>   {
+            if (e != "Saskatchewan" && e != "Newfoundland and Labrador")    {
+                defaultProvinces.push(e)
+            }
+        })
+
         // Create color scale for provinces
         const colorScale = d3.scaleOrdinal()
             .domain(allProvinces)
@@ -150,7 +156,7 @@ function initConstructionVisualization() {
         });
         
 
-        let selectedProvinces = new Set(allProvinces);
+        let selectedProvinces = new Set(defaultProvinces);
         let selectedHousingTypes = new Set(['All']);
 
         const filterContainer = container.insert('div', ':first-child')
@@ -188,7 +194,7 @@ function initConstructionVisualization() {
 
         dropdownButton.append('span')
             .attr('class', 'button-text')
-            .text('All Provinces Selected');
+            .text('10 of 12 Provinces Selected');
 
         dropdownButton.append('span')
             .attr('class', 'arrow')
@@ -234,7 +240,7 @@ function initConstructionVisualization() {
                 .attr('type', 'checkbox')
                 .attr('id', `province-${province}`)
                 .attr('value', province)
-                .property('checked', true)
+                .property('checked', defaultProvinces.includes(province))
                 .on('change', function() {
                     if (this.checked) {
                         selectedProvinces.add(province);
@@ -435,11 +441,11 @@ function initConstructionVisualization() {
         const pointsGroup = svg.append('g').attr('class', 'points-group');
 
         // Create legend on the right side of the chart
-        const legend = svg.append('g')
+        const legendProvinces = svg.append('g')
             .attr('class', 'legend')
             .attr('transform', `translate(${width + 20}, 0)`);
 
-        legend.append('text')
+        legendProvinces.append('text')
             .attr('x', 0)
             .attr('y', -10)
             .style('font-size', '14px')
@@ -453,13 +459,28 @@ function initConstructionVisualization() {
             yScale.domain([0, d3.max(filteredData, d => d.ratio) * 1.1 || 1]);
             svg.select('.y-axis').transition().duration(500).call(yAxis);
 
+            let lineData = Array.from(provinceGroups)
+            let ratio1 = ["1 House : 1 Person", []]
+            let ratio2 = ["1 House : 2 Persons", []]
+            let ratio4 = ["1 House : 4 Persons", []]
+            years.forEach(e =>  {
+                if (e > 2013)    {
+                    ratio1[1].push({"year": e, "province": "1 House : 1 Person", "ratio": 1})
+                    ratio2[1].push({"year": e, "province": "1 House : 2 Persons", "ratio": 0.5})
+                    ratio4[1].push({"year": e, "province": "1 House : 4 Persons", "ratio": 0.25})
+                }
+            })
+            
+            lineData.push(ratio1)
+            lineData.push(ratio2)
+            lineData.push(ratio4)
+
             const line = d3.line()
                 .x(d => xScale(d.year))
                 .y(d => yScale(d.ratio))
                 .curve(d3.curveMonotoneX);
-
             const lines = linesGroup.selectAll('.province-line')
-                .data(Array.from(provinceGroups), d => d[0]);
+                .data(lineData);
 
             lines.exit()
                 .transition()
@@ -480,7 +501,25 @@ function initConstructionVisualization() {
                 .duration(500)
                 .style('opacity', 1)
                 .attr('d', d => line(d[1]))
-                .attr('stroke', d => colorScale(d[0]));
+                .attr('stroke', d => {
+                    if (provinceNames.includes(d[0]))   {
+                        return colorScale(d[0])
+                    }   else    {
+                        if (d[0] == "1 House : 1 Person")   {
+                            return "green"
+                        }   else if (d[0] == "1 House : 2 Persons") {
+                            return "#fdb73e"
+                        }   else    {
+                            return "red"
+                        }
+                    }
+                })
+                .style("stroke-dasharray", d => {
+                    if (provinceNames.includes(d[0]))   {
+                    }   else    {
+                        return "5, 5"
+                    }
+                });
 
             const points = pointsGroup.selectAll('.data-point')
                 .data(filteredData, d => `${d.province}-${d.year}`);
@@ -542,7 +581,7 @@ function initConstructionVisualization() {
                 .attr('r', 4);
 
             // Update legend on the right side
-            const legendItems = legend.selectAll('.legend-item')
+            const legendItems = legendProvinces.selectAll('.legend-item')
                 .data(allProvinces.sort(), d => d);
 
             legendItems.exit().remove();
@@ -576,6 +615,51 @@ function initConstructionVisualization() {
             allLegendItems.select('text')
                 .text(d => d)
                 .attr('opacity', d => selectedProvinces.has(d) ? 1 : 0.5);
+
+            const legendLines = svg.append('g')
+            .attr('class', 'legend')
+            .attr('transform', `translate(${width + 20}, ${legendProvinces.node().getBoundingClientRect().height + 30})`);
+
+            legendLines.append('text')
+                .attr('x', 0)
+                .attr('y', -10)
+                .style('font-size', '14px')
+                .style('font-weight', 'bold')
+                .text('Thresholds');
+
+                const thresholds = [
+            { name: '1 House : 1 Person', color: 'green' },
+            { name: '1 House : 2 Persons', color: '#fdb73e' },
+            { name: '1 House : 4 Persons', color: 'red' }]
+
+            const legendItemHeight = 20; // Vertical spacing between legend items
+            const lineLength = 20; // Length of the line segment in the legend
+
+            // Create a group for each threshold item
+            const legendLinesItems = legendLines.selectAll('.legend-item')
+                .data(thresholds)
+                .enter()
+                .append('g')
+                .attr('class', 'legend-item')
+                .attr('transform', (d, i) => `translate(0, ${i * legendItemHeight})`); // Position each item vertically
+
+            // Append the dotted line segment
+            legendLinesItems.append('line')
+                .attr('x1', 0)
+                .attr('y1', 5)
+                .attr('x2', lineLength)
+                .attr('y2', 5)
+                .attr('stroke', d => d.color)
+                .attr('stroke-width', 2)
+                .attr('stroke-dasharray', '3,3');
+
+            // Append the text label for the threshold
+            legendLinesItems.append('text')
+                .attr('x', lineLength + 5) 
+                .attr('y', 5)
+                .attr('dy', '0.35em')
+                .style('font-size', '12px')
+                .text(d => d.name);
         }
 
         updateChart();
