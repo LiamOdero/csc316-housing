@@ -452,6 +452,52 @@ function initConstructionVisualization() {
             .style('font-weight', 'bold')
             .text('Provinces');
 
+        
+            const legendLines = svg.append('g')
+            .attr('class', 'legend')
+            .attr('transform', `translate(${width + 20}, ${350})`);
+
+            legendLines.append('text')
+                .attr('x', 0)
+                .attr('y', -10)
+                .style('font-size', '14px')
+                .style('font-weight', 'bold')
+                .text('Thresholds');
+
+                const thresholds = [
+            { name: '1 House : 1 Person', color: 'green' },
+            { name: '1 House : 2 Persons', color: '#fdb73e' },
+            { name: '1 House : 4 Persons', color: 'red' }]
+
+            const legendItemHeight = 20; // Vertical spacing between legend items
+            const lineLength = 20; // Length of the line segment in the legend
+
+            // Create a group for each threshold item
+            const legendLinesItems = legendLines.selectAll('.legend-item')
+                .data(thresholds)
+                .enter()
+                .append('g')
+                .attr('class', 'legend-item')
+                .attr('transform', (d, i) => `translate(0, ${i * legendItemHeight})`); // Position each item vertically
+
+            // Append the dotted line segment
+            legendLinesItems.append('line')
+                .attr('x1', 0)
+                .attr('y1', 5)
+                .attr('x2', lineLength)
+                .attr('y2', 5)
+                .attr('stroke', d => d.color)
+                .attr('stroke-width', 2)
+                .attr('stroke-dasharray', '3,3');
+
+            // Append the text label for the threshold
+            legendLinesItems.append('text')
+                .attr('x', lineLength + 5) 
+                .attr('y', 5)
+                .attr('dy', '0.35em')
+                .style('font-size', '12px')
+                .text(d => d.name);
+
         function updateChart() {
             const filteredData = ratioData.filter(d => selectedProvinces.has(d.province));
             const provinceGroups = d3.group(filteredData, d => d.province);
@@ -615,51 +661,6 @@ function initConstructionVisualization() {
             allLegendItems.select('text')
                 .text(d => d)
                 .attr('opacity', d => selectedProvinces.has(d) ? 1 : 0.5);
-
-            const legendLines = svg.append('g')
-            .attr('class', 'legend')
-            .attr('transform', `translate(${width + 20}, ${legendProvinces.node().getBoundingClientRect().height + 30})`);
-
-            legendLines.append('text')
-                .attr('x', 0)
-                .attr('y', -10)
-                .style('font-size', '14px')
-                .style('font-weight', 'bold')
-                .text('Thresholds');
-
-                const thresholds = [
-            { name: '1 House : 1 Person', color: 'green' },
-            { name: '1 House : 2 Persons', color: '#fdb73e' },
-            { name: '1 House : 4 Persons', color: 'red' }]
-
-            const legendItemHeight = 20; // Vertical spacing between legend items
-            const lineLength = 20; // Length of the line segment in the legend
-
-            // Create a group for each threshold item
-            const legendLinesItems = legendLines.selectAll('.legend-item')
-                .data(thresholds)
-                .enter()
-                .append('g')
-                .attr('class', 'legend-item')
-                .attr('transform', (d, i) => `translate(0, ${i * legendItemHeight})`); // Position each item vertically
-
-            // Append the dotted line segment
-            legendLinesItems.append('line')
-                .attr('x1', 0)
-                .attr('y1', 5)
-                .attr('x2', lineLength)
-                .attr('y2', 5)
-                .attr('stroke', d => d.color)
-                .attr('stroke-width', 2)
-                .attr('stroke-dasharray', '3,3');
-
-            // Append the text label for the threshold
-            legendLinesItems.append('text')
-                .attr('x', lineLength + 5) 
-                .attr('y', 5)
-                .attr('dy', '0.35em')
-                .style('font-size', '12px')
-                .text(d => d.name);
         }
 
         updateChart();
