@@ -1,9 +1,8 @@
-﻿const INCOME_DATA_MAP = {
-    city: "GEO",
-    date: "REF_DATE",
-    value: "VALUE",
-    familyType: "Economic family type"
-};
+﻿const INCOME_FAMILY_COLUMNS = [
+    { key: "dual-parent-families", label: "Dual-parent families" },
+    { key: "single-parent-families", label: "Single-parent families" },
+    { key: "single-individuals", label: "Single individuals" }
+];
 
 const RENT_STRUCTURE_FILTER = "Row and apartment structures of three units and over";
 
@@ -31,6 +30,30 @@ function mapRowBySchema(row, schema) {
             return [newKey, raw !== undefined && !isNaN(numericValue) ? numericValue : raw];
         })
     );
+}
+
+function reshapeIncomeData(rows) {
+    const tidy = [];
+    rows.forEach(row => {
+        const year = Number(row.date);
+        const city = typeof row.city === "string" ? row.city.trim() : null;
+        if (!city || !Number.isFinite(year)) {
+            return;
+        }
+        INCOME_FAMILY_COLUMNS.forEach(({ key, label }) => {
+            const value = Number(row[key]);
+            if (!Number.isFinite(value)) {
+                return;
+            }
+            tidy.push({
+                city,
+                date: year,
+                familyType: label,
+                value
+            });
+        });
+    });
+    return tidy;
 }
 
 function normalizeRentType(value) {
@@ -291,7 +314,7 @@ class IncomeRentComparison {
             '2br': '2BR',
             '3br': '3BR'
         };
-        this.baseBlockWidth = 180;
+        this.baseBlockWidth = 130;
         this.focusCardWidth = 130;
         this.focusCardHalfWidth = this.focusCardWidth / 2;
         this.focusCardMinWidth = 40;
@@ -504,7 +527,7 @@ class IncomeRentComparison {
             });
         });
 
-        const incomeAccumulator = {};
+        this.incomeAggregates = {};
         this.incomeData.forEach(d => {
             const city = d.city;
             const familyType = d.familyType || 'Unknown';
@@ -513,26 +536,12 @@ class IncomeRentComparison {
             if (!city || !Number.isFinite(year) || !Number.isFinite(value)) {
                 return;
             }
-            incomeAccumulator[city] = incomeAccumulator[city] || {};
-            incomeAccumulator[city][year] = incomeAccumulator[city][year] || {};
-            incomeAccumulator[city][year][familyType] = incomeAccumulator[city][year][familyType] || { sum: 0, count: 0 };
-            incomeAccumulator[city][year][familyType].sum += value;
-            incomeAccumulator[city][year][familyType].count += 1;
-        });
-
-        this.incomeAggregates = {};
-        Object.entries(incomeAccumulator).forEach(([city, yearMap]) => {
-            const cityStore = this.incomeAggregates[city] = {};
-            Object.entries(yearMap).forEach(([yearKey, typeMap]) => {
-                const numericYear = Number(yearKey);
-                const yearStore = cityStore[numericYear] = {};
-                Object.entries(typeMap).forEach(([familyType, stats]) => {
-                    yearStore[familyType] = {
-                        value: stats.count > 0 ? (stats.sum / stats.count) / 12 : null,
-                        count: stats.count
-                    };
-                });
-            });
+            const cityStore = this.incomeAggregates[city] || (this.incomeAggregates[city] = {});
+            const yearStore = cityStore[year] || (cityStore[year] = {});
+            yearStore[familyType] = {
+                value: value / 12,
+                count: 1
+            };
         });
     }
 
