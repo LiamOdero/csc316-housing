@@ -517,7 +517,7 @@ function initConstructionVisualization() {
                 .style("stroke-dasharray", d => {
                     if (provinceNames.includes(d[0]))   {
                     }   else    {
-                        return "5, 5"
+                        return "10, 35"
                     }
                 });
 
