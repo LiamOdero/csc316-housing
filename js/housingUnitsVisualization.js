@@ -1,22 +1,44 @@
 function initCityMap() {
-    const mapContainer = document.getElementById('map');
-    if (!mapContainer) {
+    const mapContainerSel = d3.select('#map');
+    if (mapContainerSel.empty()) {
         console.warn('Map container not found');
         return;
     }
 
-    mapContainer.innerHTML = ''; // clear any existing content
-    
-    // Set container styles to prevent overflow
-    mapContainer.style.position = 'relative';
-    mapContainer.style.overflow = 'hidden';
-    mapContainer.style.width = '100%';
-    mapContainer.style.height = '900px';
+    // Clear existing content and set container styles
+    mapContainerSel.html('');
+    mapContainerSel.style('position', 'relative')
+        .style('overflow', 'visible')
+        .style('width', '100%')
+        .style('min-height', '900px')
+        .style('display', 'flex')
+        .style('gap', '20px');
 
-    // State for current selected year, city, and housing type filter
+    // Create left container for map (d3 selection)
+    const mapAreaContainer = mapContainerSel.append('div')
+        .attr('class', 'map-area-container')
+        .style('flex', '1')
+        .style('min-width', '0')
+        .style('position', 'relative');
+
+    // Create right container for chart panel (d3 selection)
+    const chartPanelContainer = mapContainerSel.append('div')
+        .attr('class', 'chart-panel-container')
+        .style('width', '420px')
+        .style('height', '900px')
+        .style('flex-shrink', '0')
+        .style('position', 'relative')
+        .style('background', 'rgba(255, 255, 255, 0.98)')
+        .style('border-radius', '10px')
+        .style('box-shadow', '0 4px 16px rgba(0,0,0,0.2)')
+        .style('padding', '20px')
+        .style('display', 'flex')
+        .style('flex-direction', 'column');
+
+    // State for current selected year and city
     let currentYear = 2024; // default to most recent year
     let selectedCity = null;
-    let selectedHousingType = 'All'; // 'All' or specific housing type
+    let selectedHousingType = 'All'; // Always use average across all housing types
     
     // Placeholder functions that will be replaced after data loads
     let updateCityColors = function() {
@@ -31,6 +53,9 @@ function initCityMap() {
         return '#999'; // gray until data loads
     };
     let rentalData = {}; // will store rental data by city
+    let provinceAverages = {}; // { provinceName: { year: avgRent } }
+    let canadaAverages = {}; // { year: avgRent }
+    let cityToProvince = {}; // Map city names to their province
     
     // Shared legend/color state (must be outside Promise.all scope)
     let globalMinRent = Infinity;
@@ -38,12 +63,12 @@ function initCityMap() {
     let rentColorScale; // initialized in recalculateRentData()
     
     // Match first visualization structure
-    const width = 1400;
+    const width = 1200;
     const height = 900;
 
-    const svg = d3.select(mapContainer)
+    const svg = mapAreaContainer
         .append('svg')
-        .attr('width', width)
+        .attr('width', '100%')
         .attr('height', height)
         .attr('viewBox', `0 0 ${width} ${height}`)
         .attr('preserveAspectRatio', 'xMidYMid meet');
@@ -70,8 +95,8 @@ function initCityMap() {
         .style('white-space', 'nowrap')
         .style('transition', 'opacity 0.2s');
 
-    // Add timeline and filter container at bottom-right
-    const timelineContainer = d3.select(mapContainer)
+    // Add timeline container at bottom-right (year filter only)
+    const timelineContainer = mapAreaContainer
         .append('div')
         .attr('class', 'timeline-container')
         .style('position', 'absolute')
@@ -83,68 +108,10 @@ function initCityMap() {
         .style('box-shadow', '0 2px 8px rgba(0,0,0,0.15)')
         .style('z-index', '1000')
         .style('display', 'flex')
-        .style('gap', '15px')
+        .style('gap', '12px')
         .style('align-items', 'center');
 
-    // Housing type filter section (LEFT side) - Dropdown
-    const housingFilterSection = timelineContainer.append('div')
-        .style('display', 'flex')
-        .style('gap', '8px')
-        .style('align-items', 'center')
-        .style('padding-right', '15px')
-        .style('border-right', '2px solid #e2e8f0');
-
-    housingFilterSection.append('span')
-        .style('font-size', '12px')
-        .style('font-weight', '600')
-        .style('color', '#2d3748')
-        .text('Housing Type:');
-
-    const filterHousingTypes = ['All', 'Bachelor units', 'One bedroom units', 'Two bedroom units', 'Three bedroom units'];
-    const filterHousingTypeLabels = {
-        'All': 'All Types (Average)',
-        'Bachelor units': 'Bachelor',
-        'One bedroom units': '1 Bedroom',
-        'Two bedroom units': '2 Bedrooms',
-        'Three bedroom units': '3 Bedrooms'
-    };
-
-    // Create select dropdown
-    const housingSelect = housingFilterSection.append('select')
-        .attr('class', 'housing-filter-select')
-        .style('padding', '6px 12px')
-        .style('border', '2px solid #cbd5e0')
-        .style('border-radius', '6px')
-        .style('background', 'white')
-        .style('color', '#2d3748')
-        .style('font-size', '13px')
-        .style('font-weight', '600')
-        .style('cursor', 'pointer')
-        .style('outline', 'none')
-        .style('transition', 'all 0.2s')
-        .on('change', function() {
-            selectedHousingType = this.value;
-            
-            // Recalculate colors and update map
-            recalculateRentData();
-            updateCityColors();
-        })
-        .on('focus', function() {
-            d3.select(this).style('border-color', '#4a5568');
-        })
-        .on('blur', function() {
-            d3.select(this).style('border-color', '#cbd5e0');
-        });
-
-    // Add options to select
-    housingSelect.selectAll('option')
-        .data(filterHousingTypes)
-        .join('option')
-        .attr('value', d => d)
-        .property('selected', d => d === selectedHousingType)
-        .text(d => filterHousingTypeLabels[d]);
-
-    // Year filter section (RIGHT side) - Now with slider
+    // Year filter section (all controls in one line now)
     const yearFilterSection = timelineContainer.append('div')
         .style('display', 'flex')
         .style('gap', '12px')
@@ -168,6 +135,15 @@ function initCityMap() {
         .style('text-align', 'center')
         .text(currentYear);
     
+    // Divider between year display and slider for visual separation
+    const yearDivider = yearFilterSection.append('div')
+        .attr('class', 'year-divider')
+        .style('width', '1px')
+        .style('height', '28px')
+        .style('background', 'rgba(15,23,42,0.06)')
+        .style('margin', '0 12px')
+        .style('align-self', 'center');
+
     // Create slider container
     const sliderContainer = yearFilterSection.append('div')
         .style('display', 'flex')
@@ -197,6 +173,14 @@ function initCityMap() {
                 
                 // Update year display
                 yearDisplay.text(currentYear);
+                // Update year note in chart panel (if present)
+                try {
+                    if (typeof yearNote !== 'undefined' && yearNote) {
+                        yearNote.text(`Values shown are for the year selected on the map: ${currentYear}`);
+                    }
+                } catch (e) {
+                    // ignore if yearNote not yet available
+                }
                 
                 // Update city colors and visibility for new year
                 updateCityColors();
@@ -215,7 +199,7 @@ function initCityMap() {
         .text('2024');
 
     // Add zoom controls container
-    const controlsContainer = d3.select(mapContainer)
+    const controlsContainer = mapAreaContainer
         .append('div')
         .attr('class', 'map-controls')
         .style('position', 'absolute')
@@ -244,110 +228,154 @@ function initCityMap() {
         .attr('class', 'zoom-btn rentalpricemap-btn reset')
         .text('Reset');
     
-    // create line chart container (initially hidden - will pop up when a city is clicked)
-    const chartContainer = d3.select(mapContainer)
-        .append('div')
-        .attr('class', 'line-chart-container')
+    // Close button to hide the chart panel
+    const closeBtn = chartPanelContainer.append('button')
+        .attr('class', 'chart-close-btn')
+        .attr('aria-label', 'Close chart')
         .style('position', 'absolute')
-        .style('right', '20px')
-        .style('top', '80px')
-        .style('width', '560px')
-        .style('background', 'rgba(255, 255, 255, 0.98)')
-        .style('border-radius', '10px')
-        .style('box-shadow', '0 4px 16px rgba(0,0,0,0.2)')
-        .style('padding', '20px')
-        .style('display', 'none')
-        .style('z-index', '999');
-    
-    // line chart close button
-    const closeChartBtn = chartContainer.append('button')
-        .style('position', 'absolute')
-        .style('right', '10px')
         .style('top', '10px')
-        .style('background', '#8c8c8cff')
-        .style('color', 'white')
-        .style('border', 'none')
-        .style('border-radius', '50%')
-        .style('width', '28px')
-        .style('height', '28px')
-        .style('cursor', 'pointer')
+        .style('right', '10px')
+        // Make button visually prominent but not obtrusive
+        .style('background', 'rgba(239,68,68,0.06)')
+        .style('border', '1px solid rgba(239,68,68,0.18)')
+        .style('color', '#ef4444')
         .style('font-size', '18px')
         .style('line-height', '1')
-        .text('×')
+        .style('padding', '6px 8px')
+        .style('border-radius', '8px')
+        .style('cursor', 'pointer')
+        .style('box-shadow', '0 4px 10px rgba(239,68,68,0.06)')
+        .style('transition', 'transform 120ms ease, background 120ms ease, color 120ms ease')
+        // Hidden initially when showing the "Explore" instructions
+        .style('display', 'none')
+        .text('✕')
+        .on('mouseenter', function() {
+            d3.select(this)
+                .style('transform', 'translateY(-1px) scale(1.02)')
+                .style('background', 'rgba(239,68,68,0.12)')
+                .style('color', '#b91c1c');
+        })
+        .on('mouseleave', function() {
+            d3.select(this)
+                .style('transform', null)
+                .style('background', 'rgba(239,68,68,0.06)')
+                .style('color', '#ef4444');
+        })
         .on('click', function() {
-            chartContainer.style('display', 'none');
+            // Close the chart and deselect the city
             selectedCity = null;
-            
-            // Reset all city colors to their normal state
-            gCities.selectAll('circle.city')
-                .transition()
-                .duration(200)
-                .attr('fill', d => getCityColor(d.city));
+            chartContent.style('display', 'none');
+            instructionsDiv.style('display', 'flex');
+
+            // Hide the close button when showing the instructions
+            try { closeBtn.style('display', 'none'); } catch (e) {}
+
+            // Reset all city circle colors
+            if (typeof cityCircles !== 'undefined') {
+                cityCircles.each(function(c) {
+                    d3.select(this).attr('fill', getCityColor(c.city));
+                });
+            }
         });
     
-    // Chart title
-    const chartTitle = chartContainer.append('div')
+    // Instructions div (shown when no city is selected)
+    const instructionsDiv = chartPanelContainer.append('div')
+        .attr('class', 'chart-instructions')
+        .style('display', 'flex')
+        .style('flex-direction', 'column')
+        .style('align-items', 'center')
+        .style('justify-content', 'center')
+        .style('height', '100%')
+        .style('text-align', 'center')
+        .style('color', '#64748b')
+        .style('padding', '20px');
+    
+    instructionsDiv.append('div')
+        .style('font-size', '18px')
+        .style('font-weight', '600')
+        .style('margin-bottom', '15px')
+        .style('color', '#475569')
+        .text('Explore Rental Prices');
+    
+    instructionsDiv.append('div')
+        .style('font-size', '14px')
+        .style('line-height', '1.6')
+        .style('color', '#64748b')
+        .text('Click on any city on the map to view its average rental price trends over time, compared with provincial and national averages.');
+    
+    // Chart content div (hidden initially, shown when city is selected)
+    const chartContent = chartPanelContainer.append('div')
+        .attr('class', 'chart-content')
+        .style('display', 'none')
+        .style('flex-direction', 'column')
+        .style('height', '100%');
+    
+    
+    
+    // SVG for line chart 
+    const chartSvg = chartContent.append('svg')
+        .attr('width', '100%')
+        .attr('height', '60%')
+        .style('flex', '0 0 auto')
+        .style('max-height', '720px')
+        .style('min-height', '300px');
+
+    // Insert chart title 
+    const chartTitle = chartContent.insert('div', 'svg')
         .attr('class', 'chart-title')
         .style('font-size', '16px')
         .style('font-weight', '600')
         .style('color', '#2d3748')
-        .style('margin-bottom', '15px');
-    
-    // Housing type toggles
-    const togglesContainer = chartContainer.append('div')
-        .attr('class', 'housing-toggles')
-        .style('display', 'flex')
-        .style('flex-wrap', 'nowrap')
-        .style('gap', '8px')
-        .style('margin-bottom', '15px');
-    
-    const housingTypes = ['Bachelor units', 'One bedroom units', 'Two bedroom units', 'Three bedroom units'];
-    const housingTypeColors = {
-        'Bachelor units': '#8b5cf6',
-        'One bedroom units': '#3b82f6',
-        'Two bedroom units': '#10b981',
-        'Three bedroom units': '#f59e0b'
-    };
-    
-    let visibleHousingTypes = new Set(housingTypes); // all visible by default
-    
-    const housingToggles = togglesContainer.selectAll('button')
-        .data(housingTypes)
-        .join('button')
-        .attr('class', 'housing-toggle')
-        .style('padding', '6px 12px')
-        .style('border', d => `2px solid ${housingTypeColors[d]}`)
-        .style('border-radius', '5px')
-        .style('background', d => housingTypeColors[d])
-        .style('color', '#fff')
-        .style('font-size', '11px')
-        .style('font-weight', '600')
-        .style('cursor', 'pointer')
-        .style('opacity', '1')
-        .style('transition', 'opacity 0.2s')
-        .text(d => d.replace(' units', ''))
-        .on('click', function(event, d) {
-            if (visibleHousingTypes.has(d)) {
-                visibleHousingTypes.delete(d);
-                d3.select(this).style('opacity', '0.3');
-            } else {
-                visibleHousingTypes.add(d);
-                d3.select(this).style('opacity', '1');
-            }
-            updateLineChart(selectedCity);
-        });
-    
-    // SVG for line chart
-    const chartSvg = chartContainer.append('svg')
-        .attr('width', 520)
-        .attr('height', 250);
-    
-    const chartMargin = { top: 10, right: 30, bottom: 30, left: 50 };
-    const chartWidth = 520 - chartMargin.left - chartMargin.right;
-    const chartHeight = 250 - chartMargin.top - chartMargin.bottom;
-    
+        .style('margin-bottom', '6px')
+        .style('flex-shrink', '0');
+
+    const chartMargin = { top: 36, right: 20, bottom: 40, left: 80 };
+
     const chartG = chartSvg.append('g')
         .attr('transform', `translate(${chartMargin.left},${chartMargin.top})`);
+
+    // After the SVG: legend then chart info (so order is: title, svg, legend, info)
+    const legendDiv = chartContent.append('div')
+        .attr('class', 'chart-legend')
+        .style('display', 'flex')
+        .style('flex-direction', 'column')
+        .style('gap', '6px')
+        .style('align-items', 'stretch')
+        .style('margin-top', '12px')
+        .style('padding-top', '8px')
+        .style('border-top', '1px solid rgba(0,0,0,0.06)');
+
+    const chartInfo = chartContent.append('div')
+        .attr('class', 'chart-info')
+        .style('display', 'flex')
+        .style('flex-direction', 'column')
+        .style('gap', '8px')
+        .style('margin-top', '12px')
+        .style('padding-top', '6px')
+        .style('border-top', '1px solid rgba(0,0,0,0.06)');
+
+    const yearNote = chartInfo.append('div')
+        .attr('class', 'year-note')
+        .style('font-size', '14px')
+        .style('color', '#1e293b')
+        .style('font-weight', '600')
+        .style('background', 'rgba(59,130,246,0.06)')
+        .style('padding', '6px 8px')
+        .style('border-radius', '6px')
+        .style('display', 'inline-block')
+        .style('margin-bottom', '6px')
+        .style('letter-spacing', '0.2px')
+        .style('align-self', 'flex-start')
+        .text(`Values shown are for the year selected on the map: ${currentYear}`);
+
+    const factsDiv = chartInfo.append('div')
+        .attr('class', 'chart-facts')
+        .style('font-size', '13px')
+        .style('color', '#374151')
+        .style('line-height', '1.4');
+
+    // Visibility map for toggling lines/points
+    let visibleLines = { 0: true, 1: true, 2: true };
     
     // Create tooltip for chart data points
     const chartTooltip = d3.select('body')
@@ -368,124 +396,170 @@ function initCityMap() {
         .style('white-space', 'nowrap')
         .style('transition', 'opacity 0.2s');
     
-    // coordinates to draw canada
-    const PROVINCES_URL = 'https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/canada.geojson';
+    // use same geojson as vis 1 now
+    const PROVINCES_URL = 'data/canada_provinces.json';
 
     function updateLineChart(city) {
         if (!city || !rentalData[city.city]) {
             return;
         }
         
-        chartTitle.text(`${city.city} - Rental Prices Over Time`);
+        // Show chart content, hide instructions
+        instructionsDiv.style('display', 'none');
+        chartContent.style('display', 'flex');
+        // Show the close button when an actual chart is displayed
+        try { closeBtn.style('display', 'block'); } catch (e) {}
         
-        const cityRentalData = rentalData[city.city];
+        const cityName = city.city;
+        const provinceName = cityToProvince[cityName];
         
-        // Use all years 2010-2024 for the line chart
+        chartTitle.text(`${cityName} - Average Rental Prices`);
+        // Update the year-note to describe the comparison shown
+        if (typeof yearNote !== 'undefined' && yearNote) {
+            yearNote.text(`${cityName} comparison with ${provinceName || 'Province'} and Canada rental average in ${currentYear}`);
+        }
+        
+        const cityRentalData = rentalData[cityName];
         const allYears = d3.range(2010, 2025);
         
-        // Filter and prepare data for visible housing types
-        const filteredData = allYears.map(year => {
-            const yearData = { year };
-            housingTypes.forEach(type => {
-                if (visibleHousingTypes.has(type) && cityRentalData[year] && cityRentalData[year][type]) {
-                    yearData[type] = cityRentalData[year][type];
+        // Prepare city average data
+        const cityData = allYears.map(year => {
+            if (cityRentalData[year]) {
+                const yearData = cityRentalData[year];
+                const rentValues = Object.values(yearData).filter(v => v > 0);
+                if (rentValues.length > 0) {
+                    return rentValues.reduce((a, b) => a + b, 0) / rentValues.length;
                 }
-            });
-            return yearData;
+            }
+            return null;
         });
         
+        // Prepare province average data
+        const provinceData = allYears.map(year => {
+            if (provinceName && provinceAverages[provinceName] && provinceAverages[provinceName][year]) {
+                return provinceAverages[provinceName][year];
+            }
+            return null;
+        });
+        
+        // Prepare Canada average data
+        const canadaData = allYears.map(year => {
+            return canadaAverages[year] || null;
+        });
+        
+        // Calculate dynamic sizes based on the rendered SVG size (use actual SVG clientHeight)
+        const svgNode = chartSvg.node();
+        const svgWidth = svgNode.clientWidth || svgNode.getBoundingClientRect().width;
+
+        let svgHeight = svgNode.clientHeight || svgNode.getBoundingClientRect().height;
+        if (!svgHeight || svgHeight < 10) {
+            const titleH = chartTitle.node() ? chartTitle.node().getBoundingClientRect().height : 0;
+            const infoH = chartInfo.node() ? chartInfo.node().getBoundingClientRect().height : 0;
+            const available = (chartContent.node() ? chartContent.node().clientHeight : 0) - titleH - infoH - 20;
+            svgHeight = Math.max(240, Math.min(720, available > 0 ? available : 420));
+        }
+
+        const innerWidth = svgWidth - chartMargin.left - chartMargin.right;
+        const innerHeight = svgHeight - chartMargin.top - chartMargin.bottom;
+        const xAxisRightPadding = 16; 
+        const plotWidth = Math.max(120, innerWidth - xAxisRightPadding);
+
         // Clear previous chart
         chartG.selectAll('*').remove();
+        factsDiv.html('');
+        factsDiv.html('');
         
         // Scales
         const xScale = d3.scaleLinear()
             .domain([2010, 2024])
-            .range([0, chartWidth]);
+            .range([0, plotWidth]);
         
-        const allValues = filteredData.flatMap(d => 
-            housingTypes
-                .filter(type => visibleHousingTypes.has(type))
-                .map(type => d[type])
-                .filter(v => v !== undefined)
-        );
+        const allValues = [...cityData, ...provinceData, ...canadaData].filter(v => v !== null);
         
         if (allValues.length === 0) {
-            chartG.append('text')
-                .attr('x', chartWidth / 2)
-                .attr('y', chartHeight / 2)
+                chartG.append('text')
+                    .attr('x', plotWidth / 2)
+                    .attr('y', innerHeight / 2)
                 .attr('text-anchor', 'middle')
                 .style('fill', '#999')
                 .text('No data available');
             return;
         }
         
-        const yScale = d3.scaleLinear()
-            .domain([0, d3.max(allValues) * 1.1])
-            .range([chartHeight, 0]);
+            const yScale = d3.scaleLinear()
+                .domain([0, d3.max(allValues) * 1.1])
+                .range([innerHeight, 0]);
         
         // Axes
         chartG.append('g')
-            .attr('transform', `translate(0,${chartHeight})`)
-            .call(d3.axisBottom(xScale).ticks(5).tickFormat(d3.format('d')))
+            .attr('transform', `translate(0,${innerHeight})`)
+            .call(d3.axisBottom(xScale).ticks(8).tickFormat(d3.format('d')))
             .style('font-size', '11px');
         
         chartG.append('g')
-            .call(d3.axisLeft(yScale).ticks(5).tickFormat(d => '$' + d))
+            .call(d3.axisLeft(yScale).ticks(6).tickFormat(d => '$' + Math.round(d)))
             .style('font-size', '11px');
         
-        // Y-axis label
+        // Y-axis label (moved further left; ensure left margin is large enough to keep it visible)
         chartG.append('text')
             .attr('transform', 'rotate(-90)')
-            .attr('y', -40)
-            .attr('x', -chartHeight / 2)
+            .attr('y', -65)
+            .attr('x', -innerHeight / 2)
             .attr('text-anchor', 'middle')
             .style('font-size', '12px')
+            .style('font-weight', '600')
             .style('fill', '#666')
-            .text('Monthly Rent ($)');
+            .text('Average Monthly Rent ($)');
         
         // Line generator
         const line = d3.line()
-            .defined(d => d !== undefined)
+            .defined(d => d !== null)
             .x((d, i) => xScale(allYears[i]))
             .y(d => yScale(d));
         
-        // Draw lines for each housing type
-        housingTypes.forEach(type => {
-            if (!visibleHousingTypes.has(type)) return;
-            
-            const typeData = filteredData.map(d => d[type]);
-            
-            if (typeData.some(v => v !== undefined)) {
-                // Line
+        // Define colors and labels for each line
+        const lineConfig = [
+            { data: canadaData, color: '#94a3b8', label: 'Canada Average', width: 2, dash: '5,5' },
+            { data: provinceData, color: '#3b82f6', label: provinceName || 'Province Average', width: 2.5, dash: 'none' },
+            { data: cityData, color: '#ef4444', label: cityName, width: 3, dash: 'none' }
+        ];
+        
+        // Draw lines
+        lineConfig.forEach((config, configIndex) => {
+            if (config.data.some(v => v !== null)) {
+                // Path with class for toggling
                 chartG.append('path')
-                    .datum(typeData)
+                    .datum(config.data)
+                    .attr('class', `line-${configIndex}`)
                     .attr('fill', 'none')
-                    .attr('stroke', housingTypeColors[type])
-                    .attr('stroke-width', 2.5)
+                    .attr('stroke', config.color)
+                    .attr('stroke-width', config.width)
+                    .attr('stroke-dasharray', config.dash)
                     .attr('d', line);
-                
-                // Points
-                chartG.selectAll(`.point-${type.replace(/\s+/g, '-')}`)
-                    .data(typeData)
+
+                // Add interactive points for all lines (grouped)
+                const pointsGroup = chartG.append('g').attr('class', `points-${configIndex}`);
+                pointsGroup.selectAll(`.point-line-${configIndex}`)
+                    .data(config.data)
                     .join('circle')
-                    .attr('class', `point-${type.replace(/\s+/g, '-')}`)
+                    .attr('class', `point-line-${configIndex}`)
                     .attr('cx', (d, i) => xScale(allYears[i]))
-                    .attr('cy', d => d !== undefined ? yScale(d) : null)
-                    .attr('r', d => d !== undefined ? 4 : 0)
-                    .attr('fill', housingTypeColors[type])
+                    .attr('cy', d => d !== null ? yScale(d) : null)
+                    .attr('r', d => d !== null ? 4 : 0)
+                    .attr('fill', config.color)
                     .attr('stroke', '#fff')
-                    .attr('stroke-width', 1.5)
+                    .attr('stroke-width', 2)
                     .style('cursor', 'pointer')
-                    .on('mouseenter', function(event, d, i) {
-                        if (d !== undefined) {
-                            const yearIndex = typeData.indexOf(d);
+                    .on('mouseenter', function(event, d) {
+                        if (d !== null) {
+                            const yearIndex = config.data.indexOf(d);
                             d3.select(this)
                                 .transition()
                                 .duration(100)
                                 .attr('r', 6);
-                            
+
                             chartTooltip
-                                .html(`<strong>${type.replace(' units', '')}</strong><br/>${allYears[yearIndex]}: <strong>$${Math.round(d)}</strong>`)
+                                .html(`<strong>${config.label}</strong><br/>${allYears[yearIndex]}: <strong>$${Math.round(d)}</strong>`)
                                 .style('display', 'block')
                                 .style('opacity', 1)
                                 .style('left', (event.clientX + 10) + 'px')
@@ -502,7 +576,7 @@ function initCityMap() {
                             .transition()
                             .duration(100)
                             .attr('r', 4);
-                        
+
                         chartTooltip
                             .style('display', 'none')
                             .style('opacity', 0);
@@ -510,7 +584,91 @@ function initCityMap() {
             }
         });
         
-        chartContainer.style('display', 'block');
+        // Populate HTML legend above the SVG to keep a gap from the plotted area
+        legendDiv.html('');
+        // Build a list of visible legend entries (preserve original indices)
+        const visibleConfigs = lineConfig.map((cfg, idx) => ({ cfg, idx }))
+            .filter(item => item.cfg.data.some(v => v !== null));
+
+        visibleConfigs.forEach(({ cfg: config, idx }, vIdx) => {
+            const row = legendDiv.append('div')
+                .attr('class', 'legend-row')
+                .style('display', 'flex')
+                .style('align-items', 'center')
+                .style('gap', '8px')
+                .style('cursor', 'pointer')
+                .style('padding', '8px 6px');
+
+            // add bottom separator except for last
+            if (vIdx < visibleConfigs.length - 1) {
+                row.style('border-bottom', '1px solid rgba(0,0,0,0.06)');
+            }
+
+            // sample area 
+            const sample = row.append('svg').attr('width', 56).attr('height', 18);
+            sample.append('line')
+                .attr('x1', 6)
+                .attr('x2', 40)
+                .attr('y1', 9)
+                .attr('y2', 9)
+                .attr('stroke', config.color)
+                .attr('stroke-width', Math.max(2, config.width))
+                .attr('stroke-dasharray', config.dash);
+            sample.append('circle')
+                .attr('cx', 23)
+                .attr('cy', 9)
+                .attr('r', 4)
+                .attr('fill', config.color)
+                .attr('stroke', '#fff')
+                .attr('stroke-width', 1.5);
+
+            row.append('div')
+                .text(config.label)
+                .style('font-size', '13px')
+                .style('font-weight', '600')
+                .style('color', '#374151')
+                .style('margin-left', '8px');
+
+            // Toggle visibility on click (use original index 'idx')
+            row.on('click', function(event) {
+                visibleLines[idx] = !visibleLines[idx];
+                const show = visibleLines[idx];
+                chartG.selectAll(`.line-${idx}`).style('display', show ? null : 'none');
+                chartG.selectAll(`.points-${idx}`).style('display', show ? null : 'none');
+                d3.select(this).style('opacity', show ? 1 : 0.45);
+            });
+        });
+
+        // Compute simple textual facts comparing latest year (currentYear) values
+        const yearIndex = allYears.indexOf(currentYear) !== -1 ? allYears.indexOf(currentYear) : allYears.length - 1;
+        const cityLatest = cityData[yearIndex];
+        const provinceLatest = provinceData[yearIndex];
+        const canadaLatest = canadaData[yearIndex];
+
+        let factsHtml = '';
+        if (cityLatest == null) {
+            factsHtml += `<div>No city data available for ${currentYear}.</div>`;
+        } else {
+            if (canadaLatest != null) {
+                const diff = Math.round(cityLatest - canadaLatest);
+                const pct = canadaLatest > 0 ? Math.round(((cityLatest - canadaLatest) / canadaLatest) * 100) : 0;
+                const rel = pct >= 0 ? 'higher' : 'lower';
+                factsHtml += `<div>${cityName}'s average rent ($${Math.round(cityLatest)}) is ${Math.abs(pct)}% ${rel} than the Canada average ($${Math.round(canadaLatest)}).</div>`;
+            } else {
+                factsHtml += `<div>Canada average not available for ${currentYear}.</div>`;
+            }
+
+            if (provinceLatest != null) {
+                const diffP = Math.round(cityLatest - provinceLatest);
+                const pctP = provinceLatest > 0 ? Math.round(((cityLatest - provinceLatest) / provinceLatest) * 100) : 0;
+                const relP = pctP >= 0 ? 'higher' : 'lower';
+                factsHtml += `<div>${cityName}'s average rent ($${Math.round(cityLatest)}) is ${Math.abs(pctP)}% ${relP} than the ${provinceName} average ($${Math.round(provinceLatest)}).</div>`;
+            } else {
+                factsHtml += `<div>${provinceName} average not available for ${currentYear}.</div>`;
+            }
+        }
+
+        factsDiv.html(factsHtml);
     }
 
     // load data
@@ -522,6 +680,15 @@ function initCityMap() {
         const provincesGeo = results[0];
         const rows = results[1];
         const rentalRows = results[2];
+        
+        // Build city to province mapping first
+        rows.forEach(r => {
+            const city = r.city;
+            const province = r.province;
+            if (city && province) {
+                cityToProvince[city] = province;
+            }
+        });
         
         // Process rental data
         rentalRows.forEach(r => {
@@ -544,10 +711,68 @@ function initCityMap() {
             }
         });
         
+        // Calculate province and Canada averages
+        const allYears = d3.range(2010, 2025);
+        
+        // Structure to accumulate values: { province: { year: [values] } }
+        const provinceYearValues = {};
+        const canadaYearValues = {};
+        
+        // Initialize structures
+        allYears.forEach(year => {
+            canadaYearValues[year] = [];
+        });
+        
+        // Accumulate all city rental values by province and year
+        Object.keys(rentalData).forEach(cityName => {
+            const province = cityToProvince[cityName];
+            if (!province) return;
+            
+            if (!provinceYearValues[province]) {
+                provinceYearValues[province] = {};
+                allYears.forEach(year => {
+                    provinceYearValues[province][year] = [];
+                });
+            }
+            
+            Object.keys(rentalData[cityName]).forEach(year => {
+                const yearData = rentalData[cityName][year];
+                const housingTypes = Object.keys(yearData);
+                if (housingTypes.length > 0) {
+                    // Calculate average across all housing types for this city-year
+                    const rentValues = housingTypes.map(type => yearData[type]).filter(v => v > 0);
+                    if (rentValues.length > 0) {
+                        const avgRent = rentValues.reduce((a, b) => a + b, 0) / rentValues.length;
+                        provinceYearValues[province][year].push(avgRent);
+                        canadaYearValues[year].push(avgRent);
+                    }
+                }
+            });
+        });
+        
+        // Calculate province averages
+        Object.keys(provinceYearValues).forEach(province => {
+            provinceAverages[province] = {};
+            allYears.forEach(year => {
+                const values = provinceYearValues[province][year];
+                if (values.length > 0) {
+                    provinceAverages[province][year] = values.reduce((a, b) => a + b, 0) / values.length;
+                }
+            });
+        });
+        
+        // Calculate Canada averages
+        allYears.forEach(year => {
+            const values = canadaYearValues[year];
+            if (values.length > 0) {
+                canadaAverages[year] = values.reduce((a, b) => a + b, 0) / values.length;
+            }
+        });
+        
         // Calculate average rent for each city-year and find global min/max for consistent color scale
         const cityAverageRents = {}; // { cityName: { year: avgRent } }
         
-        const legendContainer = d3.select(mapContainer)
+        const legendContainer = mapAreaContainer
             .append('div')
             .attr('class', 'rent-legend')
             .attr('id', 'rent-legend')
@@ -568,7 +793,7 @@ function initCityMap() {
             .style('margin-bottom', '8px')
             .style('color', '#2d3748')
             .style('text-align', 'center')
-            .text('Average Rent/Month - All Types');
+            .text('Average Rent/Month');
         
         const legendSvg = legendContainer.append('svg')
             .attr('width', 250)
@@ -611,17 +836,9 @@ function initCityMap() {
         
     // Function to update the legend display
     function updateLegend() {
-            // Update legend title with housing type
-            const filterHousingTypeLabels = {
-                'All': 'All Types (Average)',
-                'Bachelor units': 'Bachelor',
-                'One bedroom units': '1 Bedroom',
-                'Two bedroom units': '2 Bedrooms',
-                'Three bedroom units': '3 Bedrooms'
-            };
-            const housingLabel = filterHousingTypeLabels[selectedHousingType] || 'All Types';
+            // Update legend title
             const titleElement = d3.select('#rent-legend .legend-title');
-            titleElement.text(`Average Rent/Month - ${housingLabel}`);
+            titleElement.text('Average Rent/Month');
             
             // Update legend labels with new min/max
             const minLabel = d3.select('#rent-legend .legend-min-label');
@@ -736,13 +953,13 @@ function initCityMap() {
         
         // Legend was moved earlier in the code - removed duplicate here
 
-        // Use same projection as first visualization, adjusted for centering
+        // Use same projection as first visualization
         const projection = d3.geoAlbers()
             .center([0, 58])
             .rotate([96, 0])
             .parallels([49, 77])
             .scale(1300)
-            .translate([width / 2 - 100, height / 2]);
+            .translate([width / 2, height / 2]);
         const path = d3.geoPath().projection(projection);
 
         // filter city data
@@ -861,11 +1078,25 @@ function initCityMap() {
                 // Prevent event from bubbling to map
                 event.stopPropagation();
                 
-                // Check if this city has rental data
+                // If the clicked city is already selected, deselect it
+                if (selectedCity && selectedCity.city === d.city) {
+                    selectedCity = null;
+                    chartContent.style('display', 'none');
+                    instructionsDiv.style('display', 'flex');
+                        // Hide the close button when switching back to instructions
+                        try { closeBtn.style('display', 'none'); } catch (e) {}
+                    // Reset all city colors
+                    cityCircles.each(function(c) {
+                        d3.select(this).attr('fill', getCityColor(c.city));
+                    });
+                    return;
+                }
+
+                // Check if this city has rental data and select it
                 if (rentalData[d.city]) {
                     selectedCity = d;
                     updateLineChart(d);
-                    
+
                     // Highlight selected city
                     cityCircles.each(function(c) {
                         if (c === d) {
@@ -875,7 +1106,7 @@ function initCityMap() {
                         }
                     });
                 } else {
-                    alert(`No rental data available for ${d.city}`);
+                    console.log(`No rental data available for ${d.city}`);
                 }
             })
             .on('mouseenter', function(event, d) {
@@ -961,11 +1192,25 @@ function initCityMap() {
 
         svg.call(zoom);
         
-        // Click on empty space to reset zoom
+        // Click on empty space to reset zoom and deselect city
         svg.on('click', function(event) {
             // Only reset if clicking directly on SVG (not on provinces or cities)
             if (event.target === this || event.target.tagName === 'svg') {
                 svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity);
+                
+                // Deselect city and show instructions
+                if (selectedCity) {
+                    selectedCity = null;
+                    chartContent.style('display', 'none');
+                    instructionsDiv.style('display', 'flex');
+                    // Hide the close button when no city is selected
+                    try { closeBtn.style('display', 'none'); } catch (e) {}
+                    
+                    // Reset all city colors
+                    cityCircles.each(function(c) {
+                        d3.select(this).attr('fill', getCityColor(c.city));
+                    });
+                }
             }
         });
 
