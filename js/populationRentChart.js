@@ -13,7 +13,7 @@ let NUM_CATEGORIES = 11;
 class PopulationRentChart {
 
 // constructor method to initialize PopulationRentChart object
-constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, data) {
+constructor(parentElement, citySearch, cityList, dropdown, filterParent, selectionArea, data) {
     this.parentElement = parentElement;
 
     // sorting the data to make accumulation logic simpler
@@ -23,16 +23,10 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
 
     this.displayData = [];
 
-    let colors = ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a'];
-
     // A list of all provinces in the dataset
     this.provinces = [...new Set(data.map(item => item.province))];
-
     // Has all cities / provinces currently displayed in the chart
     this.displayCategories = this.provinces
-
-    // Contains all bins of % increases over the x axis
-    this.displayKeys = []
 
     // Constructing an object mapping provinces to the cities they contain
     this.cityFilter = this.provinces.reduce((acc, province) => {
@@ -44,57 +38,42 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
         this.cityFilter[e.province].push(e.city)
     });
 
+    this.cityVis = ["Toronto", "Ottowa", "Victoria", "Vancouver", "Edmonton", "Winnipeg", "Fredericton", "St. John's", "Halifax", "Charlottetown", "Regina", "Québec", "Montéal"]
+
     // Inverse mapping of cities to provinces
     this.cityProvinceMap = {}
+    this.provinceCityMap = {}
     let vis = this;
 
     this.provinces.forEach(e => {
         let citySet = [...new Set(this.cityFilter[e])];
-        let currObj = {cityMode: false};
-        let provivince = e;
-        citySet.forEach(e =>    {
-            currObj[e] = true;
-            vis.cityProvinceMap[e] = provivince;
+        let currObj = {"self": true};
+        this.provinceCityMap[e] = [];
+        citySet.forEach(c =>    {
+            currObj[c] = false;
+            vis.cityProvinceMap[c] = e;
+            vis.provinceCityMap[e].push(c)
         })
         this.cityFilter[e] = currObj;
     })
 
-    // prepare colors for range
-    let colorArray = this.displayCategories.map( (d,i) => {
-        return colors[i%10]
-    })
+    vis.mutedPalette = ["rgb(193, 191, 94)", "#f9dc5c", "#E97451"]
+    vis.highlightPalette = ["#6f9460", "#f9dc5c", "red"]
 
     // Set ordinal color scale
-    this.colorScale = d3.scaleOrdinal()
-        .domain(this.displayCategories)
-        .range(colorArray);
+    vis.popColorScale = d3.scaleLinear()
+        .range(vis.highlightPalette);
+    vis.avgColorScale = d3.scaleLinear()
+        .range(vis.highlightPalette);
 
-    this.structureIDMap = {RA3P: "Row and apartment structures of three units and over", 
-                          R3P: "Row structures of three units and over", 
-                          A3P: "Apartment structures of three units and over", 
-                          A6P: "Apartment structures of six units and over"};
-    this.structureFilters = data[1].data.reduce((acc, e) => {
-                                acc[e.structure] = true;
-                                return acc;
-                            }, {});
-
-    this.unitIDMap = {bachelor: "Bachelor units", onebed: "One bedroom units", twobed: "Two bedroom units", threebed: "Three bedroom units"};
-    this.unitFilters = data[3].data.reduce((acc, e) => {
-                                acc[e.unit] = true;
-                                return acc;
-                            }, {});
-
-    filterElements.forEach(e => {
-        this.createBuildingListeners(e)
-    })
-
-    // Listener for province selection
-    this.provinceFilterArea = d3.select("#" + provinceFilterArea);
-    this.select = d3.select("#" + provinceSelect);
-    this.select.on("change", function() {
-        vis.createProvinceFilters(vis.select.property("value"));
-    });
-    this.createProvinceFilters(vis.select.property("value"));
+    this.selectionArea = selectionArea;
+    this.areaSearch = d3.select("#" + citySearch);
+    this.cityList = document.getElementById(cityList);
+    this.dropdown = d3.select("#" + dropdown);
+    this.filterParent = d3.select("#" + filterParent);
+    this.highlight = d3.select("#vis5-highlight")
+    this.highlight.property("value", "both")
+    vis.legendArea = d3.select("#vis5-legend");
 }
 
 	/*
@@ -103,7 +82,7 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
 	initVis(){
 		let vis = this;
 
-		vis.margin = {top: 100, right: 100, bottom: 60, left: 75};
+		vis.margin = {top: 25, right: 100, bottom: 25, left: 175};
 
 		vis.width = document.getElementById(vis.parentElement).getBoundingClientRect().width - vis.margin.left - vis.margin.right;
 		vis.height = document.getElementById(vis.parentElement).getBoundingClientRect().height - vis.margin.top - vis.margin.bottom;
@@ -116,59 +95,98 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
 			.attr("transform", "translate(" + vis.margin.left + "," + vis.margin.top + ")");
 
 		// Scales and axes
-		vis.x = d3.scaleLinear()
-			.range([0, vis.width]);
+		vis.x = d3.scaleBand()
+			.range([0, vis.width])
+              .paddingInner(0.01);
 
-		vis.y = d3.scaleLinear()
-			.range([vis.height, 0]);
+		vis.y = d3.scaleBand()
+			.range([vis.height, 0])
+            .paddingInner(0.01);
 
 		vis.xAxis = d3.axisBottom()
 			.scale(vis.x);
 
 		vis.yAxis = d3.axisLeft()
-			.scale(vis.y);
-
+			.scale(vis.y)
 		vis.svg.append("g")
 			.attr("class", "x-axis axis")
 			.attr("transform", "translate(0," + vis.height + ")");
 
 		vis.svg.append("g")
-			.attr("class", "y-axis axis");
+			.attr("class", "y-axis axis")
 
-        vis.svg.append("text")
-            .attr("class", "x-axis-title")
-            .attr("text-anchor", "middle")
-            .attr("x", vis.width / 2)
-            .attr("y", vis.height + 40)
-            .text("% Increase in Population Since 2001");
-        vis.svg.append("text")
-            .attr("class", "y-axis-title")
-            .attr("text-anchor", "middle")
-            .attr("transform", `translate(-40, ${vis.height / 2}) rotate(-90)`)
-            .text("Total % Increase in Average Rent Since 2001");
+        // create a tooltip
+        vis.tooltip = d3.select("body")
+            .append("div")
+            .style("opacity", 0)
+            .attr("class", "tooltip")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px")
+            .style("position", "absolute")
+            .style("color", "black")
+        vis.defs = vis.svg.append("defs");
 
-		vis.tooltip = vis.svg.append("text")
-					  .attr("x", 0)
-					  .attr("y", 0)
+        const tabCities = document.getElementById("vis5-tab-cities");
+        const tabProvinces = document.getElementById("vis5-tab-provinces");
+        // Tab switching
+        tabCities.addEventListener("click", () => {
+            tabCities.classList.add("active");
+            tabProvinces.classList.remove("active");
 
-         vis.wrangleData();
+            Object.keys(vis.cityFilter).forEach(p => {
+                Object.keys(vis.cityFilter[p]).forEach(c => {
+                    if (c == "self")    {
+                        vis.cityFilter[p][c] = false;
+                    }   else if (vis.cityVis.includes(c))    {
+                        vis.cityFilter[p][c] = true;
+                    }
+                })
+            })
+            vis.wrangleData();
+        });
 
+        tabProvinces.addEventListener("click", () => {
+            tabProvinces.classList.add("active");
+            tabCities.classList.remove("active");
+
+            Object.keys(vis.cityFilter).forEach(p => {
+                Object.keys(vis.cityFilter[p]).forEach(c => {
+                    if (c == "self")    {
+                        vis.cityFilter[p][c] = true;
+                    }   else    {
+                        vis.cityFilter[p][c] = false;
+                    }
+                })
+            })
+            vis.wrangleData()
+        });
+
+        vis.highlight.on("change", function()  {
+            vis.wrangleData()
+        })
+        vis.wrangleData();
 	}
+
+    sanitizeId(str) {
+        return str.replace(/[^a-zA-Z0-9_-]/g, "_");
+    }
 
     // Accumulates averages over the current displayCategory
     accumulateAvg() {
         let vis = this;
         let newData = [];
 
-        // Collecting yearly averages across selected structure and unit types
+        // Collecting yearly averages across structure and unit types
         this.data.forEach(e =>  {
             let accAvg = 0;
             let num = 0;
             
-            let include = vis.cityFilter[e.province][e.city];
+            let include = vis.cityFilter[e.province][e.city] || vis.cityFilter[e.province].self;
                 if (include)    {
                 e.data.forEach(e => {
-                    let include = vis.structureFilters[e.structure] && vis.unitFilters[e.unit]
                     accAvg += e.avg * include;
                     num += include;
                 })
@@ -184,54 +202,66 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
         // Accumulate city data by province and average it out  
         let accumulatedData = [];
 
-        newData.forEach((e, i) =>    {
-            // accumulating averages across cities
-            let currCategory = (vis.cityFilter[e.province].cityMode) ? e.city : e.province
-            if (accumulatedData.length == 0 || vis.cityFilter[e.province].cityMode || (accumulatedData[accumulatedData.length - 1].category != currCategory) || (accumulatedData[accumulatedData.length - 1].year!= e.year) )  {
-                // Directly push an object in one of 4 cases: No other object in accumulated data, the current province is displaying each city,
-                // or none of the above BUT the province or year have changed
-                
-                let currObj = {category: currCategory, year: e.year, pop: e.pop, avg: e.avg, cityNum: 1}
-                accumulatedData.push(currObj)
-            }   else    {
-                // only accumulate if there is data, the province is the same and in the same year, and we arent displaying individual cities
-                accumulatedData[accumulatedData.length - 1].pop += e.pop;
-                accumulatedData[accumulatedData.length - 1].avg += e.avg;
-                accumulatedData[accumulatedData.length - 1].cityNum += 1;
-            }
+        Object.keys(vis.cityFilter).forEach(p =>    {
+            Object.keys(vis.cityFilter[p]).forEach(c    =>  {
+                let tempData = newData.filter(function(d)   {
+                    if (c == "self")    {
+                        return d.province == p && vis.cityFilter[p][c];
+                    }   else    {
+                        return d.city == c && vis.cityFilter[p][c];
+                    }
+                })
 
+                
+                if (tempData.length > 0)   {
+                    let currYear = -1;
+                    tempData.forEach(e =>   {
+                        let currCategory = c;
+                        if (c == "self")    {
+                            currCategory = e.province;
+                        }
+                        let currObj = {category: currCategory, year: e.year, pop: e.pop, avg: e.avg, cityNum: 1}
+        
+                        if (c == "self")    {
+                            if (e.year == currYear) {
+                                accumulatedData[accumulatedData.length - 1].pop += e.pop;
+                                accumulatedData[accumulatedData.length - 1].avg += e.avg;
+                                accumulatedData[accumulatedData.length - 1].cityNum += 1;
+                            }   else    {
+                                currYear = e.year;
+                                accumulatedData.push(currObj);
+                            }
+                        }   else   {
+                            accumulatedData.push(currObj);
+                        }
+                    })
+                }
+            })
         })
-            
+
         accumulatedData = accumulatedData.sort(function(a, b) {
-            return a.category.localeCompare(b.category)
+            return b.category.localeCompare(a.category)
         })
 
         let categories = [];
-        
-        let startAvg = 0;
-        let startPop = 0;
-
         // final average calculation
         accumulatedData.forEach((e, i) =>   {
             e.avg /= e.cityNum
 
-            // 2001 is the first year in the dataset, so exclude the change
             // For some reason Parksville has 0 in rent for 2001 which i somehow doubt is correct, so this is the bandaid fix
-            if (e.year == "2001" || (e.category == "Parksville" && e.year == "2002")) {
-                startAvg = e.avg;
-                startPop = e.pop;
-
+            if (i == 0 || e.category != accumulatedData[i - 1].category || (e.category == "Parksville" && e.year == "2002")) {
                 e.popChange = 0;
                 e.avgChange = 0;
             }   else    {
-                e.popChange = (e.pop - startPop) / (startPop) * 100
-                e.avgChange = (e.avg - startAvg) / startAvg * 100;
+                e.popChange = (e.pop - accumulatedData[i - 1].pop) / (accumulatedData[i - 1].pop) * 100
+                e.avgChange = (e.avg - accumulatedData[i - 1].avg) / accumulatedData[i - 1].avg * 100;
             }
 
-            if (e.year == "2001")   {
+            if (i == 0 || e.categories != accumulatedData[i - 1].category)   {
                 categories.push(e.category)
             }
         })
+
         vis.displayCategories = categories;
         let range = d3.extent(
             accumulatedData.filter(d => vis.displayCategories.includes(d.category)),
@@ -239,208 +269,29 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
         );
 
         vis.displayKeys = d3.ticks(range[0], range[1], NUM_CATEGORIES);
-        vis.displayData = accumulatedData;
-        this.accumulateCategories();
-    }
-
-    accumulateCategories()  {
-        // Bins the current display data by % population change
-        let vis = this;
-        let binnedData = [];
-        let range = d3.extent(vis.displayData, d => d.popChange)
-        vis.displayKeys.forEach((e, i) => {
-            let currObj = {};
-
-            let lowerCompare = (i > 0) ? vis.displayKeys[i - 1] : range[0];
-            let higherCompare = vis.displayKeys[i]
-
-            // very inefficient way to collect the data, will optimize
-            vis.displayCategories.forEach(e => {
-                let total = 0;
-                let currAvg = 0;
-                let currProvince = e;
-                vis.displayData.forEach(e =>   {
-                    
-                    if (e.category == currProvince && e.popChange > lowerCompare && e.popChange <= higherCompare)   {
-                        currAvg += e.avgChange;
-                        total += 1;
-                    }
-                })
-
-                currAvg /= (total > 0) ? total : 1 ;
-                currObj[e] = currAvg
-            });
-            binnedData.push(currObj);
+        vis.displayData = accumulatedData.filter(function (d)   {
+            return d.year != "2001"
         })
-        vis.stackData = binnedData;
 
-    }
-
-    handleClick(d)   {
-        let vis = this;
-        let category = d.key;
-        if (vis.provinces.includes(category))   {
-            // clicked on a province
-            vis.provinces.forEach(e =>  {
-                let currProvince = e;
-                if (e != category)  {
-                    Object.keys(vis.cityFilter[currProvince]).forEach(e => {
-                        vis.cityFilter[currProvince][e] = false;
-                    })
-                }   else    {
-                    vis.cityFilter[e].cityMode = true;
-                }
-
-            })
-            vis.select.property("value", category);
-            this.createProvinceFilters(category)
-            
-        }   else    {
-            //clicked on a city
-            let province = vis.cityProvinceMap[category];
-            vis.cityFilter[province].cityMode = false;
-        }
-
-        vis.wrangleData();
-    }
-
-    createBuildingListeners(checkbox)    {
-        let vis = this;
-        let check = d3.select("#" + checkbox)
-        check.property("checked", true)
-        
-        check.on("change", function(d)  {
-            if (checkbox.length < 5)    {
-                
-                vis.structureFilters[vis.structureIDMap[checkbox]] = this.checked;
-            }   else    {
-                vis.unitFilters[vis.unitIDMap[checkbox]] = this.checked;
+        vis.displayData = vis.displayData.sort(function(a, b)   {
+            if (a.province < b.province) {
+                return -1;  
             }
-            vis.wrangleData();
+            if (a.province > b.province) {
+                return 1;   
+            }
+
+            if (a.city < b.city) {
+                return -1;  
+            }
+            if (a.city > b.city) {
+                return 1;  
+            }
+
+            return a.year - b.year;
         })
+
     }
-    
-    createProvinceFilters(province)    {
-        let vis = this;
-        let cities = ["All " + province];
-        let allCheckPre = true;
-
-        if (province == "All Provinces")    {
-            vis.provinces.forEach(e =>  {
-                cities.push(e); 
-                let check = false;
-                let currProvince = e
-                Object.keys(vis.cityFilter[currProvince]).forEach(e =>   {
-                    if (e != "cityMode")    {
-                        check = check || vis.cityFilter[currProvince][e];
-                    }
-                })
-                allCheckPre = check && allCheckPre
-            })
-
-
-        }   else    {
-            Object.keys(vis.cityFilter[province]).forEach(e =>   {
-                if (e != "cityMode")    {
-                    cities.push(e)
-                    allCheckPre = allCheckPre && vis.cityFilter[province][e];
-                }
-            })
-        }
-
-        let citySelection = vis.provinceFilterArea.selectAll(".city-checkbox")
-                                           .data(cities, d => d);
-        citySelection.exit()
-            .transition()
-            .duration(200)
-            .style("opacity", 0)
-            .remove();
-
-        let cityEnter = citySelection.enter()
-            .append("div")
-            .attr("class", "form-check city-checkbox")
-            .style("opacity", 0);
-
-        cityEnter.append("input")
-            .attr("class", "form-check-input")
-            .attr("type", "checkbox")
-            .attr("id", d => `check-${d.replace(/[^a-zA-Z0-9_-]/g, "_")}`)
-            .attr("value", d => d)
-            .property("checked", function(d)    {
-                if (d.slice(0, 3) == "All") {
-                    return allCheckPre;
-                }   else    {
-                    if (province == "All Provinces")    {
-                        let check = false;
-                        Object.keys(vis.cityFilter[d]).forEach(e =>   {
-                            if (e != "cityMode")    {
-                                check = check || vis.cityFilter[d][e];
-                            }
-                        })
-                        return check;
-                    }   else    {
-                        return vis.cityFilter[province][d];
-                    }
-                }
-            })
-            .on("change", function(d)   {
-                let target = d.target.value;
-                if (target.slice(0, 3) == "All")    {
-                    let allCheck = d.target.checked;
-
-                    if (province == "All Provinces")    {
-                        vis.provinces.forEach(e =>  {
-                            Object.keys(vis.cityFilter[e]).forEach(j =>   {
-                            if (j != "cityMode")    {
-                                vis.cityFilter[e][j] = d.target.checked;;
-                            }
-                            d3.select(`#check-${e.replace(/[^a-zA-Z0-9_-]/g, "_")}`)
-                                .property("checked", allCheck);
-                        })
-                        })
-                    }   else    {
-                        cities.forEach(e => {
-                            if (e.slice(0, 3) != "All") {
-                                vis.cityFilter[province][e] = allCheck;
-
-                                d3.select(`#check-${e.replace(/[^a-zA-Z0-9_-]/g, "_")}`)
-                                        .property("checked", allCheck);
-                            }
-                        })
-                    }
-
-                }   else    {
-                    if (province == "All Provinces")    {
-                        Object.keys(vis.cityFilter[target]).forEach(e =>   {
-                            if (e != "cityMode")    {
-                                vis.cityFilter[target][e] = d.target.checked;;
-                            }
-                        })
-                    }   else    {
-                        vis.cityFilter[province][target] = !vis.cityFilter[province][target];
-                    }
-                }
-                vis.wrangleData();
-            });
-
-
-        cityEnter.append("label")
-            .attr("class", "form-check-label")
-            .attr("for", d => `check-${d}`)
-            .text(function(d)  {
-                if (d.slice(0, 3) == "All") {
-                    return "All";
-                }   else    {
-                    return d;
-                }
-            });
-
-        // ENTER + UPDATE MERGE
-        cityEnter.merge(citySelection)
-            .transition()
-            .duration(200)
-            .style("opacity", 1);
-            }
 
 	/*
  	* Data wrangling
@@ -448,59 +299,310 @@ constructor(parentElement, filterElements, provinceSelect, provinceFilterArea, d
 	wrangleData(){
 		let vis = this;
         vis.accumulateAvg();
-        let stack = d3.stack()
-            .keys(vis.displayCategories)
-            .offset(d3.stackOffsetNone);
-        vis.stackedData = stack(vis.stackData);
-
-        vis.area = d3.area()	
-			.curve(d3.curveCardinal)
-			.x((d, i)=> vis.x(vis.displayKeys[i]))
-			.y0(d=> vis.y(d[0]))
-			.y1(d=>vis.y(d[1]))
-
-
 		vis.updateVis();
 	}
 
-	/*
-	 * The drawing function - should use the D3 update sequence (enter, update, exit)
- 	* Function parameters only needed if different kinds of updates are needed
- 	*/
-	updateVis(){
-		let vis = this;
 
-        vis.x.domain(d3.extent(vis.displayKeys));
-        vis.y.domain([
-        d3.min(vis.stackedData, layer => d3.min(layer, d => d[0])),
-        d3.max(vis.stackedData, layer => d3.max(layer, d => d[1]))
+    // Function to draw a single row
+    drawRow(rowIndex, label, gradId, minValue, maxValue, svg) {
+        let vis = this;
+        const legendWidth = vis.legendArea.node().clientWidth;
+        const containerWidth = d3.select("#vis5-filters-container").node().clientWidth * 0.65;
+
+        // --- Responsive Constants ---
+        const rowHeight = 60; 
+        const barHeight = 20; 
+        const rowY = rowIndex * rowHeight + 10; // Y position is relative to row index
+        
+        // Define proportional widths based on legendWidth
+        const totalContentRatio = 0.9; // Use 90% of the legend width for content
+        
+        // Calculate widths and spacing based on ratios
+        const totalContentWidth = legendWidth * totalContentRatio;
+        const boxSize = 40; // Fixed size for the example box (can be made responsive too)
+        const availableBarWidth = totalContentWidth - boxSize;
+        
+        // Ratios for spacing and bar/label width within the remaining space
+        const spacingBoxBarRatio = 0.05; 
+        const spacingBarLabelRatio = 0.05;
+        const labelWidthRatio = 0.20; // 20% of the content width for the label
+        
+        // Calculate final pixel dimensions
+        const spacingBoxBar = availableBarWidth * spacingBoxBarRatio;
+        const spacingBarLabel = availableBarWidth * spacingBarLabelRatio;
+        const labelWidth = totalContentWidth * labelWidthRatio;
+        const barWidth = containerWidth;
+        
+        // Calculate X offset to center the content
+        const xOffset = (legendWidth - totalContentWidth) / 2 + 50;
+
+        // Group for the row
+        const g = svg.append("g")
+            .attr("transform", `translate(${xOffset + 50}, ${rowY})`);
+
+        const barY = (boxSize - barHeight) / 2;
+
+        // --- 1. Example box ---
+        g.append("rect")
+            .attr("width", boxSize)
+            .attr("height", boxSize)
+            .attr("fill", "none")
+            .attr("stroke", "#555");
+
+        // Triangles inside box
+        g.append("path")
+            .attr("d", `M0,${boxSize} L${boxSize},${boxSize} L0,0 Z`)
+            .attr("fill", (rowIndex == 1) ? "white" : "red"); 
+        g.append("path")
+            .attr("d", `M${boxSize},0 L${boxSize},${boxSize} L0,0 Z`)
+            .attr("fill", (rowIndex == 1) ? "red" : "white")
+
+        // --- 2. Gradient bar ---
+        const barX = boxSize + spacingBoxBar;
+        g.append("rect")
+            .attr("x", barX)
+            .attr("y", barY)
+            .attr("width", barWidth)
+            .attr("height", barHeight)
+            .attr("fill", `url(#${gradId})`);
+
+        // --- 3. Min/max numbers ---
+        g.append("text")
+            .attr("x", barX)
+            .attr("y", barY - 4)
+            .attr("font-size", "0.8em") // Use relative font size
+            .text(`${minValue.toFixed(2)}%`);
+        g.append("text")
+            .attr("x", barX + barWidth)
+            .attr("y", barY - 4)
+            .attr("font-size", "0.8em") // Use relative font size
+            .attr("text-anchor", "end")
+            .text(`${maxValue.toFixed(2)}%`);
+
+        // --- 4. Row label ---
+        g.append("text")
+            .attr("x", barX + barWidth + spacingBarLabel)
+            .attr("y", boxSize / 2)
+            .attr("dominant-baseline", "middle")
+            .attr("font-size", "1em") // Use relative font size
+            .text(label);
+    }
+
+    // Function to create the gradient (no change needed here, it's already responsive)
+    createGradient(svg, id, colors) {
+        const grad = svg.append("defs")
+            .append("linearGradient")
+            .attr("id", id)
+            .attr("x1", "0%").attr("y1", "0%")
+            .attr("x2", "100%").attr("y2", "0%");
+        
+        grad.selectAll("stop")
+            .data(colors)
+            .enter()
+            .append("stop")
+            .attr("offset", (d, i) => `${i / (colors.length - 1) * 100}%`)
+            .attr("stop-color", d => d);
+    }
+
+    // Function to set up the legend area
+    createLegend() {
+        let vis = this;
+
+        // --- Bug Fix: Data Check and Safe Fallback ---
+        const dataExists = vis.displayData && vis.displayData.length > 0;
+        
+        // Define safe fallback values in case data is missing
+        let popMin = 0, popMax = 100;
+        let rentMin = 0, rentMax = 100;
+
+        if (dataExists) {
+            popMin = d3.min(vis.displayData, d => d.popChange);
+            popMax = d3.max(vis.displayData, d => d.popChange);
+            rentMin = d3.min(vis.displayData, d => d.avgChange);
+            rentMax = d3.max(vis.displayData, d => d.avgChange);
+        } else {
+            console.warn("vis.displayData is empty or null. Displaying default range (0% to 100%).");
+        }
+        // --- End Bug Fix ---
+
+
+        // It's critical to get the clientWidth dynamically for responsiveness
+        const legendWidth = d3.select("#vis5-filters-container").node().clientWidth * 0.85;
+        const padding = 10;
+        const rowHeight = 60; // Now using a fixed row height
+        const numRows = 2;
+
+        // Clear previous legend
+        vis.legendArea.selectAll("*").remove();
+
+        // Calculate total height dynamically
+        const totalHeight = padding * 1.5 + numRows * rowHeight;
+
+        // Append SVG
+        const svg = vis.legendArea.append("svg")
+            .attr("width", legendWidth)
+            .attr("height", totalHeight);
+
+        vis.createGradient(svg, "popGrad", vis.popColorScale.range());
+        vis.createGradient(svg, "rentGrad", vis.avgColorScale.range());
+
+        // Use the calculated safe min/max values in drawRow calls
+        vis.drawRow(0, "Population", "popGrad", popMin, popMax, svg);
+        vis.drawRow(1, "Rent", "rentGrad", rentMin, rentMax, svg);
+    }
+
+    destructVis()   {
+        let vis = this;
+        d3.select("#" + vis.parentElement).selectAll("*").remove();
+    }
+
+	updateVis(){
+        let vis = this;
+
+        vis.x.domain([...new Set(vis.displayData.map(d => d.year))]);
+        vis.y.domain(vis.displayCategories); // includes new rows
+
+        vis.popColorScale.domain([
+            d3.min(vis.displayData, d => d.popChange),
+            d3.median(vis.displayData, d => d.popChange),
+            d3.max(vis.displayData, d => d.popChange)
         ]);
 
-		// Draw the layers
-		let categories = vis.svg.selectAll(".area")
-			.data(vis.stackedData);
-		
-		categories.enter().append("path")
-			.on("mouseover", function(e, d)	{
-                vis.tooltip.text(d.key)
-			})
-			.on("click", function(e, d)	{
-                vis.handleClick(d)
-			})
+        vis.avgColorScale.domain([
+            d3.min(vis.displayData, d => d.avgChange),
+            d3.median(vis.displayData, d => d.avgChange),
+            d3.max(vis.displayData, d => d.avgChange)
+        ]);
 
-			.attr("class", "area")
-			.merge(categories)
-            .transition(750)
-			.style("fill", d => {
-				return vis.colorScale(d)
-			})
-			.attr("d", d => vis.area(d))
+        if (vis.highlight.property("value") == "pop")   {
+            vis.popColorScale.range(vis.highlightPalette);
+            vis.avgColorScale.range(vis.mutedPalette);
+        }   else if (vis.highlight.property("value") == "avg")   {
+            vis.popColorScale.range(vis.mutedPalette);
+            vis.avgColorScale.range(vis.highlightPalette);
+        }   else if (vis.highlight.property("value") == "both")   {
+            vis.popColorScale.range(vis.highlightPalette);
+            vis.avgColorScale.range(vis.highlightPalette);
 
-		categories.exit().remove();
-                                
+        }
 
-		// Call axis functions with the new domain
-		vis.svg.select(".x-axis").call(vis.xAxis);
-		vis.svg.select(".y-axis").call(vis.yAxis);
+        vis.createLegend();
+        vis.svg.selectAll(".box-group")
+            .data(vis.displayData, d => `${d.year}-${d.category}`)
+            .join(
+                enter => {
+                    const g = enter.append("g")
+                        .attr("class", "box-group")
+                        .attr("transform", d => `translate(${vis.x(d.year)}, ${vis.y(d.category)})`);
+
+                    // Dimensions
+                    const bw = vis.x.bandwidth();
+                    const bh = vis.y.bandwidth();
+
+                    // Border rect
+                    g.append("rect")
+                        .attr("width", bw)
+                        .attr("height", bh)
+                        .style("fill", "none")
+                        .style("stroke", "#555")
+                        .style("stroke-width", 1);
+
+                    // Population triangle
+                    g.append("path")
+                        .attr("class", "pop-tri")
+                        .attr("d", `M0,${bh} L${bw},${bh} L0,0 Z`)
+                        .style("fill", d => vis.popColorScale(d.popChange));
+
+                    // Rent triangle
+                    g.append("path")
+                        .attr("class", "rent-tri")
+                        .attr("d", `M${bw},0 L${bw},${bh} L0,0 Z`)
+                        .style("fill", d => vis.avgColorScale(d.avgChange));
+                        
+
+                    // Diagonal line (hidden initially)
+                    g.append("line")
+                        .attr("class", "diag")
+                        .attr("x1", 0)
+                        .attr("y1", 0)
+                        .attr("x2", bw)
+                        .attr("y2", bh)
+                        .attr("stroke", "black")
+                        .attr("stroke-width", 1.5)
+                        .style("opacity", 0)
+
+                    // Hover events
+                    g.on("mouseover", function(event, d) {
+                        d3.select(this).select("rect")
+                            .style("stroke", "black")
+                            .style("stroke-width", 2);
+
+                        d3.select(this).select(".diag")
+                            .style("opacity", 1);
+
+                        vis.tooltip
+                            .style("opacity", 1)
+                            .html(`
+                                <strong>${d.category}</strong><br/>
+                                Year: ${d.year}<br/>
+                                Change in Rent: ${d.avgChange.toFixed(2)}%<br/>
+                                Change in Population: ${d.popChange.toFixed(2)}%
+                            `);
+                    })
+                    .on("mousemove", function(event) {
+                        vis.tooltip
+                            .style("left", (event.pageX + 10) + "px")
+                            .style("top", (event.pageY + 10) + "px");
+                    })
+                    .on("mouseleave", function() {
+                        d3.select(this).select("rect")
+                            .style("stroke", "#555")
+                            .style("stroke-width", 1);
+
+                        d3.select(this).select(".diag")
+                            .style("opacity", 0);
+
+                        vis.tooltip.style("opacity", 0);
+                    });
+
+                    return g;
+                },
+                update => {
+                    // Update positions and dimensions
+                    const bw = vis.x.bandwidth();
+                    const bh = vis.y.bandwidth();
+
+                    update
+                    .transition()
+                        .attr("transform", d => `translate(${vis.x(d.year)}, ${vis.y(d.category)})`);
+
+                    update.select("rect")
+                        .transition()
+                        .attr("width", bw)
+                        .attr("height", bh);
+
+                    update.select(".pop-tri")
+                    .transition()
+                        .attr("d", `M0,${bh} L${bw},${bh} L0,0 Z`)
+                        .style("fill", d => vis.popColorScale(d.popChange));
+
+                    update.select(".rent-tri")
+                    .transition()
+                        .attr("d", `M${bw},0 L${bw},${bh} L0,0 Z`)
+                        .style("fill", d => vis.avgColorScale(d.avgChange));
+
+                    update.select(".diag")
+                    .transition()
+                        .attr("x2", bw)
+                        .attr("y2", bh);
+
+                    return update;
+                },
+                exit => exit.remove()
+            );
+
+        vis.svg.select(".x-axis").call(vis.xAxis);
+        vis.svg.select(".y-axis").call(vis.yAxis);
+
 	}
 }

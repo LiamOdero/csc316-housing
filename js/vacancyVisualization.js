@@ -1,5 +1,5 @@
 // Set current year in footer
-document.getElementById("current-year").textContent = new Date().getFullYear();
+//document.getElementById('current-year').textContent = new Date().getFullYear();
 
 // Province name mapping
 const provinceNames = {
@@ -41,33 +41,12 @@ let isProgrammaticCarouselScroll = false;
 
 setupCarouselControls();
 
-// Load and create the building visualization
-d3.json("data/BURAK_cities_data_by_unit_type.json")
-  .then((data) => {
-    console.log("Data loaded successfully:", data.length, "cities");
+function initVacancyVis(data) {
     allCitiesData = data;
     setupCitySelector();
     setupFilterListeners();
     applyFilters();
-  })
-  .catch((error) => {
-    console.error("Error loading data:", error);
-    // Fallback to original data if multi-year data is not available
-    d3.json("data/BURAK_cities_data.json")
-      .then((data) => {
-        console.log("Fallback data loaded:", data.length, "cities");
-        // Add year field to existing data
-        allCitiesData = data.map((d) => ({ ...d, year: 2023 }));
-        setupCitySelector();
-        setupFilterListeners();
-        applyFilters();
-      })
-      .catch((fallbackError) => {
-        console.error("Error loading fallback data:", fallbackError);
-        document.getElementById("buildings-container").innerHTML =
-          '<p style="color: #ff6b6b; text-align: center;">Error loading visualization data.</p>';
-      });
-  });
+}
 
 function setupCarouselControls() {
   carouselViewport = document.querySelector(".buildings-viewport");
@@ -93,7 +72,7 @@ function setupCarouselControls() {
     if (carouselSnapTimeout) clearTimeout(carouselSnapTimeout);
     carouselSnapTimeout = setTimeout(() => {
       if (!isProgrammaticCarouselScroll) {
-        snapToNearestCard();
+        //snapToNearestCard();
       }
     }, 120);
     updateCarouselButtons();
@@ -414,7 +393,6 @@ function updateCityDropdown(searchTerm) {
     }
     citiesByProvince.get(city.province).push(city);
   });
-
   // Sort provinces
   const sortedProvinces = Array.from(citiesByProvince.keys()).sort();
 
@@ -506,12 +484,10 @@ function updateSelectedCitiesDisplay() {
 function applyFilters() {
   let filteredData = allCitiesData;
 
-  console.log("applyFilters called, total cities:", filteredData.length);
 
   // Filter out cities that don't have data for the selected unit type
   const unitType = currentFilters.unitType;
   filteredData = filteredData.filter((d) => d.data && d.data[unitType]);
-  console.log("After unit type filter:", filteredData.length, "cities");
 
   // City selection filter (highest priority)
   if (selectedCities.length > 0) {
@@ -547,7 +523,6 @@ function applyFilters() {
 
 function createBuildingVisualization(cities) {
   try {
-    console.log("createBuildingVisualization called with", cities.length, "cities");
     const container = d3.select("#buildings-container");
 
     // Clear existing buildings
@@ -564,7 +539,6 @@ function createBuildingVisualization(cities) {
 
     // Get the current unit type
     const unitType = currentFilters.unitType;
-    console.log("Creating visualization for unit type:", unitType);
 
   // Apply sorting based on current filter
   switch (currentFilters.sort) {
@@ -743,7 +717,6 @@ function createBuildingVisualization(cities) {
     // The green styling is applied via the 'high-vacancy' class on the label
   });
 
-  console.log("Visualization created successfully with", cities.length, "buildings");
   resetCarouselPosition();
 
   } catch (error) {

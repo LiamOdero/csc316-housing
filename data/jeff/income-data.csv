@@ -1,0 +1,227 @@
+date,city,"dual-parent-families","single-parent-families","single-individuals"
+2000,"Calgary, Alberta",66600.0,30300.0,23800.0
+2000,"Halifax, Nova Scotia",60200.0,23200.0,20300.0
+2000,"Montréal, Quebec",55800.0,26000.0,17700.0
+2000,"Saskatoon, Saskatchewan",58100.0,22500.0,18700.0
+2000,"St. John's, Newfoundland and Labrador",56200.0,21300.0,15400.0
+2000,"Toronto, Ontario",61700.0,29400.0,21600.0
+2000,"Vancouver, British Columbia",55200.0,26600.0,20600.0
+2000,"Winnipeg, Manitoba",58400.0,25400.0,19400.0
+2001,"Calgary, Alberta",71500.0,32900.0,25600.0
+2001,"Halifax, Nova Scotia",63100.0,25000.0,21300.0
+2001,"Montréal, Quebec",58300.0,28200.0,18900.0
+2001,"Saskatoon, Saskatchewan",61400.0,23700.0,19800.0
+2001,"St. John's, Newfoundland and Labrador",59800.0,23800.0,16600.0
+2001,"Toronto, Ontario",64700.0,31900.0,22600.0
+2001,"Vancouver, British Columbia",58100.0,29100.0,21700.0
+2001,"Winnipeg, Manitoba",60900.0,27300.0,20600.0
+2002,"Calgary, Alberta",73000.0,34100.0,26000.0
+2002,"Halifax, Nova Scotia",65200.0,26100.0,22000.0
+2002,"Montréal, Quebec",59900.0,29100.0,19200.0
+2002,"Saskatoon, Saskatchewan",63600.0,24600.0,20500.0
+2002,"St. John's, Newfoundland and Labrador",62300.0,24700.0,16900.0
+2002,"Toronto, Ontario",64800.0,32600.0,21800.0
+2002,"Vancouver, British Columbia",58700.0,29700.0,21100.0
+2002,"Winnipeg, Manitoba",62800.0,28400.0,21000.0
+2003,"Calgary, Alberta",74500.0,34500.0,26400.0
+2003,"Halifax, Nova Scotia",66800.0,26800.0,22300.0
+2003,"Montréal, Quebec",61000.0,29800.0,19700.0
+2003,"Saskatoon, Saskatchewan",65300.0,24900.0,21000.0
+2003,"St. John's, Newfoundland and Labrador",64300.0,25000.0,17700.0
+2003,"Toronto, Ontario",65700.0,32300.0,22000.0
+2003,"Vancouver, British Columbia",59700.0,29400.0,21200.0
+2003,"Winnipeg, Manitoba",64300.0,28800.0,21500.0
+2004,"Calgary, Alberta",77800.0,35800.0,27200.0
+2004,"Halifax, Nova Scotia",69000.0,27900.0,22200.0
+2004,"Montréal, Quebec",62700.0,30500.0,20200.0
+2004,"Saskatoon, Saskatchewan",68100.0,25600.0,21600.0
+2004,"St. John's, Newfoundland and Labrador",65500.0,25000.0,18100.0
+2004,"Toronto, Ontario",67500.0,33100.0,22200.0
+2004,"Vancouver, British Columbia",61800.0,30600.0,21800.0
+2004,"Winnipeg, Manitoba",66500.0,29800.0,22000.0
+2005,"Calgary, Alberta",82800.0,36000.0,28700.0
+2005,"Halifax, Nova Scotia",72800.0,28500.0,23000.0
+2005,"Montréal, Quebec",65500.0,31900.0,20700.0
+2005,"Saskatoon, Saskatchewan",71900.0,26800.0,22300.0
+2005,"St. John's, Newfoundland and Labrador",68900.0,26100.0,18400.0
+2005,"Toronto, Ontario",69900.0,31600.0,22600.0
+2005,"Vancouver, British Columbia",65000.0,29700.0,22600.0
+2005,"Winnipeg, Manitoba",68900.0,30200.0,22600.0
+2006,"Calgary, Alberta",90700.0,42200.0,31700.0
+2006,"Halifax, Nova Scotia",75500.0,31000.0,23900.0
+2006,"Moncton, New Brunswick",65500.0,29900.0,21500.0
+2006,"Montréal, Quebec",67400.0,34500.0,21200.0
+2006,"Saskatoon, Saskatchewan",76600.0,30300.0,24000.0
+2006,"St. John's, Newfoundland and Labrador",72200.0,28200.0,19300.0
+2006,"Toronto, Ontario",71200.0,35600.0,22900.0
+2006,"Vancouver, British Columbia",68600.0,34700.0,24100.0
+2006,"Winnipeg, Manitoba",72000.0,32500.0,23700.0
+2007,"Calgary, Alberta",95160.0,44770.0,33670.0
+2007,"Halifax, Nova Scotia",78750.0,32960.0,25360.0
+2007,"Moncton, New Brunswick",68510.0,31180.0,22630.0
+2007,"Montréal, Quebec",70370.0,36590.0,22170.0
+2007,"Saskatoon, Saskatchewan",81190.0,33080.0,26110.0
+2007,"St. John's, Newfoundland and Labrador",77270.0,30960.0,20700.0
+2007,"Toronto, Ontario",73970.0,37090.0,23740.0
+2007,"Vancouver, British Columbia",71850.0,37070.0,25740.0
+2007,"Winnipeg, Manitoba",75340.0,34560.0,25010.0
+2008,"Calgary, Alberta",99000.0,46770.0,35710.0
+2008,"Charlottetown, Prince Edward Island",74720.0,33810.0,23220.0
+2008,"Halifax, Nova Scotia",82410.0,34310.0,26300.0
+2008,"Moncton, New Brunswick",71580.0,32470.0,23490.0
+2008,"Montréal, Quebec",72410.0,37760.0,22790.0
+2008,"Saskatoon, Saskatchewan",86220.0,36050.0,28280.0
+2008,"St. John's, Newfoundland and Labrador",82280.0,32550.0,21950.0
+2008,"Toronto, Ontario",75630.0,38380.0,24030.0
+2008,"Vancouver, British Columbia",74270.0,38860.0,26560.0
+2008,"Winnipeg, Manitoba",78170.0,36260.0,26060.0
+2009,"Calgary, Alberta",95630.0,45740.0,35120.0
+2009,"Charlottetown, Prince Edward Island",75980.0,34600.0,24090.0
+2009,"Halifax, Nova Scotia",83560.0,34950.0,26700.0
+2009,"Moncton, New Brunswick",72900.0,33350.0,24160.0
+2009,"Montréal, Quebec",72520.0,38300.0,22910.0
+2009,"Saskatoon, Saskatchewan",87570.0,37040.0,29160.0
+2009,"St. John's, Newfoundland and Labrador",86120.0,34420.0,23000.0
+2009,"Toronto, Ontario",74110.0,38250.0,23580.0
+2009,"Vancouver, British Columbia",73070.0,38180.0,25650.0
+2009,"Winnipeg, Manitoba",79090.0,36880.0,26380.0
+2010,"Calgary, Alberta",97070.0,45090.0,34970.0
+2010,"Charlottetown, Prince Edward Island",77430.0,34890.0,24530.0
+2010,"Halifax, Nova Scotia",85170.0,35330.0,26950.0
+2010,"Moncton, New Brunswick",74740.0,34270.0,24380.0
+2010,"Montréal, Quebec",73690.0,38930.0,23000.0
+2010,"Saskatoon, Saskatchewan",89350.0,37610.0,29450.0
+2010,"St. John's, Newfoundland and Labrador",88890.0,34960.0,23970.0
+2010,"Toronto, Ontario",75580.0,39340.0,23230.0
+2010,"Vancouver, British Columbia",72610.0,38080.0,24660.0
+2010,"Winnipeg, Manitoba",79680.0,37330.0,26380.0
+2011,"Calgary, Alberta",101210.0,46980.0,35860.0
+2011,"Charlottetown, Prince Edward Island",80570.0,36040.0,24960.0
+2011,"Halifax, Nova Scotia",87430.0,37190.0,27680.0
+2011,"Moncton, New Brunswick",76880.0,35310.0,25190.0
+2011,"Montréal, Quebec",76020.0,39910.0,23650.0
+2011,"Saskatoon, Saskatchewan",93900.0,38460.0,30510.0
+2011,"St. John's, Newfoundland and Labrador",94040.0,37330.0,25210.0
+2011,"Toronto, Ontario",77350.0,39590.0,24510.0
+2011,"Vancouver, British Columbia",74510.0,39210.0,25070.0
+2011,"Winnipeg, Manitoba",81740.0,38230.0,27120.0
+2012,"Calgary, Alberta",106270.0,49490.0,35910.0
+2012,"Charlottetown, Prince Edward Island",82050.0,36380.0,25550.0
+2012,"Halifax, Nova Scotia",89530.0,37960.0,28460.0
+2012,"Moncton, New Brunswick",78500.0,36010.0,25660.0
+2012,"Montréal, Quebec",78260.0,42280.0,24790.0
+2012,"Saskatoon, Saskatchewan",96710.0,39470.0,32020.0
+2012,"St. John's, Newfoundland and Labrador",98630.0,39120.0,26510.0
+2012,"Toronto, Ontario",78990.0,40280.0,24900.0
+2012,"Vancouver, British Columbia",76690.0,40340.0,25800.0
+2012,"Winnipeg, Manitoba",83740.0,39230.0,28020.0
+2013,"Calgary, Alberta",109260.0,51270.0,36190.0
+2013,"Charlottetown, Prince Edward Island",83510.0,37030.0,26000.0
+2013,"Halifax, Nova Scotia",91620.0,39260.0,28950.0
+2013,"Moncton, New Brunswick",80380.0,36590.0,26080.0
+2013,"Montréal, Quebec",80140.0,43630.0,25150.0
+2013,"Saskatoon, Saskatchewan",99790.0,41420.0,33770.0
+2013,"St. John's, Newfoundland and Labrador",102810.0,40920.0,27580.0
+2013,"Toronto, Ontario",80680.0,41150.0,25210.0
+2013,"Vancouver, British Columbia",78980.0,41380.0,26150.0
+2013,"Winnipeg, Manitoba",85670.0,40390.0,28500.0
+2014,"Calgary, Alberta",112420.0,53060.0,37320.0
+2014,"Charlottetown, Prince Edward Island",85800.0,38890.0,26450.0
+2014,"Halifax, Nova Scotia",93800.0,40440.0,29330.0
+2014,"Moncton, New Brunswick",82420.0,37210.0,26880.0
+2014,"Montréal, Quebec",82010.0,44090.0,25600.0
+2014,"Saskatoon, Saskatchewan",102660.0,43350.0,34960.0
+2014,"St. John's, Newfoundland and Labrador",106240.0,41480.0,28270.0
+2014,"Toronto, Ontario",83010.0,43380.0,25660.0
+2014,"Vancouver, British Columbia",81700.0,42870.0,26880.0
+2014,"Winnipeg, Manitoba",87600.0,41470.0,29010.0
+2015,"Calgary, Alberta",112380.0,53630.0,39030.0
+2015,"Charlottetown, Prince Edward Island",86960.0,41020.0,26910.0
+2015,"Halifax, Nova Scotia",95250.0,42210.0,29910.0
+2015,"Moncton, New Brunswick",83730.0,38370.0,27220.0
+2015,"Montréal, Quebec",84030.0,45610.0,26150.0
+2015,"Saskatoon, Saskatchewan",104260.0,43760.0,34860.0
+2015,"St. John's, Newfoundland and Labrador",108420.0,43970.0,28810.0
+2015,"Toronto, Ontario",86260.0,45440.0,26540.0
+2015,"Vancouver, British Columbia",85560.0,45550.0,27890.0
+2015,"Winnipeg, Manitoba",89740.0,43270.0,29620.0
+2016,"Calgary, Alberta",107620.0,53250.0,37110.0
+2016,"Charlottetown, Prince Edward Island",87420.0,42600.0,27460.0
+2016,"Halifax, Nova Scotia",95760.0,43760.0,30400.0
+2016,"Moncton, New Brunswick",84430.0,40220.0,27260.0
+2016,"Montréal, Quebec",86160.0,47470.0,26630.0
+2016,"Saskatoon, Saskatchewan",102730.0,43930.0,34250.0
+2016,"St. John's, Newfoundland and Labrador",108340.0,45270.0,29280.0
+2016,"Toronto, Ontario",88170.0,47480.0,26830.0
+2016,"Vancouver, British Columbia",88000.0,47990.0,28510.0
+2016,"Winnipeg, Manitoba",91010.0,44720.0,29750.0
+2017,"Calgary, Alberta",110200.0,52340.0,35410.0
+2017,"Charlottetown, Prince Edward Island",89830.0,44960.0,28390.0
+2017,"Halifax, Nova Scotia",98870.0,44680.0,31300.0
+2017,"Moncton, New Brunswick",86740.0,41640.0,28300.0
+2017,"Montréal, Quebec",89370.0,48430.0,27470.0
+2017,"Saskatoon, Saskatchewan",105000.0,43840.0,34540.0
+2017,"St. John's, Newfoundland and Labrador",109520.0,45660.0,29850.0
+2017,"Toronto, Ontario",91700.0,47240.0,27430.0
+2017,"Vancouver, British Columbia",92210.0,48010.0,29540.0
+2017,"Winnipeg, Manitoba",93790.0,45160.0,30290.0
+2018,"Calgary, Alberta",112540.0,53940.0,36070.0
+2018,"Charlottetown, Prince Edward Island",91430.0,46990.0,28710.0
+2018,"Halifax, Nova Scotia",101550.0,46670.0,32040.0
+2018,"Moncton, New Brunswick",89360.0,43840.0,29590.0
+2018,"Montréal, Quebec",92990.0,51270.0,28990.0
+2018,"Saskatoon, Saskatchewan",106310.0,45970.0,34660.0
+2018,"St. John's, Newfoundland and Labrador",113050.0,47730.0,30350.0
+2018,"Toronto, Ontario",95140.0,50280.0,28820.0
+2018,"Vancouver, British Columbia",94980.0,51170.0,30540.0
+2018,"Winnipeg, Manitoba",95830.0,46890.0,30890.0
+2019,"Calgary, Alberta",115010.0,56510.0,35990.0
+2019,"Charlottetown, Prince Edward Island",93740.0,49980.0,29620.0
+2019,"Halifax, Nova Scotia",102810.0,48690.0,32760.0
+2019,"Moncton, New Brunswick",90770.0,45980.0,30480.0
+2019,"Montréal, Quebec",96820.0,53800.0,29960.0
+2019,"Saskatoon, Saskatchewan",107820.0,47430.0,35070.0
+2019,"St. John's, Newfoundland and Labrador",114240.0,48630.0,30580.0
+2019,"Toronto, Ontario",97640.0,52530.0,28930.0
+2019,"Vancouver, British Columbia",97580.0,53690.0,31120.0
+2019,"Winnipeg, Manitoba",97580.0,48550.0,31190.0
+2020,"Calgary, Alberta",117720.0,60790.0,37950.0
+2020,"Charlottetown, Prince Edward Island",99620.0,56220.0,32980.0
+2020,"Halifax, Nova Scotia",107500.0,54950.0,35860.0
+2020,"Moncton, New Brunswick",95950.0,51630.0,33760.0
+2020,"Montréal, Quebec",103830.0,59680.0,33490.0
+2020,"Saskatoon, Saskatchewan",112570.0,53660.0,37930.0
+2020,"St. John's, Newfoundland and Labrador",117400.0,54910.0,33700.0
+2020,"Toronto, Ontario",104960.0,59120.0,32830.0
+2020,"Vancouver, British Columbia",104350.0,60710.0,35850.0
+2020,"Winnipeg, Manitoba",103550.0,54660.0,34440.0
+2021,"Calgary, Alberta",118580.0,59020.0,39340.0
+2021,"Charlottetown, Prince Edward Island",102190.0,56510.0,33460.0
+2021,"Halifax, Nova Scotia",110070.0,53950.0,36300.0
+2021,"Moncton, New Brunswick",96720.0,51100.0,33920.0
+2021,"Montréal, Quebec",107780.0,60880.0,34010.0
+2021,"Saskatoon, Saskatchewan",114800.0,51830.0,37330.0
+2021,"St. John's, Newfoundland and Labrador",119450.0,55110.0,33720.0
+2021,"Toronto, Ontario",106670.0,58360.0,32540.0
+2021,"Vancouver, British Columbia",107770.0,61340.0,36420.0
+2021,"Winnipeg, Manitoba",104340.0,52620.0,33880.0
+2022,"Calgary, Alberta",121600.0,61780.0,40250.0
+2022,"Charlottetown, Prince Edward Island",104120.0,58620.0,34570.0
+2022,"Halifax, Nova Scotia",111970.0,55950.0,37300.0
+2022,"Moncton, New Brunswick",98900.0,53280.0,34540.0
+2022,"Montréal, Quebec",115650.0,65940.0,36350.0
+2022,"Saskatoon, Saskatchewan",119430.0,53890.0,39170.0
+2022,"St. John's, Newfoundland and Labrador",123590.0,56420.0,33830.0
+2022,"Toronto, Ontario",108400.0,59910.0,32160.0
+2022,"Vancouver, British Columbia",109400.0,62780.0,36380.0
+2022,"Winnipeg, Manitoba",106970.0,54370.0,34540.0
+2023,"Calgary, Alberta",124960.0,66010.0,41640.0
+2023,"Charlottetown, Prince Edward Island",109290.0,63130.0,36520.0
+2023,"Halifax, Nova Scotia",117670.0,61130.0,39770.0
+2023,"Moncton, New Brunswick",101590.0,56640.0,36460.0
+2023,"Montréal, Quebec",117010.0,67060.0,37320.0
+2023,"Saskatoon, Saskatchewan",121800.0,56380.0,40730.0
+2023,"St. John's, Newfoundland and Labrador",127260.0,59720.0,35600.0
+2023,"Toronto, Ontario",111320.0,63280.0,33440.0
+2023,"Vancouver, British Columbia",113610.0,67420.0,38400.0
+2023,"Winnipeg, Manitoba",110690.0,57670.0,36560.0

@@ -3,12 +3,15 @@
 
 // Global variables
 let timeseriesData;
+let yearlyData;  // Aggregated yearly data
 let geoData;
 let currentIncome = 75000;
-let currentQuarterIndex = 51;  // Start at 2025 Q2
+let currentYearIndex = 12;  // Start at 2024 (last complete year)
 let isPlaying = false;
 let animationInterval = null;
 let svg, projection, path, g;
+let mortgageVisInitialized = false;
+let currentZoomScale = 1;  // Track current zoom level
 
 // Color scale for affordability (green = affordable, red = unaffordable)
 const colorScale = d3.scaleThreshold()
@@ -16,11 +19,20 @@ const colorScale = d3.scaleThreshold()
     .range(['#2d5016', '#5a9216', '#ffc107', '#ff6b35', '#c1121f']);
 
 // Initialize the visualization
-async function init() {
+async function initMortgageVisualization() {
+    // Prevent double initialization
+    if (mortgageVisInitialized) {
+        console.log('Mortgage visualization already initialized');
+        return;
+    }
+    
     try {
         // Load data
         timeseriesData = await d3.json('data/mortgage_timeseries.json');
         geoData = await d3.json('data/canada_provinces.json');
+        
+        // Aggregate quarterly data into yearly averages
+        yearlyData = aggregateToYearly(timeseriesData);
         
         // Setup SVG
         setupSVG();
@@ -36,48 +48,111 @@ async function init() {
         // Update displays
         updateAllDisplays();
         
+        mortgageVisInitialized = true;
         console.log('Visualization initialized successfully');
-        console.log(`Loaded ${timeseriesData.quarters.length} quarters of data`);
+        console.log(`Loaded ${yearlyData.years.length} years of data`);
     } catch (error) {
         console.error('Error initializing visualization:', error);
     }
 }
 
-// Get current quarter data
-function getCurrentQuarterData() {
-    const quarter = timeseriesData.quarters[currentQuarterIndex];
+// Aggregate quarterly data into yearly averages
+function aggregateToYearly(data) {
+    const yearMap = {};
+    
+    // Group quarters by year
+    data.quarters.forEach(quarter => {
+        const year = quarter.substring(0, 4);
+        if (!yearMap[year]) {
+            yearMap[year] = [];
+        }
+        yearMap[year].push(quarter);
+    });
+    
+    // Get sorted list of years
+    const years = Object.keys(yearMap).sort();
+    
+    // Average province data by year
+    const provinces = {};
+    for (const [code, provinceData] of Object.entries(data.provinces)) {
+        provinces[code] = {
+            name: provinceData.name,
+            fullName: provinceData.fullName,
+            years: {}
+        };
+        
+        years.forEach(year => {
+            const quarters = yearMap[year];
+            const payments = quarters.map(q => provinceData.quarters[q] || 0).filter(p => p > 0);
+            if (payments.length > 0) {
+                provinces[code].years[year] = payments.reduce((a, b) => a + b, 0) / payments.length;
+            }
+        });
+    }
+    
+    // Average CMA data by year
+    const cmas = data.cmas.map(cma => {
+        const yearlyPayments = {};
+        years.forEach(year => {
+            const quarters = yearMap[year];
+            const payments = quarters.map(q => cma.quarters[q] || 0).filter(p => p > 0);
+            if (payments.length > 0) {
+                yearlyPayments[year] = payments.reduce((a, b) => a + b, 0) / payments.length;
+            }
+        });
+        
+        return {
+            name: cma.name,
+            province: cma.province,
+            lat: cma.lat,
+            lon: cma.lon,
+            years: yearlyPayments
+        };
+    });
+    
+    return { years, provinces, cmas };
+}
+
+// Get current year data
+function getCurrentYearData() {
+    const year = yearlyData.years[currentYearIndex];
     const provinces = {};
     const cmas = [];
     
-    // Build provinces data for current quarter
-    for (const [code, provinceData] of Object.entries(timeseriesData.provinces)) {
+    // Build provinces data for current year
+    for (const [code, provinceData] of Object.entries(yearlyData.provinces)) {
         provinces[code] = {
             code: code,
             name: provinceData.name,
             fullName: provinceData.fullName,
-            payment: provinceData.quarters[quarter] || 0
+            payment: provinceData.years[year] || 0
         };
     }
     
-    // Build CMAs data for current quarter
-    for (const cma of timeseriesData.cmas) {
+    // Build CMAs data for current year
+    for (const cma of yearlyData.cmas) {
         cmas.push({
             name: cma.name,
             province: cma.province,
             lat: cma.lat,
             lon: cma.lon,
-            payment: cma.quarters[quarter] || 0
+            payment: cma.years[year] || 0
         });
     }
     
-    return { provinces, cmas, quarter };
+    return { provinces, cmas, year };
 }
 
 // Setup SVG and projection
 function setupSVG() {
     const container = d3.select('#canada-map');
-    const width = 1400;
-    const height = 900;
+    const width = 780;
+    const height = 546;
+    
+    // Prevent visualization area clicks from triggering page navigation
+    d3.select('#visualization-area-1').on('click', function(event) {
+        event.stopPropagation();
+    });
     
     svg = container
         .attr('width', width)
@@ -90,7 +165,7 @@ function setupSVG() {
         .center([0, 58])
         .rotate([96, 0])
         .parallels([49, 77])
-        .scale(1100)
+        .scale(780)
         .translate([width / 2, height / 2]);
     
     path = d3.geoPath().projection(projection);
@@ -104,20 +179,37 @@ function setupSVG() {
         .on('zoom', (event) => {
             g.attr('transform', event.transform);
             
-            // Scale strokes, circles, and text inversely to zoom level
-            const scale = event.transform.k;
+            // Update current zoom scale
+            currentZoomScale = event.transform.k;
+            const scale = currentZoomScale;
+            
             g.selectAll('.province')
-                .attr('stroke-width', 2 / scale);
+                .attr('stroke-width', 3.1 / scale);
             
             g.selectAll('.cma-marker')
-                .attr('r', function() {
-                    const baseRadius = d3.select(this).attr('data-base-radius');
-                    return baseRadius / scale;
-                })
-                .attr('stroke-width', 2 / scale);
+                .each(function() {
+                    const circle = d3.select(this);
+                    const baseRadius = parseFloat(circle.attr('data-base-radius'));
+                    const currentRadius = parseFloat(circle.attr('r'));
+                    const expectedScaledRadius = baseRadius / scale;
+                    const expectedHoveredRadius = (baseRadius * 1.3) / scale;
+                    
+                    // Check if currently in hover state (within tolerance of 1.3x scaled radius)
+                    const isHovered = Math.abs(currentRadius - expectedHoveredRadius) < 0.5;
+                    
+                    if (isHovered) {
+                        // Maintain hover state with new zoom
+                        circle.attr('r', expectedHoveredRadius);
+                        circle.attr('stroke-width', (2.6 * 1.25) / scale); // Thicker for hover
+                    } else {
+                        // Normal state
+                        circle.attr('r', expectedScaledRadius);
+                        circle.attr('stroke-width', 2.6 / scale);
+                    }
+                });
             
             g.selectAll('.cma-line')
-                .attr('stroke-width', 1 / scale);
+                .attr('stroke-width', 2 / scale);
             
             g.selectAll('.cma-label')
                 .attr('font-size', 11 / scale + 'px');
@@ -161,7 +253,7 @@ function drawProvinces() {
 
 // Draw CMA markers and connecting lines
 function drawCMAs() {
-    const currentData = getCurrentQuarterData();
+    const currentData = getCurrentYearData();
     const cmas = currentData.cmas;
     
     // Draw lines from CMAs to their locations
@@ -203,14 +295,14 @@ function drawCMAs() {
     
     cmaGroups.append('circle')
         .attr('class', 'cma-marker')
-        .attr('r', d => {
-            // Size based on payment amount (larger = more expensive)
-            return Math.max(4, Math.min(12, d.payment / 300));
+        .attr('data-base-radius', 5.5)
+        .attr('r', () => {
+            // Fixed size regardless of payment amount
+            return 5.5 / currentZoomScale;
         })
-        .attr('data-base-radius', d => Math.max(4, Math.min(12, d.payment / 300)))
         .attr('fill', d => getColor(d.payment, currentIncome))
         .attr('stroke', '#2c3e50')
-        .attr('stroke-width', 2)
+        .attr('stroke-width', 2.6 / currentZoomScale)
         .on('mouseover', handleCMAMouseOver)
         .on('mousemove', handleMouseMove)
         .on('mouseout', handleMouseOut);
@@ -243,7 +335,7 @@ const provinceNameToCode = {
 // Get province data by code or name
 function getProvinceData(codeOrName) {
     const code = provinceNameToCode[codeOrName] || codeOrName;
-    const currentData = getCurrentQuarterData();
+    const currentData = getCurrentYearData();
     return currentData.provinces[code];
 }
 
@@ -322,11 +414,17 @@ function handleCMAMouseOver(event, d) {
     `)
     .classed('visible', true);
     
-    d3.select(event.currentTarget)
-        .attr('r', function() {
-            const currentRadius = parseFloat(d3.select(this).attr('r'));
-            return currentRadius * 1.3;
-        });
+    const circle = d3.select(event.currentTarget);
+    // Cancel any ongoing transitions first
+    circle.interrupt();
+    const baseRadius = parseFloat(circle.attr('data-base-radius'));
+    // Account for current zoom level
+    const targetRadius = (baseRadius * 1.3) / currentZoomScale;
+    const targetStrokeWidth = (2.6 * 1.25) / currentZoomScale; // Slightly thicker on hover
+    circle.transition()
+        .duration(150)
+        .attr('r', targetRadius)
+        .attr('stroke-width', targetStrokeWidth);
 }
 
 function handleMouseMove(event) {
@@ -369,15 +467,25 @@ function handleMouseMove(event) {
 function handleMouseOut(event) {
     d3.select('#tooltip').classed('visible', false);
     
-    // Reset province opacity
-    d3.select(event.currentTarget)
-        .style('opacity', 1);
+    const element = d3.select(event.currentTarget);
     
-    // Reset CMA circle size
+    // Reset province opacity
+    element.style('opacity', 1);
+    
+    // Reset CMA circle size with smooth transition
     if (event.currentTarget.tagName === 'circle' && event.currentTarget.classList.contains('cma-marker')) {
-        const payment = d3.select(event.currentTarget).datum().payment;
-        d3.select(event.currentTarget)
-            .attr('r', Math.max(4, Math.min(12, payment / 300)));
+        // Cancel any ongoing transitions first
+        element.interrupt();
+        const baseRadius = parseFloat(element.attr('data-base-radius'));
+        if (baseRadius && !isNaN(baseRadius)) {
+            // Account for current zoom level
+            const targetRadius = baseRadius / currentZoomScale;
+            const targetStrokeWidth = 2.6 / currentZoomScale;
+            element.transition()
+                .duration(150)
+                .attr('r', targetRadius)
+                .attr('stroke-width', targetStrokeWidth);
+        }
     }
 }
 
@@ -396,17 +504,21 @@ function setupControls() {
 // Setup timeline controls
 function setupTimelineControls() {
     const timelineSlider = d3.select('#timeline-slider');
-    const quarterDisplay = d3.select('#quarter-display');
+    const yearDisplay = d3.select('#quarter-display');
     const playButton = d3.select('#play-button');
     const resetButton = d3.select('#reset-button');
+    
+    // Update slider to use years
+    timelineSlider.attr('max', yearlyData.years.length - 1);
+    timelineSlider.property('value', currentYearIndex);
     
     // Timeline slider
     timelineSlider.on('input', function() {
         if (isPlaying) {
             stopAnimation();
         }
-        currentQuarterIndex = +this.value;
-        updateQuarterDisplay();
+        currentYearIndex = +this.value;
+        updateYearDisplay();
         updateVisualization();
     });
     
@@ -422,22 +534,20 @@ function setupTimelineControls() {
     // Reset button
     resetButton.on('click', function() {
         stopAnimation();
-        currentQuarterIndex = 0;
+        currentYearIndex = 0;
         timelineSlider.property('value', 0);
-        updateQuarterDisplay();
+        updateYearDisplay();
         updateVisualization();
     });
     
-    updateQuarterDisplay();
+    updateYearDisplay();
 }
 
-// Update quarter display
-function updateQuarterDisplay() {
-    const quarter = timeseriesData.quarters[currentQuarterIndex];
-    const year = quarter.substring(0, 4);
-    const q = quarter.substring(4);
-    d3.select('#quarter-display').text(`${year} ${q}`);
-    d3.select('#timeline-slider').property('value', currentQuarterIndex);
+// Update year display
+function updateYearDisplay() {
+    const year = yearlyData.years[currentYearIndex];
+    d3.select('#quarter-display').text(year);
+    d3.select('#timeline-slider').property('value', currentYearIndex);
 }
 
 // Start animation
@@ -448,13 +558,13 @@ function startAnimation() {
         .classed('playing', true);
     
     animationInterval = setInterval(() => {
-        currentQuarterIndex++;
-        if (currentQuarterIndex >= timeseriesData.quarters.length) {
-            currentQuarterIndex = 0;  // Loop back to start
+        currentYearIndex++;  // Increment by 1 year
+        if (currentYearIndex >= yearlyData.years.length) {
+            currentYearIndex = 0;  // Loop back to start
         }
-        updateQuarterDisplay();
+        updateYearDisplay();
         updateVisualization();
-    }, 500);  // Update every 500ms
+    }, 800);  // Update every 800ms
 }
 
 // Stop animation
@@ -470,9 +580,12 @@ function stopAnimation() {
     }
 }
 
-// Update visualization when income or quarter changes
+// Update visualization when income or year changes
 function updateVisualization() {
-    const currentData = getCurrentQuarterData();
+    const currentData = getCurrentYearData();
+    
+    // Hide tooltip when data updates to prevent stale information
+    d3.select('#tooltip').classed('visible', false);
     
     // Update province colors
     g.selectAll('.province')
@@ -483,8 +596,12 @@ function updateVisualization() {
             return provinceData ? getColor(provinceData.payment, currentIncome) : '#cccccc';
         });
     
-    // Remove old CMAs
-    g.selectAll('.cma-group').remove();
+    // Remove old CMAs (cancel any transitions first)
+    g.selectAll('.cma-group')
+        .each(function() {
+            d3.select(this).selectAll('circle').interrupt();
+        })
+        .remove();
     g.selectAll('.cma-line').remove();
     
     // Redraw CMAs with new data
@@ -527,11 +644,14 @@ function updateVisualization() {
     
     cmaGroups.append('circle')
         .attr('class', 'cma-marker')
-        .attr('r', d => Math.max(4, Math.min(12, d.payment / 300)))
-        .attr('data-base-radius', d => Math.max(4, Math.min(12, d.payment / 300)))
+        .attr('data-base-radius', 5.5)
+        .attr('r', () => {
+            // Fixed size regardless of payment amount
+            return 5.5 / currentZoomScale;
+        })
         .attr('fill', d => getColor(d.payment, currentIncome))
         .attr('stroke', '#2c3e50')
-        .attr('stroke-width', 2)
+        .attr('stroke-width', 2.6 / currentZoomScale)
         .on('mouseover', handleCMAMouseOver)
         .on('mousemove', handleMouseMove)
         .on('mouseout', handleMouseOut);
@@ -558,7 +678,7 @@ function updateAllDisplays() {
 
 // Update national information
 function updateNationalInfo() {
-    const currentData = getCurrentQuarterData();
+    const currentData = getCurrentYearData();
     // Calculate national average from all provinces
     const provincePayments = Object.values(currentData.provinces).map(p => p.payment);
     const nationalPayment = Math.round(provincePayments.reduce((a, b) => a + b, 0) / provincePayments.length);
@@ -573,7 +693,7 @@ function updateNationalInfo() {
 
 // Update most/least affordable provinces
 function updateProvinceExtremes() {
-    const currentData = getCurrentQuarterData();
+    const currentData = getCurrentYearData();
     const provincesWithAffordability = Object.values(currentData.provinces).map(p => ({
         ...p,
         affordability: calculateAffordability(p.payment, currentIncome)
@@ -595,7 +715,7 @@ function updateProvinceExtremes() {
 
 // Update data table
 function updateDataTable() {
-    const currentData = getCurrentQuarterData();
+    const currentData = getCurrentYearData();
     const provincesWithAffordability = Object.values(currentData.provinces).map(p => ({
         ...p,
         affordability: calculateAffordability(p.payment, currentIncome)
@@ -621,5 +741,13 @@ function updateDataTable() {
         });
 }
 
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', init);
+// Cleanup function when leaving the visualization
+function destructMortgageVisualization() {
+    if (isPlaying) {
+        stopAnimation();
+    }
+}
+
+// Make functions globally available for main.js to call
+window.initMortgageVisualization = initMortgageVisualization;
+window.destructMortgageVisualization = destructMortgageVisualization;

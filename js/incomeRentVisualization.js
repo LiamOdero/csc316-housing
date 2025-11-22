@@ -1,9 +1,8 @@
-﻿const INCOME_DATA_MAP = {
-    city: "GEO",
-    date: "REF_DATE",
-    value: "VALUE",
-    familyType: "Economic family type"
-};
+﻿const INCOME_FAMILY_COLUMNS = [
+    { key: "dual-parent-families", label: "Dual-parent families" },
+    { key: "single-parent-families", label: "Single-parent families" },
+    { key: "single-individuals", label: "Single individuals" }
+];
 
 const RENT_STRUCTURE_FILTER = "Row and apartment structures of three units and over";
 
@@ -31,6 +30,30 @@ function mapRowBySchema(row, schema) {
             return [newKey, raw !== undefined && !isNaN(numericValue) ? numericValue : raw];
         })
     );
+}
+
+function reshapeIncomeData(rows) {
+    const tidy = [];
+    rows.forEach(row => {
+        const year = Number(row.date);
+        const city = typeof row.city === "string" ? row.city.trim() : null;
+        if (!city || !Number.isFinite(year)) {
+            return;
+        }
+        INCOME_FAMILY_COLUMNS.forEach(({ key, label }) => {
+            const value = Number(row[key]);
+            if (!Number.isFinite(value)) {
+                return;
+            }
+            tidy.push({
+                city,
+                date: year,
+                familyType: label,
+                value
+            });
+        });
+    });
+    return tidy;
 }
 
 function normalizeRentType(value) {
@@ -182,13 +205,9 @@ function createSelection(data, defaultText, container, options = {}) {
     };
 }
 
-Promise.all([
-    d3.csv("data/jeff/rent-prices.csv").then(rows => rows
-        .map(row => mapRowBySchema(row, RENT_DATA_MAP))
-        .filter(row => row.structure === RENT_STRUCTURE_FILTER)),
-    d3.csv("data/jeff/u65incomedata.csv").then(rows => rows.filter(row => ['A', 'B', 'C', 'D', 'E'].includes(row.STATUS))
-        .map(row => mapRowBySchema(row, INCOME_DATA_MAP)))
-]).then(([rentData, incomeData]) => {
+let vis, caption, rentInfo, slider, rentData, incomeData;
+
+function initIncomeVis(rentData, incomeData)  {
     rentData.forEach(d => {
         d.type = normalizeRentType(d.type);
         d.cityLabel = getCityLabel(d.city);
@@ -207,14 +226,14 @@ Promise.all([
     const minYear = yearValues[0] ?? 2000;
     const maxYear = yearValues[yearValues.length - 1] ?? 2023;
 
-    const vis = new IncomeRentComparison({
+    vis = new IncomeRentComparison({
         parentElement: "#vis4-container",
         rentData,
         incomeData,
         initialYear: maxYear
     });
 
-    const caption = new Caption({
+    caption = new Caption({
         parentElement: "#vis4-caption",
         text: "",
         rentData,
@@ -226,14 +245,14 @@ Promise.all([
     vis.init();
     caption.init();
 
-    const rentInfo = new RentInfo({
+    rentInfo = new RentInfo({
         parentElement: "#vis4-rentinfo"
     });
 
     rentInfo.init();
     vis.setRentInfo(rentInfo);
 
-    const slider = new Slider({
+    slider = new Slider({
         parentElement: "#vis4-slider",
         min: minYear,
         max: maxYear,
@@ -242,9 +261,14 @@ Promise.all([
     });
 
     slider.init();
-}).catch(error => {
-    console.error("Failed to load income/rent datasets", error);
-});
+}
+
+function destructIncomeVis()    {
+    d3.select("#vis4-container",).selectAll("*").remove();
+    d3.select("#vis4-caption").selectAll("*").remove();
+    d3.select("#vis4-rentinfo").selectAll("*").remove();
+    d3.select("#vis4-slider").selectAll("*").remove();
+}
 
 class IncomeRentComparison {
     constructor(config) {
@@ -290,10 +314,10 @@ class IncomeRentComparison {
             '2br': '2BR',
             '3br': '3BR'
         };
-        this.baseBlockWidth = 180;
+        this.baseBlockWidth = 130;
         this.focusCardWidth = 130;
         this.focusCardHalfWidth = this.focusCardWidth / 2;
-    this.focusCardMinWidth = 40;
+        this.focusCardMinWidth = 40;
         this.rentAggregates = {};
         this.incomeAggregates = {};
         const yearSet = new Set([
@@ -354,7 +378,7 @@ class IncomeRentComparison {
         vis.yAxisGroup.append('text')
             .attr('class', 'axis-label')
             .attr('x', -vis.margin.left + 12)
-            .attr('y', -30)
+            .attr('y', -50)
             .attr('text-anchor', 'start')
             .attr('fill', '#111827')
             .attr('font-size', 12)
@@ -503,7 +527,7 @@ class IncomeRentComparison {
             });
         });
 
-        const incomeAccumulator = {};
+        this.incomeAggregates = {};
         this.incomeData.forEach(d => {
             const city = d.city;
             const familyType = d.familyType || 'Unknown';
@@ -512,26 +536,12 @@ class IncomeRentComparison {
             if (!city || !Number.isFinite(year) || !Number.isFinite(value)) {
                 return;
             }
-            incomeAccumulator[city] = incomeAccumulator[city] || {};
-            incomeAccumulator[city][year] = incomeAccumulator[city][year] || {};
-            incomeAccumulator[city][year][familyType] = incomeAccumulator[city][year][familyType] || { sum: 0, count: 0 };
-            incomeAccumulator[city][year][familyType].sum += value;
-            incomeAccumulator[city][year][familyType].count += 1;
-        });
-
-        this.incomeAggregates = {};
-        Object.entries(incomeAccumulator).forEach(([city, yearMap]) => {
-            const cityStore = this.incomeAggregates[city] = {};
-            Object.entries(yearMap).forEach(([yearKey, typeMap]) => {
-                const numericYear = Number(yearKey);
-                const yearStore = cityStore[numericYear] = {};
-                Object.entries(typeMap).forEach(([familyType, stats]) => {
-                    yearStore[familyType] = {
-                        value: stats.count > 0 ? (stats.sum / stats.count) / 12 : null,
-                        count: stats.count
-                    };
-                });
-            });
+            const cityStore = this.incomeAggregates[city] || (this.incomeAggregates[city] = {});
+            const yearStore = cityStore[year] || (cityStore[year] = {});
+            yearStore[familyType] = {
+                value: value / 12,
+                count: 1
+            };
         });
     }
 
@@ -689,7 +699,7 @@ class IncomeRentComparison {
         this.filteredRent = filteredRent;
         this.filteredIncome = filteredIncome;
 
-    const baseBlockWidth = this.baseBlockWidth;
+    const baseBlockWidth = this.baseBlockWidth / 4 * 3;
         const blockHeight = 80;
         const gap = 20;
         const startX = 10;
@@ -1212,7 +1222,7 @@ class IncomeRentComparison {
             .attr('text-anchor', 'middle')
             .attr('fill', '#1f2937')
             .attr('font-weight', '600')
-            .attr('font-size', 14);
+            .attr('font-size', 12);
 
         cityGroupsEnter.append('text')
             .attr('class', 'city-card-status')
