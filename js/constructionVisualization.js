@@ -34,8 +34,8 @@ function initConstructionVisualization() {
         .style('z-index', '1000');
 
     Promise.all([
-        d3.csv('data/construction/housing_completions_dwelling_type_by_province_2013-2023.csv'),
-        d3.text('data/construction/canadian-population.csv')
+        d3.csv('data/housing_completions_dwelling_type_by_province_2013-2023.csv'),
+        d3.text('data/canadian-population.csv')
     ]).then(([housingData, populationText]) => {
         
     const populationLines = populationText.split('\n');
