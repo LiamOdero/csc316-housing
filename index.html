@@ -23,13 +23,13 @@
 <div id="folder-container">
         <div id="tab-bar">
             <button id="tab1" class="tab active-tab" data-target="vis0">Intro</button>
-            <button id="tab2" class="tab" data-target="vis1">Visualization 1</button>
-            <button id="tab3" class="tab" data-target="vis2" style="display: none;">Visualization 2</button>
-            <button id="tab4" class="tab" data-target="vis3" style="display: none;">Visualization 3</button>
-            <button id="tab5" class="tab" data-target="vis4" style="display: none;">Visualization 4</button>
-            <button id="tab6" class="tab" data-target="vis5" style="display: none;">Visualization 5</button>
-            <button id="tab7" class="tab" data-target="vis6" style="display: none;">Visualization 6</button>
-            <button id="tab8" class="tab" data-target="vis7" style="display: none;">Conclusion</button>
+            <button id="tab2" class="tab" data-target="vis1">Mortgage Rates</button>
+            <button id="tab3" class="tab" data-target="vis2">Rent Increases</button>
+            <button id="tab4" class="tab" data-target="vis3">Income vs Rent</button>
+            <button id="tab5" class="tab" data-target="vis4">Rent & Population</button>
+            <button id="tab6" class="tab" data-target="vis5">Vacancy Rates</button>
+            <button id="tab7" class="tab" data-target="vis6">Construction</button>
+            <button id="tab8" class="tab" data-target="vis7">Conclusion</button>
         </div>
 
         <div id="folder-page">
@@ -71,7 +71,7 @@
                 <div class="row justify-content-center g-5" id="vis1">
                             <header>
                                 <h1>How Quickly Have Mortgage Rates Increased?</h1>
-                                <p class="subtitle">Interactive exploration of housing costs across provinces · 2012—2025</p>
+                                <p class="subtitle">Interactive exploration of housing costs across provinces · 2012—2024</p>
                             </header>
                             
                             <div class="container">
@@ -87,15 +87,15 @@
                                     </div>
                                     <div class="timeline-control">
                                         <label>Time Period</label>
-                                        <span id="quarter-display">2025 Q2</span>
+                                        <span id="quarter-display">2024</span>
                                         <div class="playback-controls">
                                             <button id="play-button" class="control-btn">▶ Play</button>
                                             <button id="reset-button" class="control-btn">↺ Reset</button>
                                         </div>
-                                        <input type="range" id="timeline-slider" min="0" max="51" step="1" value="51">
+                                        <input type="range" id="timeline-slider" min="0" max="12" step="1" value="12">
                                         <div class="timeline-labels">
-                                            <span>2012 Q3</span>
-                                            <span>2025 Q2</span>
+                                            <span>2012</span>
+                                            <span>2024</span>
                                         </div>
                                     </div>
                                     <div class="legend">
@@ -106,6 +106,7 @@
                                             <div class="legend-item"><div class="legend-color" style="background: #ffc107;"></div><span>Borderline (30-40%)</span></div>
                                             <div class="legend-item"><div class="legend-color" style="background: #ff6b35;"></div><span>Unaffordable (40-50%)</span></div>
                                             <div class="legend-item"><div class="legend-color" style="background: #c1121f;"></div><span>Very Unaffordable (&gt;50%)</span></div>
+                                            <div class="legend-item"><div class="legend-color" style="background: #cccccc;"></div><span>No Data</span></div>
                                         </div>
                                         <p class="legend-note">Based on mortgage payment as % of monthly income</p>
                                     </div>
@@ -184,7 +185,7 @@
                 if we click on a node in the line, it takes us to the data for THAT SPECIFIC year.-->
                 <div class="row justify-content-center g-5" id="vis3"> 
                     <header>
-                        <h1>Can the People Living in Cities Afford to Rent?</h1>
+                        <h1>Can the people living in cities afford to rent?</h1>
                     </header>
 
                     <div class="col-12 visualization-section">
