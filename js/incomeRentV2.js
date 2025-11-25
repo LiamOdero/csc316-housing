@@ -169,8 +169,20 @@
             const incomeSeries = data ? data.avgIncomeSeries : [];
             const rentSeries = data ? data.avgRentSeries : [];
             const series = [
-                { key: 'income', label: 'Average Monthly Income of the Largest Cities in Each Province', color: this.seriesColors.income, values: incomeSeries, isSelected: false },
-                { key: 'rent', label: 'Average Monthly Rent of the Largest Cities in Each Province', color: this.seriesColors.rent, values: rentSeries, isSelected: false }
+                {
+                    key: 'income',
+                    label: 'Average monthly income (largest city per province)',
+                    color: this.seriesColors.income,
+                    values: incomeSeries,
+                    isAverage: true
+                },
+                {
+                    key: 'rent',
+                    label: 'Average monthly rent (largest city per province)',
+                    color: this.seriesColors.rent,
+                    values: rentSeries,
+                    isAverage: true
+                }
             ];
 
             if (this.selectedCity && data) {
@@ -182,19 +194,19 @@
                 if (hasIncome) {
                     series.push({
                         key: 'selected-income',
-                        label: `Average Monthly Income in ${cityLabel}`,
+                        label: `Income in ${cityLabel}`,
                         color: this.seriesColors.income,
                         values: cityIncome,
-                        isSelected: true
+                        isAverage: false
                     });
                 }
                 if (hasRent) {
                     series.push({
                         key: 'selected-rent',
-                        label: `Average Monthly Rent in ${cityLabel}`,
+                        label: `Rent in ${cityLabel}`,
                         color: this.seriesColors.rent,
                         values: cityRent,
-                        isSelected: true
+                        isAverage: false
                     });
                 }
             }
@@ -213,7 +225,7 @@
         }
 
         updateLegend(series) {
-            const signature = series.map(s => `${s.key}-${s.label}-${s.isSelected ? 1 : 0}`).join('|');
+            const signature = series.map(s => `${s.key}-${s.label}-${s.isAverage ? 'avg' : 'city'}`).join('|');
             if (signature === this.lastLegendSignature) {
                 return;
             }
@@ -238,7 +250,7 @@
                 .attr('transform', (d, i) => `translate(12, ${i * 22})`);
             merged.select('.legend-line')
                 .attr('stroke', d => d.color)
-                .attr('stroke-dasharray', d => d.isSelected ? '4 3' : null);
+                .attr('stroke-dasharray', d => d.isAverage ? '4 3' : null);
             merged.select('text').text(d => d.label);
             legend.exit().remove();
 
@@ -266,24 +278,29 @@
             const yMax = (() => {
                 const familyMax = this.maxByFamily.get(this.selectedFamily);
                 if (Number.isFinite(familyMax) && familyMax > 0) return familyMax * 1.15;
-                if (Number.isFinite(this.globalSeriesMax) && this.globalSeriesMax > 0) return this.globalSeriesMax * 1.15;
+                const globalMax = Number.isFinite(this.globalSeriesMax) ? this.globalSeriesMax : null;
+                if (globalMax !== null && globalMax > 0) return globalMax * 1.15;
                 const allValuesFallback = series.flatMap(s => s.values.map(v => v.value).filter(Number.isFinite));
                 return allValuesFallback.length ? d3.max(allValuesFallback) * 1.15 : 1000;
             })();
             this.xScale.domain([d3.min(this.availableYears) || 2000, d3.max(this.availableYears) || 2023]);
             this.yScale.domain([0, yMax]);
 
-            if (!this.axesRendered) {
-                this.xAxisGroup.call(
-                    d3.axisBottom(this.xScale)
-                        .tickValues(this.availableYears)
-                        .tickFormat(d3.format('d'))
-                );
-                this.yAxisGroup.call(
-                    d3.axisLeft(this.yScale)
-                        .ticks(6)
-                        .tickFormat(d => `$${d3.format(',')(Math.round(d))}`)
-                );
+            const xAxis = d3.axisBottom(this.xScale)
+                .tickValues(this.availableYears)
+                .tickFormat(d3.format('d'));
+            const yAxis = d3.axisLeft(this.yScale)
+                .ticks(6)
+                .tickFormat(d => `$${d3.format(',')(Math.round(d))}`);
+            const axisTransition = this.axesRendered
+                ? d3.transition().duration(350).ease(d3.easeCubicOut)
+                : null;
+            if (axisTransition) {
+                this.xAxisGroup.transition(axisTransition).call(xAxis);
+                this.yAxisGroup.transition(axisTransition).call(yAxis);
+            } else {
+                this.xAxisGroup.call(xAxis);
+                this.yAxisGroup.call(yAxis);
                 this.axesRendered = true;
             }
 
@@ -302,7 +319,7 @@
                 .transition(lineTransition)
                 .attr('stroke', d => d.color)
                 .attr('stroke-width', 2.4)
-                .attr('stroke-dasharray', d => d.isSelected ? '4 3' : null)
+                .attr('stroke-dasharray', d => d.isAverage ? '4 3' : null)
                 .attr('d', d => lineGen(d.values));
 
             seriesSel.exit().remove();
@@ -349,6 +366,7 @@
             this.selectedFamily = this.familyTypes[0] || null;
             this.selectedYear = years.length ? years[years.length - 1] : null;
             this.maxByFamily.clear();
+            this.globalSeriesMax = null;
 
             const citySet = new Set();
             Object.values(data.data || {}).forEach(familyEntry => {
@@ -364,29 +382,52 @@
                 }
             });
 
+            let globalMax = null;
+            const registerGlobal = value => {
+                const num = Number(value);
+                if (!Number.isFinite(num)) return;
+                globalMax = globalMax === null ? num : Math.max(globalMax, num);
+            };
+
             Object.entries(data.data || {}).forEach(([family, payload]) => {
+                let familyMax = null;
+                const registerValue = value => {
+                    const num = Number(value);
+                    if (!Number.isFinite(num)) return;
+                    familyMax = familyMax === null ? num : Math.max(familyMax, num);
+                    registerGlobal(num);
+                };
+
                 const cityRowsMap = new Map();
                 Object.entries(payload.cityRowsByYear || {}).forEach(([year, rows]) => {
                     cityRowsMap.set(Number(year), rows);
                 });
                 const citySeriesMap = new Map();
                 Object.entries(payload.citySeriesByCity || {}).forEach(([city, series]) => {
+                    const incomeSeries = series.income || [];
+                    const rentSeries = series.rent || [];
+                    incomeSeries.forEach(point => registerValue(point?.value));
+                    rentSeries.forEach(point => registerValue(point?.value));
                     citySeriesMap.set(city, {
-                        income: series.income || [],
-                        rent: series.rent || []
+                        income: incomeSeries,
+                        rent: rentSeries
                     });
                 });
+
+                (payload.avgIncomeSeries || []).forEach(point => registerValue(point?.value));
+                (payload.avgRentSeries || []).forEach(point => registerValue(point?.value));
+                registerValue(payload.maxValue);
+
                 this.precomputedByFamily.set(family, {
                     avgIncomeSeries: payload.avgIncomeSeries || [],
                     avgRentSeries: payload.avgRentSeries || [],
                     cityRowsByYear: cityRowsMap,
                     citySeriesByCity: citySeriesMap
                 });
-                if (payload.maxValue !== undefined && payload.maxValue !== null) {
-                    this.maxByFamily.set(family, Number(payload.maxValue));
+                if (familyMax !== null) {
+                    this.maxByFamily.set(family, familyMax);
                 }
             });
-            const globalMax = Math.max(...Array.from(this.maxByFamily.values()).filter(Number.isFinite));
             this.globalSeriesMax = Number.isFinite(globalMax) ? globalMax : null;
         }
 

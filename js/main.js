@@ -273,7 +273,5 @@ function changePage(page)   {
     }
 
 
-}
-
 // Initialize the housing units map visualization
 initCityMap();
