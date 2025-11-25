@@ -767,7 +767,7 @@ window.initIncomeVisV2 = function () {
     if (precomputedIncomeRentData) {
         startVis();
     } else {
-        d3.json('data/precomputed/income_rent_precomputed.json').then(json => {
+        d3.json('data/jeff/income_rent_precomputed.json').then(json => {
             precomputedIncomeRentData = json;
             startVis();
         }).catch(() => {
