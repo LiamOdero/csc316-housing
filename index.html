@@ -23,13 +23,13 @@
     <div id="folder-container">
         <div id="tab-bar">
             <button id="tab1" class="tab active-tab" data-target="vis0">Intro</button>
-            <button id="tab2" class="tab" data-target="vis1">Visualization 1</button>
-            <button id="tab3" class="tab" data-target="vis2" style="display: none;">Visualization 2</button>
-            <button id="tab4" class="tab" data-target="vis3" style="display: none;">Income spent on rent</button>
-            <button id="tab5" class="tab" data-target="vis4" style="display: none;">Visualization 4</button>
-            <button id="tab6" class="tab" data-target="vis5" style="display: none;">Visualization 5</button>
-            <button id="tab7" class="tab" data-target="vis6" style="display: none;">Visualization 6</button>
-            <button id="tab8" class="tab" data-target="vis7" style="display: none;">Conclusion</button>
+            <button id="tab2" class="tab" data-target="vis1">Mortgage Rates</button>
+            <button id="tab3" class="tab" data-target="vis2">Rent Increases</button>
+            <button id="tab4" class="tab" data-target="vis3">Income vs Rent</button>
+            <button id="tab5" class="tab" data-target="vis4">Rent & Population</button>
+            <button id="tab6" class="tab" data-target="vis5">Vacancy Rates</button>
+            <button id="tab7" class="tab" data-target="vis6">Construction</button>
+            <button id="tab8" class="tab" data-target="vis7">Conclusion</button>
         </div>
 
         <div id="folder-page">
@@ -72,63 +72,48 @@
             <div id="visualization-area-1" class="content" data-content="vis1">
                 <!-- Visualization 1: Canada Mortgage Affordability Heatmap -->
                 <div class="row justify-content-center g-5" id="vis1">
-                    <header>
-                        <h1>How Quickly Have Mortgage Rates Increased?</h1>
-                        <p class="subtitle">Interactive exploration of housing costs across provinces · 2012—2025</p>
-                    </header>
-
-                    <div class="container">
-                        <div class="controls-section">
-                            <div class="income-control">
-                                <label for="income-slider">Annual Income</label>
-                                <span id="income-display">$75,000</span>
-                                <input type="range" id="income-slider" min="30000" max="250000" step="5000"
-                                    value="75000">
-                                <div class="income-labels">
-                                    <span>$30K</span>
-                                    <span>$250K</span>
-                                </div>
-                            </div>
-                            <div class="timeline-control">
-                                <label>Time Period</label>
-                                <span id="quarter-display">2025 Q2</span>
-                                <div class="playback-controls">
-                                    <button id="play-button" class="control-btn">▶ Play</button>
-                                    <button id="reset-button" class="control-btn">↺ Reset</button>
-                                </div>
-                                <input type="range" id="timeline-slider" min="0" max="51" step="1" value="51">
-                                <div class="timeline-labels">
-                                    <span>2012 Q3</span>
-                                    <span>2025 Q2</span>
-                                </div>
-                            </div>
-                            <div class="legend">
-                                <h3>Scale</h3>
-                                <div class="legend-items">
-                                    <div class="legend-item">
-                                        <div class="legend-color" style="background: #2d5016;"></div><span>Very
-                                            Affordable (&lt;20%)</span>
+                            <header>
+                                <h1>How Quickly Have Mortgage Rates Increased?</h1>
+                                <p class="subtitle">Interactive exploration of housing costs across provinces · 2012—2024</p>
+                            </header>
+                            
+                            <div class="container">
+                                <div class="controls-section">
+                                    <div class="income-control">
+                                        <label for="income-slider">Annual Income</label>
+                                        <span id="income-display">$75,000</span>
+                                        <input type="range" id="income-slider" min="30000" max="250000" step="5000" value="75000">
+                                        <div class="income-labels">
+                                            <span>$30K</span>
+                                            <span>$250K</span>
+                                        </div>
                                     </div>
-                                    <div class="legend-item">
-                                        <div class="legend-color" style="background: #5a9216;"></div><span>Affordable
-                                            (20-30%)</span>
+                                    <div class="timeline-control">
+                                        <label>Time Period</label>
+                                        <span id="quarter-display">2024</span>
+                                        <div class="playback-controls">
+                                            <button id="play-button" class="control-btn">▶ Play</button>
+                                            <button id="reset-button" class="control-btn">↺ Reset</button>
+                                        </div>
+                                        <input type="range" id="timeline-slider" min="0" max="12" step="1" value="12">
+                                        <div class="timeline-labels">
+                                            <span>2012</span>
+                                            <span>2024</span>
+                                        </div>
                                     </div>
-                                    <div class="legend-item">
-                                        <div class="legend-color" style="background: #ffc107;"></div><span>Borderline
-                                            (30-40%)</span>
-                                    </div>
-                                    <div class="legend-item">
-                                        <div class="legend-color" style="background: #ff6b35;"></div><span>Unaffordable
-                                            (40-50%)</span>
-                                    </div>
-                                    <div class="legend-item">
-                                        <div class="legend-color" style="background: #c1121f;"></div><span>Very
-                                            Unaffordable (&gt;50%)</span>
+                                    <div class="legend">
+                                        <h3>Scale</h3>
+                                        <div class="legend-items">
+                                            <div class="legend-item"><div class="legend-color" style="background: #2d5016;"></div><span>Very Affordable (&lt;20%)</span></div>
+                                            <div class="legend-item"><div class="legend-color" style="background: #5a9216;"></div><span>Affordable (20-30%)</span></div>
+                                            <div class="legend-item"><div class="legend-color" style="background: #ffc107;"></div><span>Borderline (30-40%)</span></div>
+                                            <div class="legend-item"><div class="legend-color" style="background: #ff6b35;"></div><span>Unaffordable (40-50%)</span></div>
+                                            <div class="legend-item"><div class="legend-color" style="background: #c1121f;"></div><span>Very Unaffordable (&gt;50%)</span></div>
+                                            <div class="legend-item"><div class="legend-color" style="background: #cccccc;"></div><span>No Data</span></div>
+                                        </div>
+                                        <p class="legend-note">Based on mortgage payment as % of monthly income</p>
                                     </div>
                                 </div>
-                                <p class="legend-note">Based on mortgage payment as % of monthly income</p>
-                            </div>
-                        </div>
 
                         <div class="map-container">
                             <svg id="canada-map"></svg>
@@ -243,86 +228,81 @@
                 <div class="viz-block" id="vis4">
                     <header>
                         <h1>How Have Rent Responded to Population Changes?</h1>
+                            <p>Overall, most years and locations in which there is a high percentage increase in rent also see a corresponding increase 
+                                in population. There are of course exceptions, such as PEI in 2023 which saw a mere 0.93% increase in average rent despite 
+                                a 4.52% increase in population, or Ontario in 2022 which saw a 7% increase in average rent with only a 0.27% increase in population. 
+                                However, positive correlation between population and average rent increases suggests that supply is struggling to keep up with demand,
+                                driving up prices. 
+                            </p>
                     </header>
                     <div class="row justify-content-center g-5">
                         <div class="col-12 visualization-section" style="min-height: 70vh;">
 
-                            <!-- Filters -->
-                            <div class="filters-container">
-                                <div class="filter-labels-row">
-                                    <div class="filter-label-item filter-label-location">
-                                        <div class="label-text">Location Selection</div>
-                                        <div class="selector-tabs">
-                                            <button id="vis5-tab-cities" class="selector-tab active">Cities</button>
-                                            <button id="vis5-tab-provinces" class="selector-tab">Provinces</button>
-                                        </div>
-                                    </div>
-                                    <div class="filter-label-item">
-                                        <div class="label-text">Highlight Change</div>
-                                    </div>
-                                    <div class="filter-label-item filter-label-button">
-                                        <div class="label-text">&nbsp;</div>
-                                    </div>
-                                    <div class="filter-label-item filter-label-button">
-                                        <div class="label-text">&nbsp;</div>
-                                    </div>
-                                    <div class="filter-label-item filter-label-button">
-                                        <div class="label-text">&nbsp;</div>
-                                    </div>
-                                    <div class="filter-label-item filter-label-button">
-                                        <div class="label-text">&nbsp;</div>
+                        <!-- Filters -->
+                        <div id="vis5-filters-container" class="filters-container">
+                            <div class="filter-labels-row">
+                                <div class="filter-label-item filter-label-location">
+                                    <div class="label-text">Location Selection</div>
+                                    <div class="selector-tabs">
+                                        <button id="vis5-tab-provinces" class="selector-tab active">Provinces</button>
+                                        <button id="vis5-tab-cities" class="selector-tab">Cities</button>
                                     </div>
                                 </div>
-
-                                <!-- Filter Inputs Row -->
-                                <div class="filter-inputs-row">
-                                    <div class="filter-input-item filter-input-location">
-                                        <div class="city-selector-container">
-                                            <input type="text" id="vis5-city-search" class="city-search-input"
-                                                placeholder="Search cities...">
-                                            <select id="vis5-province-select" class="province-select"
-                                                style="display: none;">
-                                                <option value="">Select a province...</option>
-                                            </select>
-                                            <div id="vis5-city-dropdown" class="city-dropdown" style="display: none;">
-                                                <div id="vis5-city-list" class="city-list"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="filter-input-item">
-                                        <select id="vis4-highlight" class="filter-select">
-                                            <option value="none" selected>None</option>
-                                            <option value="pop" selected>High Population</option>
-                                            <option value="avg">High Average Rent</option>
-                                            <option value="both">High Population and Average Rent</option>
-                                        </select>
-                                    </div>
-                                    <div class="filter-input-item filter-input-button">
-                                        <button id="vis5-reset-filters" class="reset-btn">Reset Filters</button>
-                                    </div>
+                                <div class="filter-label-item filter-label-location">
+                                    <div class="label-text">Highlight Change:</div>
+                                    <select id="vis5-highlight" class="filter-select" style="height:95%">
+                                        <option value="pop" selected>Population</option>
+                                        <option value="avg">Average Rent</option>
+                                        <option value="both">Both</option>
+                                    </select>
                                 </div>
 
-                                <!-- Selected Cities Display -->
-                                <div id="vis5-selected-cities" class="selected-cities"></div>
+                                <div class="filter-label-item filter-label-button">
+                                    <div class="label-text">&nbsp;</div>
+                                </div>
+                                <div class="filter-label-item filter-label-button">
+                                    <div class="label-text">&nbsp;</div>
+                                </div>
+                                <div class="filter-label-item filter-label-button">
+                                    <div class="label-text">&nbsp;</div>
+                                </div>
+                                <div class="filter-label-item filter-label-button">
+                                    <div class="label-text">&nbsp;</div>
+                                </div>
                             </div>
 
-                            <div id="vis5-area"
-                                style="width: 100%; height: 60vh; min-height: 400px; border: thin solid transparent;">
+                            <div class="filter-labels-row">
+                                <div class="label-text">Legend</div>
+                                <div class="filter-label-item filter-label-button">
+                                    <div class="label-text">&nbsp;</div>
+                                </div>
+                                <div class="filter-label-item filter-label-button">
+                                    <div class="label-text">&nbsp;</div>
+                                </div>
+                                <div class="filter-label-item filter-label-button">
+                                    <div class="label-text">&nbsp;</div>
+                                </div>
+                                <div class="filter-label-item filter-label-button">
+                                    <div class="label-text">&nbsp;</div>
+                                </div>
+                                <div class="filter-label-item filter-label-button">
+                                    <div class="label-text">&nbsp;</div>
+                                </div>
                             </div>
 
-                            <div id="vis5-legend" style="height: 5vh"></div>
-                            <div class="data-table-section">
-                                <p>Overall, most years and locations in which there is a high percentage increase in
-                                    rent also see a corresponding increase
-                                    in population. There are of course exceptions, such as PEI in 2023 which saw a mere
-                                    0.93% increase in average rent despite
-                                    a 4.52% increase in population, or Ontario in 2022 which saw a 7% increase in
-                                    average rent with only a 0.27% increase in population.
-                                    However, positive correlation between population and average rent increases suggests
-                                    that supply is struggling to keep up with demand,
-                                    driving up prices.
-                                </p>
+                            <div class="filter-inputs-row">
+
+                                <div class="filter-input-item">
+                                    <div id="vis5-legend" class="vis5-legend"></div>
+                                </div>
                             </div>
+                            
+                        </div>
+                        
+                        <div id="vis5-area"
+                            style="width: 100%; height: 60vh; min-height: 400px; border: thin solid transparent;">
+                        </div>
+
                         </div>
                     </div>
                 </div>

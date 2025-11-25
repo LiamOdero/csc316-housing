@@ -38,6 +38,8 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
         this.cityFilter[e.province].push(e.city)
     });
 
+    this.cityVis = ["Toronto", "Ottowa", "Victoria", "Vancouver", "Edmonton", "Winnipeg", "Fredericton", "St. John's", "Halifax", "Charlottetown", "Regina", "Québec", "Montéal"]
+
     // Inverse mapping of cities to provinces
     this.cityProvinceMap = {}
     this.provinceCityMap = {}
@@ -55,21 +57,23 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
         this.cityFilter[e] = currObj;
     })
 
+    vis.mutedPalette = ["rgb(193, 191, 94)", "#f9dc5c", "#E97451"]
+    vis.highlightPalette = ["#6f9460", "#f9dc5c", "red"]
+
     // Set ordinal color scale
     vis.popColorScale = d3.scaleLinear()
-        .range(["green", "yellow", "red"]);
+        .range(vis.highlightPalette);
     vis.avgColorScale = d3.scaleLinear()
-        .range(["green", "yellow", "red"]);
+        .range(vis.highlightPalette);
 
     this.selectionArea = selectionArea;
     this.areaSearch = d3.select("#" + citySearch);
     this.cityList = document.getElementById(cityList);
     this.dropdown = d3.select("#" + dropdown);
     this.filterParent = d3.select("#" + filterParent);
-    document.getElementById("vis5-city-search").value = "";
-    this.highlight = d3.select("#vis4-highlight")
-    this.highlight.property("value", "none")
-    this.initLegend();
+    this.highlight = d3.select("#vis5-highlight")
+    this.highlight.property("value", "both")
+    vis.legendArea = d3.select("#vis5-legend");
 }
 
 	/*
@@ -111,7 +115,6 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
 		vis.svg.append("g")
 			.attr("class", "y-axis axis")
 
-
         // create a tooltip
         vis.tooltip = d3.select("body")
             .append("div")
@@ -126,111 +129,46 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
             .style("color", "black")
         vis.defs = vis.svg.append("defs");
 
-        let resetButton = d3.select("#vis5-reset-filters");
-        resetButton.on("click", function()  {
-            
-            Object.keys(vis.cityFilter).forEach((p) =>    {
-                Object.keys(vis.cityFilter[p]).forEach((c) => {
-                    vis.cityFilter[p][c] = false;
-                })
-            })
-            vis.highlight.property("value", "none")
-            vis.wrangleData();
-        })
-
         const tabCities = document.getElementById("vis5-tab-cities");
         const tabProvinces = document.getElementById("vis5-tab-provinces");
-        const provinceSelect = document.getElementById("vis5-province-select");
-        vis.populateProvinceDropdown();
-
         // Tab switching
         tabCities.addEventListener("click", () => {
             tabCities.classList.add("active");
             tabProvinces.classList.remove("active");
-            vis.areaSearch.style("display", "block")
-            provinceSelect.style.display = "none";
+
+            Object.keys(vis.cityFilter).forEach(p => {
+                Object.keys(vis.cityFilter[p]).forEach(c => {
+                    if (c == "self")    {
+                        vis.cityFilter[p][c] = false;
+                    }   else if (vis.cityVis.includes(c))    {
+                        vis.cityFilter[p][c] = true;
+                    }
+                })
+            })
+            vis.wrangleData();
         });
 
         tabProvinces.addEventListener("click", () => {
             tabProvinces.classList.add("active");
             tabCities.classList.remove("active");
-            vis.areaSearch.style("display", "none")
-            provinceSelect.style.display = "block";
-            vis.dropdown.style("display", "none")
+
+            Object.keys(vis.cityFilter).forEach(p => {
+                Object.keys(vis.cityFilter[p]).forEach(c => {
+                    if (c == "self")    {
+                        vis.cityFilter[p][c] = true;
+                    }   else    {
+                        vis.cityFilter[p][c] = false;
+                    }
+                })
+            })
+            vis.wrangleData()
         });
 
-        // Province selection
-        provinceSelect.addEventListener("change", (e) => {
-            const province = e.target.value;
-            if (province) {
-                vis.toggleLocation(province);
-                e.target.value = ""; // Reset dropdown
-            }
-        });
         vis.highlight.on("change", function()  {
-            vis.updateVis()
+            vis.wrangleData()
         })
-        vis.createAreaFilters();
         vis.wrangleData();
 	}
-
-    initLegend() {
-        let vis = this;
-        const legendContainer = document.getElementById('vis5-legend');
-
-        if (legendContainer) {
-            // 1. Create the Toggle Button (Opens/Closes)
-            const button = document.createElement('button');
-            button.id = 'legend-toggle-button';
-            button.textContent = 'Show Legend';
-            legendContainer.appendChild(button); 
-
-            // 2. Create the Expanded Legend Overlay Div
-            const overlayDiv = document.createElement('div');
-            overlayDiv.id = 'expanded-legend-overlay';
-            legendContainer.appendChild(overlayDiv);
-            overlayDiv.style.transform = 'translateY(50px)';
-
-            // --- NEW: Create the Close Button inside the overlay ---
-            const closeButton = document.createElement('button');
-            closeButton.id = 'close-legend-button';
-            closeButton.textContent = 'Close';
-            
-            // Append the close button to the overlay div BEFORE D3 renders the SVG
-            overlayDiv.appendChild(closeButton);
-
-            // D3 selection for the overlay container
-            vis.legendArea = d3.select(overlayDiv);
-            const d3LegendArea = vis.legendArea; // Renaming for clarity in the toggle function
-
-            // 3. Add Event Listeners for Toggle Functionality
-            function toggleLegend() {
-                const isHidden = overlayDiv.style.display === 'none' || overlayDiv.style.display === '';
-                
-                if (isHidden) {
-                    // Show the overlay
-                    overlayDiv.style.display = 'block';
-
-                    // Call your visualization's legend creation function
-                    vis.createLegend(d3LegendArea, null); 
-                        
-                    // Re-append the close button after createLegend clears and adds the SVG
-                    d3LegendArea.node().appendChild(closeButton);
-                    
-                } else {
-                    // Hide the overlay
-                    overlayDiv.style.display = 'none';
-                }
-            }
-
-            // Attach listeners
-            button.addEventListener('click', toggleLegend);
-            closeButton.addEventListener('click', toggleLegend); // Close button now calls toggleLegend
-            
-        } else {
-            console.error("Required container elements ('vis5-legend' or its parent) not found. Ensure D3 is loaded.");
-        }
-    }
 
     sanitizeId(str) {
         return str.replace(/[^a-zA-Z0-9_-]/g, "_");
@@ -355,202 +293,6 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
 
     }
 
-
-    // Update city dropdown list
-    updateCityDropdown(searchTerm) {
-        let vis = this;
-
-        d3.select("#vis5-city-list").selectAll("*").remove();
-
-        let toggled = []
-        Object.keys(vis.cityFilter).forEach((p) =>    {
-            Object.keys(vis.cityFilter[p]).forEach((c) => {
-                if (vis.cityFilter[p][c])   {
-                    if (c == "self")    {
-                        toggled.push(p);
-                    }   else     {
-                        toggled.push(c);
-                    }
-                }
-            })
-        })
-
-        let availableCities = Object.keys(vis.cityProvinceMap);
-        // Filter by search term
-        if (searchTerm) {
-            availableCities = availableCities.filter(function (d) {
-                if (d.toLowerCase().includes(searchTerm))    {
-                    return true;
-                }   
-
-                let provinceQuery = vis.cityProvinceMap[d.toLowerCase()]
-                if (provinceQuery != undefined && provinceQuery.toLowerCase().includes(searchTerm))    {
-                    return true;
-                }
-
-                return false;
-            });
-        }
-
-        // Add header
-        const header = document.createElement("div");
-        header.className = "dropdown-header";
-        header.textContent = (searchTerm) ? `${availableCities.length} cities found` : `All ${Object.keys(vis.cityProvinceMap).length} cities`;
-        vis.cityList.appendChild(header);
-
-        if (availableCities.length === 0) {
-            vis.cityList.innerHTML +=
-            '<div style="padding: 20px; text-align: center; color: #718096;">No cities match your search</div>';
-            return;
-        }
-
-        let currProvinces = []
-        availableCities.forEach(e =>    {
-            if (!(currProvinces.includes(vis.cityProvinceMap[e])) )   {
-                currProvinces.push(vis.cityProvinceMap[e])
-            }
-        })
-
-        // Display cities grouped by province
-        currProvinces.forEach((province) => {
-            // Province header
-            const provinceHeader = document.createElement("div");
-            provinceHeader.className = "province-group-header";
-
-            let currCities = []
-            availableCities.forEach(e =>    {
-                if (vis.cityProvinceMap[e] == province) {
-                    currCities.push(e);
-                }
-            })
-
-            provinceHeader.textContent = `${province} (${
-                currCities.length
-            })`;
-            vis.cityList.appendChild(provinceHeader);
-
-            // Cities in this province (sorted alphabetically)
-            const cities = vis.provinceCityMap[province].sort((a, b) => a.localeCompare(b));
-
-            currCities.forEach((city) => {
-                const isSelected = toggled.includes(city);
-
-                const option = document.createElement("div");
-                option.className = "city-option";
-
-                if (isSelected) {
-                    option.classList.add("selected");
-                } 
-
-                // Create city name span
-                const cityName = document.createElement("span");
-                cityName.textContent = city;
-                option.appendChild(cityName);
-
-                // All cities are clickable
-                option.addEventListener("click", () => {
-                    vis.toggleLocation(city)
-                    document.getElementById("vis5-city-search").value = "";
-                    vis.updateCityDropdown("")
-                    vis.dropdown.style("display", "none");
-                });
-
-                vis.cityList.appendChild(option);
-            });
-        });
-    }
-
-    // Populate province dropdown with all provinces
-    populateProvinceDropdown() {
-        let vis = this;
-        const provinceSelect = document.getElementById("vis5-province-select");
-
-        // Add provinces to dropdown
-        vis.provinces.forEach((province) => {
-            const option = document.createElement("option");
-            option.value = province;
-            option.textContent = `${province}`;
-            provinceSelect.appendChild(option);
-        });
-    }
-
-
-
-    toggleLocation(loc) {
-        let vis = this;
-        if (Object.keys(vis.cityFilter).includes(loc))  {
-            vis.cityFilter[loc].self = !vis.cityFilter[loc].self;
-        }   else    {
-            vis.cityFilter[vis.cityProvinceMap[loc]][loc] = !vis.cityFilter[vis.cityProvinceMap[loc]][loc];
-        }
-        vis.wrangleData();
-    }
-
-    // Update selected cities display
-    updateSelectedCitiesDisplay() {
-        let vis = this;
-        const container = document.getElementById(vis.selectionArea);
-        container.innerHTML = "";
-
-        let toggled = []
-        Object.keys(vis.cityFilter).forEach((p) =>    {
-            Object.keys(vis.cityFilter[p]).forEach((c) => {
-                if (vis.cityFilter[p][c])   {
-                    if (c == "self")    {
-                        toggled.push(p);
-                    }   else     {
-                        toggled.push(c);
-                    }
-                }
-            })
-        })
-        if (toggled.length === 0) {
-            container.innerHTML =
-            '<div style="color: #718096; font-size: 0.9em; padding: 5px;">No cities selected</div>';
-            return;
-        }
-
-        toggled.forEach((cityName) => {
-            const tag = document.createElement("div");
-            tag.className = "selected-city-tag";
-            tag.innerHTML = `
-                    <span>${cityName}</span>
-                    <span class="remove-city" data-city="${cityName}">×</span>
-                `;
-
-            tag.querySelector(".remove-city").addEventListener("click", (e) => {
-                e.stopPropagation();
-                vis.toggleLocation(cityName)
-            });
-
-            container.appendChild(tag);
-        });
-    }
-
-
-    createAreaFilters()    {
-        let vis = this;
-
-        // Show dropdown on focus
-        vis.areaSearch.on("focus", () => {
-            vis.updateCityDropdown("")
-            vis.dropdown.style("display", "block");
-        });
-
-        vis.areaSearch.on("focusout", (d) => {
-            if (d.explicitOriginalTarget.className != "city-option" && d.explicitOriginalTarget.className !=  "city-option selected")    {
-                vis.dropdown.style("display", "none");
-            }
-            
-        });
-
-        // Filter dropdown as user types
-        vis.areaSearch.on("input", (e, d) => {
-            vis.updateCityDropdown(vis.areaSearch.property("value").toLowerCase())
-        });
-
-    }
-
 	/*
  	* Data wrangling
  	*/
@@ -565,15 +307,15 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
     drawRow(rowIndex, label, gradId, minValue, maxValue, svg) {
         let vis = this;
         const legendWidth = vis.legendArea.node().clientWidth;
-        
+        const containerWidth = d3.select("#vis5-filters-container").node().clientWidth * 0.65;
+
         // --- Responsive Constants ---
         const rowHeight = 60; 
         const barHeight = 20; 
-        const rowY = 50 + rowIndex * rowHeight; // Y position is relative to row index
+        const rowY = rowIndex * rowHeight + 10; // Y position is relative to row index
         
         // Define proportional widths based on legendWidth
         const totalContentRatio = 0.9; // Use 90% of the legend width for content
-        const barLabelAreaRatio = 0.75; // The bar/label section is 75% of totalContentRatio
         
         // Calculate widths and spacing based on ratios
         const totalContentWidth = legendWidth * totalContentRatio;
@@ -589,14 +331,14 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
         const spacingBoxBar = availableBarWidth * spacingBoxBarRatio;
         const spacingBarLabel = availableBarWidth * spacingBarLabelRatio;
         const labelWidth = totalContentWidth * labelWidthRatio;
-        const barWidth = availableBarWidth - spacingBoxBar - spacingBarLabel - labelWidth;
+        const barWidth = containerWidth;
         
         // Calculate X offset to center the content
-        const xOffset = (legendWidth - totalContentWidth) / 2;
+        const xOffset = (legendWidth - totalContentWidth) / 2 + 50;
 
         // Group for the row
         const g = svg.append("g")
-            .attr("transform", `translate(${xOffset}, ${rowY})`);
+            .attr("transform", `translate(${xOffset + 50}, ${rowY})`);
 
         const barY = (boxSize - barHeight) / 2;
 
@@ -662,78 +404,56 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
             .attr("stop-color", d => d);
     }
 
-// Function to set up the legend area
-createLegend() {
-    let vis = this;
+    // Function to set up the legend area
+    createLegend() {
+        let vis = this;
 
-    // --- Bug Fix: Data Check and Safe Fallback ---
-    const dataExists = vis.displayData && vis.displayData.length > 0;
-    
-    // Define safe fallback values in case data is missing
-    let popMin = 0, popMax = 100;
-    let rentMin = 0, rentMax = 100;
-
-    if (dataExists) {
-        popMin = d3.min(vis.displayData, d => d.popChange);
-        popMax = d3.max(vis.displayData, d => d.popChange);
-        rentMin = d3.min(vis.displayData, d => d.avgChange);
-        rentMax = d3.max(vis.displayData, d => d.avgChange);
-    } else {
-        console.warn("vis.displayData is empty or null. Displaying default range (0% to 100%).");
-    }
-    // --- End Bug Fix ---
-
-
-    // It's critical to get the clientWidth dynamically for responsiveness
-    const legendWidth = vis.legendArea.node().clientWidth;
-    const padding = 10;
-    const rowHeight = 60; // Now using a fixed row height
-    const numRows = 2;
-
-    // Clear previous legend
-    vis.legendArea.selectAll("*").remove();
-
-    // Calculate total height dynamically
-    const totalHeight = padding * 2 + 30 + numRows * rowHeight;
-
-    // Append SVG
-    const svg = vis.legendArea.append("svg")
-        .attr("width", legendWidth)
-        .attr("height", totalHeight);
-
-    // Title
-    svg.append("text")
-        .attr("x", legendWidth / 2)
-        .attr("y", padding + 12)
-        .attr("text-anchor", "middle")
-        .attr("font-size", "1.5em") // Use relative font size
-        .attr("font-weight", "bold")
-        .text("Legend");
+        // --- Bug Fix: Data Check and Safe Fallback ---
+        const dataExists = vis.displayData && vis.displayData.length > 0;
         
-    // --- Optional: Add a warning message inside the SVG if data is missing ---
-    if (!dataExists) {
-         svg.append("text")
-            .attr("x", legendWidth / 2)
-            .attr("y", padding + 12 + 30)
-            .attr("text-anchor", "middle")
-            .attr("font-size", "0.75em")
-            .attr("fill", "#dc3545")
-            .text("No data available.");
+        // Define safe fallback values in case data is missing
+        let popMin = 0, popMax = 100;
+        let rentMin = 0, rentMax = 100;
+
+        if (dataExists) {
+            popMin = d3.min(vis.displayData, d => d.popChange);
+            popMax = d3.max(vis.displayData, d => d.popChange);
+            rentMin = d3.min(vis.displayData, d => d.avgChange);
+            rentMax = d3.max(vis.displayData, d => d.avgChange);
+        } else {
+            console.warn("vis.displayData is empty or null. Displaying default range (0% to 100%).");
+        }
+        // --- End Bug Fix ---
+
+
+        // It's critical to get the clientWidth dynamically for responsiveness
+        const legendWidth = d3.select("#vis5-filters-container").node().clientWidth * 0.85;
+        const padding = 10;
+        const rowHeight = 60; // Now using a fixed row height
+        const numRows = 2;
+
+        // Clear previous legend
+        vis.legendArea.selectAll("*").remove();
+
+        // Calculate total height dynamically
+        const totalHeight = padding * 1.5 + numRows * rowHeight;
+
+        // Append SVG
+        const svg = vis.legendArea.append("svg")
+            .attr("width", legendWidth)
+            .attr("height", totalHeight);
+
+        vis.createGradient(svg, "popGrad", vis.popColorScale.range());
+        vis.createGradient(svg, "rentGrad", vis.avgColorScale.range());
+
+        // Use the calculated safe min/max values in drawRow calls
+        vis.drawRow(0, "Population", "popGrad", popMin, popMax, svg);
+        vis.drawRow(1, "Rent", "rentGrad", rentMin, rentMax, svg);
     }
 
-    vis.createGradient(svg, "popGrad", ["green","yellow","red"]);
-    vis.createGradient(svg, "rentGrad", ["green","yellow","red"]);
-
-    // Use the calculated safe min/max values in drawRow calls
-    vis.drawRow(0, "Population", "popGrad", popMin, popMax, svg);
-    vis.drawRow(1, "Rent", "rentGrad", rentMin, rentMax, svg);
-}
     destructVis()   {
         let vis = this;
-        d3.select("#" + vis.selectionArea).selectAll("*").remove();
         d3.select("#" + vis.parentElement).selectAll("*").remove();
-
-        document.getElementById("expanded-legend-overlay").style.display = 'none';
     }
 
 	updateVis(){
@@ -754,28 +474,19 @@ createLegend() {
             d3.max(vis.displayData, d => d.avgChange)
         ]);
 
-        let highlighted = []
-        let popThreshold = d3.max(vis.displayData, d => d.popChange) * 0.5
-        let avgThreshold = d3.max(vis.displayData, d => d.avgChange) * 0.5
-        vis.displayData.forEach(e =>    {
-            if (vis.highlight.property("value") == "pop")   {
-                if (e.popChange >= popThreshold)    {
-                    highlighted.push(e)
-                }
-            }   else if (vis.highlight.property("value") == "avg")   {
-                if (e.avgChange >= avgThreshold)    {
-                    highlighted.push(e)
-                }
-            }   else if (vis.highlight.property("value") == "both")   {
-                if (e.popChange >= popThreshold && e.avgChange >= avgThreshold)    {
-                    highlighted.push(e)
-                }
-            }
-        })
+        if (vis.highlight.property("value") == "pop")   {
+            vis.popColorScale.range(vis.highlightPalette);
+            vis.avgColorScale.range(vis.mutedPalette);
+        }   else if (vis.highlight.property("value") == "avg")   {
+            vis.popColorScale.range(vis.mutedPalette);
+            vis.avgColorScale.range(vis.highlightPalette);
+        }   else if (vis.highlight.property("value") == "both")   {
+            vis.popColorScale.range(vis.highlightPalette);
+            vis.avgColorScale.range(vis.highlightPalette);
 
-        vis.updateSelectedCitiesDisplay()
+        }
+
         vis.createLegend();
-
         vis.svg.selectAll(".box-group")
             .data(vis.displayData, d => `${d.year}-${d.category}`)
             .join(
@@ -873,14 +584,12 @@ createLegend() {
                     update.select(".pop-tri")
                     .transition()
                         .attr("d", `M0,${bh} L${bw},${bh} L0,0 Z`)
-                        .style("fill", d => vis.popColorScale(d.popChange))
-                        .style("opacity", d => (highlighted.length > 0 && !(highlighted.includes(d))) ? 0.4 : 1);
+                        .style("fill", d => vis.popColorScale(d.popChange));
 
                     update.select(".rent-tri")
                     .transition()
                         .attr("d", `M${bw},0 L${bw},${bh} L0,0 Z`)
-                        .style("fill", d => vis.avgColorScale(d.avgChange))
-                        .style("opacity", d => (highlighted.length > 0 && !(highlighted.includes(d))) ? 0.4 : 1);
+                        .style("fill", d => vis.avgColorScale(d.avgChange));
 
                     update.select(".diag")
                     .transition()
