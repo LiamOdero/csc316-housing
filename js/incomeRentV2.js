@@ -575,13 +575,14 @@
     const root = d3.select(containerSelector);
     root.selectAll('*').remove();
 
-    const controls = root.append('div')
-        .attr('class', 'vis4v2-control-bar')
-        .style('display', 'flex')
-        .style('align-items', 'center')
-        .style('flex-wrap', 'wrap')
-        .style('gap', '10px')
-        .style('margin', '6px 0');
+        const controls = root.append('div')
+            .attr('class', 'vis4v2-control-bar')
+            .style('display', 'flex')
+            .style('align-items', 'center')
+            .style('justify-content', 'center')
+            .style('flex-wrap', 'wrap')
+            .style('gap', '10px')
+            .style('margin', '6px 0');
 
     const makeCard = () => controls.append('div')
         .style('display', 'flex')
