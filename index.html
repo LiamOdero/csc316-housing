@@ -17,15 +17,15 @@
 </head>
 
 <body>
-<div id="folder-wrapper">
-    
-</div>
-<div id="folder-container">
+    <div id="folder-wrapper">
+
+    </div>
+    <div id="folder-container">
         <div id="tab-bar">
             <button id="tab1" class="tab active-tab" data-target="vis0">Intro</button>
             <button id="tab2" class="tab" data-target="vis1">Visualization 1</button>
             <button id="tab3" class="tab" data-target="vis2" style="display: none;">Visualization 2</button>
-            <button id="tab4" class="tab" data-target="vis3" style="display: none;">Visualization 3</button>
+            <button id="tab4" class="tab" data-target="vis3" style="display: none;">Income spent on rent</button>
             <button id="tab5" class="tab" data-target="vis4" style="display: none;">Visualization 4</button>
             <button id="tab6" class="tab" data-target="vis5" style="display: none;">Visualization 5</button>
             <button id="tab7" class="tab" data-target="vis6" style="display: none;">Visualization 6</button>
@@ -33,7 +33,7 @@
         </div>
 
         <div id="folder-page">
-            
+
             <div id="visualization-area-0" class="content active" data-content="vis0">
                 <!-- Opening Hook Section -->
                 <div class="row justify-content-center" style="margin-top: 60px; margin-bottom: 60px;">
@@ -42,14 +42,16 @@
 
                         <div class="row justify-content-center">
                             <div class="col-md-5">
-                                <h1 style="color: #48bb78; font-size: 3.5em; font-weight: bold; margin-bottom: 20px;">$230,134
+                                <h1 style="color: #48bb78; font-size: 3.5em; font-weight: bold; margin-bottom: 20px;">
+                                    $230,134
                                 </h1>
                                 <p style="font-size: 1.3em; color: #4a5568;">
                                     The average price of a home in<br>September <strong>2000</strong>
                                 </p>
                             </div>
                             <div class="col-md-5">
-                                <h1 style="color: #c53030; font-size: 3.5em; font-weight: bold; margin-bottom: 20px;">$938,334
+                                <h1 style="color: #c53030; font-size: 3.5em; font-weight: bold; margin-bottom: 20px;">
+                                    $938,334
                                 </h1>
                                 <p style="font-size: 1.3em; color: #4a5568;">
                                     The average price of a home in<br>September <strong>2025</strong>
@@ -59,7 +61,8 @@
 
                         <p
                             style="font-size: 1.4em; color: #2d3748; margin-top: 40px; max-width: 900px; margin-left: auto; margin-right: auto; line-height: 1.6;">
-                            By now, most Canadians are intimately familiar with just how unaffordable housing has become, but
+                            By now, most Canadians are intimately familiar with just how unaffordable housing has
+                            become, but
                             how quickly did things actually go out of control?
                         </p>
                     </div>
@@ -69,90 +72,125 @@
             <div id="visualization-area-1" class="content" data-content="vis1">
                 <!-- Visualization 1: Canada Mortgage Affordability Heatmap -->
                 <div class="row justify-content-center g-5" id="vis1">
-                            <header>
-                                <h1>How Quickly Have Mortgage Rates Increased?</h1>
-                                <p class="subtitle">Interactive exploration of housing costs across provinces · 2012—2025</p>
-                            </header>
-                            
-                            <div class="container">
-                                <div class="controls-section">
-                                    <div class="income-control">
-                                        <label for="income-slider">Annual Income</label>
-                                        <span id="income-display">$75,000</span>
-                                        <input type="range" id="income-slider" min="30000" max="250000" step="5000" value="75000">
-                                        <div class="income-labels">
-                                            <span>$30K</span>
-                                            <span>$250K</span>
-                                        </div>
-                                    </div>
-                                    <div class="timeline-control">
-                                        <label>Time Period</label>
-                                        <span id="quarter-display">2025 Q2</span>
-                                        <div class="playback-controls">
-                                            <button id="play-button" class="control-btn">▶ Play</button>
-                                            <button id="reset-button" class="control-btn">↺ Reset</button>
-                                        </div>
-                                        <input type="range" id="timeline-slider" min="0" max="51" step="1" value="51">
-                                        <div class="timeline-labels">
-                                            <span>2012 Q3</span>
-                                            <span>2025 Q2</span>
-                                        </div>
-                                    </div>
-                                    <div class="legend">
-                                        <h3>Scale</h3>
-                                        <div class="legend-items">
-                                            <div class="legend-item"><div class="legend-color" style="background: #2d5016;"></div><span>Very Affordable (&lt;20%)</span></div>
-                                            <div class="legend-item"><div class="legend-color" style="background: #5a9216;"></div><span>Affordable (20-30%)</span></div>
-                                            <div class="legend-item"><div class="legend-color" style="background: #ffc107;"></div><span>Borderline (30-40%)</span></div>
-                                            <div class="legend-item"><div class="legend-color" style="background: #ff6b35;"></div><span>Unaffordable (40-50%)</span></div>
-                                            <div class="legend-item"><div class="legend-color" style="background: #c1121f;"></div><span>Very Unaffordable (&gt;50%)</span></div>
-                                        </div>
-                                        <p class="legend-note">Based on mortgage payment as % of monthly income</p>
-                                    </div>
-                                </div>
+                    <header>
+                        <h1>How Quickly Have Mortgage Rates Increased?</h1>
+                        <p class="subtitle">Interactive exploration of housing costs across provinces · 2012—2025</p>
+                    </header>
 
-                                <div class="map-container">
-                                    <svg id="canada-map"></svg>
-                                    <div id="tooltip" class="tooltip"></div>
+                    <div class="container">
+                        <div class="controls-section">
+                            <div class="income-control">
+                                <label for="income-slider">Annual Income</label>
+                                <span id="income-display">$75,000</span>
+                                <input type="range" id="income-slider" min="30000" max="250000" step="5000"
+                                    value="75000">
+                                <div class="income-labels">
+                                    <span>$30K</span>
+                                    <span>$250K</span>
                                 </div>
-
-                                <div class="info-section">
-                                    <div class="info-card"><h3>National Average</h3><p class="big-number" id="national-payment">$2,006</p><p class="affordability-text" id="national-affordability"></p></div>
-                                    <div class="info-card"><h3>Most Affordable</h3><p class="province-name" id="most-affordable-province">Loading...</p><p class="payment-amount" id="most-affordable-payment"></p></div>
-                                    <div class="info-card"><h3>Least Affordable</h3><p class="province-name" id="least-affordable-province">Loading...</p><p class="payment-amount" id="least-affordable-payment"></p></div>
-                                </div>
-
-                                <div class="data-table-section" style="display: none">
-                                    <h2>Provincial Breakdown</h2>
-                                    <div class="table-wrapper">
-                                        <table id="data-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>Province</th>
-                                                    <th>Monthly Payment</th>
-                                                    <th>% of Monthly Income</th>
-                                                    <th>Affordability</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="table-body"></tbody>
-                                        </table>
-                                    </div>
-                                </div>
-
-                                <div class="data-table-section">
-                                    <p>Mortgage prices have skyrocketed since 2020, with the pandemic triggering an unprecedented surge in housing costs. 
-                                        While there has been a slight cooling off since 2024, the damage is done: the average Canadian income of approximately 
-                                        $60,000-$70,000 per year now makes housing unaffordable across most of Canada. What would have been comfortably affordable 
-                                        in 2012 is now out of reach for the majority of working Canadians. In many provinces, even households earning significantly 
-                                        above the national average are spending 40-50% or more of their income on mortgage payments—well beyond the 30% affordability threshold.
-                                    </p>
-                                </div>
-
-                                <footer>
-                                    <p>Data Source: Equifax Canada via Canada Mortgage and Housing Corporation (CMHC) | Last Updated: September 2025</p>
-                                    <p>Affordability calculation based on the 30% rule: housing costs should not exceed 30% of gross monthly income</p>
-                                </footer>
                             </div>
+                            <div class="timeline-control">
+                                <label>Time Period</label>
+                                <span id="quarter-display">2025 Q2</span>
+                                <div class="playback-controls">
+                                    <button id="play-button" class="control-btn">▶ Play</button>
+                                    <button id="reset-button" class="control-btn">↺ Reset</button>
+                                </div>
+                                <input type="range" id="timeline-slider" min="0" max="51" step="1" value="51">
+                                <div class="timeline-labels">
+                                    <span>2012 Q3</span>
+                                    <span>2025 Q2</span>
+                                </div>
+                            </div>
+                            <div class="legend">
+                                <h3>Scale</h3>
+                                <div class="legend-items">
+                                    <div class="legend-item">
+                                        <div class="legend-color" style="background: #2d5016;"></div><span>Very
+                                            Affordable (&lt;20%)</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <div class="legend-color" style="background: #5a9216;"></div><span>Affordable
+                                            (20-30%)</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <div class="legend-color" style="background: #ffc107;"></div><span>Borderline
+                                            (30-40%)</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <div class="legend-color" style="background: #ff6b35;"></div><span>Unaffordable
+                                            (40-50%)</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <div class="legend-color" style="background: #c1121f;"></div><span>Very
+                                            Unaffordable (&gt;50%)</span>
+                                    </div>
+                                </div>
+                                <p class="legend-note">Based on mortgage payment as % of monthly income</p>
+                            </div>
+                        </div>
+
+                        <div class="map-container">
+                            <svg id="canada-map"></svg>
+                            <div id="tooltip" class="tooltip"></div>
+                        </div>
+
+                        <div class="info-section">
+                            <div class="info-card">
+                                <h3>National Average</h3>
+                                <p class="big-number" id="national-payment">$2,006</p>
+                                <p class="affordability-text" id="national-affordability"></p>
+                            </div>
+                            <div class="info-card">
+                                <h3>Most Affordable</h3>
+                                <p class="province-name" id="most-affordable-province">Loading...</p>
+                                <p class="payment-amount" id="most-affordable-payment"></p>
+                            </div>
+                            <div class="info-card">
+                                <h3>Least Affordable</h3>
+                                <p class="province-name" id="least-affordable-province">Loading...</p>
+                                <p class="payment-amount" id="least-affordable-payment"></p>
+                            </div>
+                        </div>
+
+                        <div class="data-table-section" style="display: none">
+                            <h2>Provincial Breakdown</h2>
+                            <div class="table-wrapper">
+                                <table id="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Province</th>
+                                            <th>Monthly Payment</th>
+                                            <th>% of Monthly Income</th>
+                                            <th>Affordability</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="data-table-section">
+                            <p>Mortgage prices have skyrocketed since 2020, with the pandemic triggering an
+                                unprecedented surge in housing costs.
+                                While there has been a slight cooling off since 2024, the damage is done: the average
+                                Canadian income of approximately
+                                $60,000-$70,000 per year now makes housing unaffordable across most of Canada. What
+                                would have been comfortably affordable
+                                in 2012 is now out of reach for the majority of working Canadians. In many provinces,
+                                even households earning significantly
+                                above the national average are spending 40-50% or more of their income on mortgage
+                                payments—well beyond the 30% affordability threshold.
+                            </p>
+                        </div>
+
+                        <footer>
+                            <p>Data Source: Equifax Canada via Canada Mortgage and Housing Corporation (CMHC) | Last
+                                Updated: September 2025</p>
+                            <p>Affordability calculation based on the 30% rule: housing costs should not exceed 30% of
+                                gross monthly income</p>
+                        </footer>
+                    </div>
                 </div>
 
             </div>
@@ -167,8 +205,10 @@
                     <div id="map" style="min-height: 700px;"></div>
 
                     <div class="data-table-section">
-                         <p>The rental market hasn't faired any better, with rent in many cities only steadily decreasing in the 2010's to 
-                            noticeably climbing across unit types in the past five years. Thus we begin to explore: what factors have lead to
+                        <p>The rental market hasn't faired any better, with rent in many cities only steadily decreasing
+                            in the 2010's to
+                            noticeably climbing across unit types in the past five years. Thus we begin to explore: what
+                            factors have lead to
                             the current housing crisis?
                         </p>
                     </div>
@@ -176,37 +216,25 @@
             </div>
 
             <div id="visualization-area-3" class="content" data-content="vis3">
-                <!-- Jeff's visualization -->
-                <!-- This is going to be shown OVER time as well, 
-                so we should get new data that isn't just from 2023. 
-                ALSO, to change the time selected, 
-                I will make a simple line graph with 2 lines showing average incomes and average rent prices in all the cities displayed, 
-                if we click on a node in the line, it takes us to the data for THAT SPECIFIC year.-->
-                <div class="row justify-content-center g-5" id="vis3"> 
-                    <header>
-                        <h1>Can the People Living in Cities Afford to Rent?</h1>
-                    </header>
-
+                <div class="row justify-content-center g-5" id="vis3">
+                    <p class="caption">We have seen rent <b><em>increase</em></b> over the past years. However, when answering the question of affordability, we also have to know how income has <b><em>changed</em></b> over the same period. 
+                        Thus the question we then ask is, <b><em>What share of income do people spend on rent?</em></b> We looked at the monthly rent prices compared to monthly incomes of family types across the largest city in every province.</p>
+                    <h1 class = "text-center">How has the share of income spent on rent changed since 2000?</h1>
                     <div class="col-12 visualization-section">
-                        
-                        <div class="d-flex flex-column" style="min-height: 60vh;">
-                            <div class="vis4 mb-3 d-flex justify-content-center align-items-center flex-wrap gap-2 text-center px-3" id="vis4-caption"></div>
-                            <div class="vis4 mb-3 d-flex justify-content-center align-items-center flex-wrap gap-2 text-center px-3" id="vis4-slider"></div>
-                            <div class="flex-grow-1 d-flex" style="min-height: 0;">
-                                <div class="vis4 flex-grow-1 px-3" id="vis4-container"></div>
-                            </div>
+                        <div id="vis4v2-controls"></div>
+                        <div class="vis4v2-shell">
+                            <div id="vis4v2-container" style="overflow: hidden"></div>
                         </div>
-                        <div class="vis4 mb-3 d-flex justify-content-center align-items-center flex-wrap gap-2 text-center px-3" id="vis4-rentinfo"></div>
                     </div>
-
-                    <div class="data-table-section">
-                         <p>Across these cities, wages have been increasing steadily over time, however rent has been increasing at a much faster rate.
-                            In Toronto, wages have increased from 5-20% between 2000 to 2023, and yet rent has increased by 84-180% for various unit types. 
-                            Even in places like Alberta, where couples saw a 36% increase in income from 2000 to 2023, rent saw a 128-154% increase in rent. 
-                            As such, a key part of the affordability crisis is that wages have not kept up with increases in rent. This begs a different question 
+                    <p class="caption">
+                            In Toronto, wages have increased from 5-20% between 2000 to 2023, and yet rent has increased
+                            by 84-180% for various unit types.
+                            Even in places like Alberta, where couples saw a 36% increase in income from 2000 to 2023,
+                            rent saw a 128-154% increase in rent.
+                            As such, a key part of the affordability crisis is that wages have not kept up with
+                            increases in rent. This begs a different question
                             however, why has rent gone up by so much?
                         </p>
-                    </div>
                 </div>
             </div>
 
@@ -219,76 +247,82 @@
                     <div class="row justify-content-center g-5">
                         <div class="col-12 visualization-section" style="min-height: 70vh;">
 
-                        <!-- Filters -->
-                        <div class="filters-container">
-                            <div class="filter-labels-row">
-                                <div class="filter-label-item filter-label-location">
-                                    <div class="label-text">Location Selection</div>
-                                    <div class="selector-tabs">
-                                        <button id="vis5-tab-cities" class="selector-tab active">Cities</button>
-                                        <button id="vis5-tab-provinces" class="selector-tab">Provinces</button>
-                                    </div>
-                                </div>
-                                <div class="filter-label-item">
-                                    <div class="label-text">Highlight Change</div>
-                                </div>
-                                <div class="filter-label-item filter-label-button">
-                                    <div class="label-text">&nbsp;</div>
-                                </div>
-                                <div class="filter-label-item filter-label-button">
-                                    <div class="label-text">&nbsp;</div>
-                                </div>
-                                <div class="filter-label-item filter-label-button">
-                                    <div class="label-text">&nbsp;</div>
-                                </div>
-                                <div class="filter-label-item filter-label-button">
-                                    <div class="label-text">&nbsp;</div>
-                                </div>
-                            </div>
-
-                            <!-- Filter Inputs Row -->
-                            <div class="filter-inputs-row">
-                                <div class="filter-input-item filter-input-location">
-                                    <div class="city-selector-container">
-                                        <input type="text" id="vis5-city-search" class="city-search-input" placeholder="Search cities...">
-                                        <select id="vis5-province-select" class="province-select" style="display: none;">
-                                            <option value="">Select a province...</option>
-                                        </select>
-                                        <div id="vis5-city-dropdown" class="city-dropdown" style="display: none;">
-                                            <div id="vis5-city-list" class="city-list"></div>
+                            <!-- Filters -->
+                            <div class="filters-container">
+                                <div class="filter-labels-row">
+                                    <div class="filter-label-item filter-label-location">
+                                        <div class="label-text">Location Selection</div>
+                                        <div class="selector-tabs">
+                                            <button id="vis5-tab-cities" class="selector-tab active">Cities</button>
+                                            <button id="vis5-tab-provinces" class="selector-tab">Provinces</button>
                                         </div>
                                     </div>
+                                    <div class="filter-label-item">
+                                        <div class="label-text">Highlight Change</div>
+                                    </div>
+                                    <div class="filter-label-item filter-label-button">
+                                        <div class="label-text">&nbsp;</div>
+                                    </div>
+                                    <div class="filter-label-item filter-label-button">
+                                        <div class="label-text">&nbsp;</div>
+                                    </div>
+                                    <div class="filter-label-item filter-label-button">
+                                        <div class="label-text">&nbsp;</div>
+                                    </div>
+                                    <div class="filter-label-item filter-label-button">
+                                        <div class="label-text">&nbsp;</div>
+                                    </div>
                                 </div>
-                                <div class="filter-input-item">
-                                    <select id="vis4-highlight" class="filter-select">
-                                        <option value="none" selected>None</option>
-                                        <option value="pop" selected>High Population</option>
-                                        <option value="avg">High Average Rent</option>
-                                        <option value="both">High Population and Average Rent</option>
-                                    </select>
+
+                                <!-- Filter Inputs Row -->
+                                <div class="filter-inputs-row">
+                                    <div class="filter-input-item filter-input-location">
+                                        <div class="city-selector-container">
+                                            <input type="text" id="vis5-city-search" class="city-search-input"
+                                                placeholder="Search cities...">
+                                            <select id="vis5-province-select" class="province-select"
+                                                style="display: none;">
+                                                <option value="">Select a province...</option>
+                                            </select>
+                                            <div id="vis5-city-dropdown" class="city-dropdown" style="display: none;">
+                                                <div id="vis5-city-list" class="city-list"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="filter-input-item">
+                                        <select id="vis4-highlight" class="filter-select">
+                                            <option value="none" selected>None</option>
+                                            <option value="pop" selected>High Population</option>
+                                            <option value="avg">High Average Rent</option>
+                                            <option value="both">High Population and Average Rent</option>
+                                        </select>
+                                    </div>
+                                    <div class="filter-input-item filter-input-button">
+                                        <button id="vis5-reset-filters" class="reset-btn">Reset Filters</button>
+                                    </div>
                                 </div>
-                                <div class="filter-input-item filter-input-button">
-                                    <button id="vis5-reset-filters" class="reset-btn">Reset Filters</button>
-                                </div>
+
+                                <!-- Selected Cities Display -->
+                                <div id="vis5-selected-cities" class="selected-cities"></div>
                             </div>
 
-                            <!-- Selected Cities Display -->
-                            <div id="vis5-selected-cities" class="selected-cities"></div>
-                        </div>
+                            <div id="vis5-area"
+                                style="width: 100%; height: 60vh; min-height: 400px; border: thin solid transparent;">
+                            </div>
 
-                        <div id="vis5-area"
-                            style="width: 100%; height: 60vh; min-height: 400px; border: thin solid transparent;">
-                        </div>
-
-                        <div id="vis5-legend" style="height: 5vh"></div>
-                        <div class="data-table-section">
-                            <p>Overall, most years and locations in which there is a high percentage increase in rent also see a corresponding increase 
-                                in population. There are of course exceptions, such as PEI in 2023 which saw a mere 0.93% increase in average rent despite 
-                                a 4.52% increase in population, or Ontario in 2022 which saw a 7% increase in average rent with only a 0.27% increase in population. 
-                                However, positive correlation between population and average rent increases suggests that supply is struggling to keep up with demand,
-                                driving up prices. 
-                            </p>
-                        </div>
+                            <div id="vis5-legend" style="height: 5vh"></div>
+                            <div class="data-table-section">
+                                <p>Overall, most years and locations in which there is a high percentage increase in
+                                    rent also see a corresponding increase
+                                    in population. There are of course exceptions, such as PEI in 2023 which saw a mere
+                                    0.93% increase in average rent despite
+                                    a 4.52% increase in population, or Ontario in 2022 which saw a 7% increase in
+                                    average rent with only a 0.27% increase in population.
+                                    However, positive correlation between population and average rent increases suggests
+                                    that supply is struggling to keep up with demand,
+                                    driving up prices.
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -297,17 +331,17 @@
             <div id="visualization-area-4" class="content" data-content="vis5">
                 <header>
                     <h1>What are the Vacancy Rates of the Most Expensive Cities?</h1>
-                    <p class="subtitle">                                
-                            Each building represents a major Canadian city. Building height shows population size,
-                            while windows represent housing units: <strong>lit windows are occupied</strong>,
-                            and <strong>dark windows are vacant</strong>. Chimney smoke indicates average
-                            rent prices—more smoke means higher rent. Cities with <strong>vacancy rates above 2%</strong>
-                            are highlighted in green.</p>
+                    <p class="subtitle">
+                        Each building represents a major Canadian city. Building height shows population size,
+                        while windows represent housing units: <strong>lit windows are occupied</strong>,
+                        and <strong>dark windows are vacant</strong>. Chimney smoke indicates average
+                        rent prices—more smoke means higher rent. Cities with <strong>vacancy rates above 2%</strong>
+                        are highlighted in green.</p>
                 </header>
                 <div class="row justify-content-center g-5" id="vis5">
 
                     <div class="col-12 visualization-section">
-                        
+
 
                         <!-- Filters -->
                         <div class="filters-container">
@@ -341,7 +375,8 @@
                             <div class="filter-inputs-row">
                                 <div class="filter-input-item filter-input-location">
                                     <div class="city-selector-container">
-                                        <input type="text" id="city-search" class="city-search-input" placeholder="Search cities...">
+                                        <input type="text" id="city-search" class="city-search-input"
+                                            placeholder="Search cities...">
                                         <select id="province-select" class="province-select" style="display: none;">
                                             <option value="">Select a province...</option>
                                         </select>
@@ -372,7 +407,7 @@
                                         <option value="all" selected>All Prices</option>
                                         <option value="high">High (>$1500)</option>
                                         <option value="medium">Medium ($1200-$1500)</option>
-                                        <option value="low">Low (<$1200)</option>
+                                        <option value="low">Low (<$1200)< /option>
                                     </select>
                                 </div>
                                 <div class="filter-input-item">
@@ -417,21 +452,26 @@
 
                         <!-- Buildings Container -->
                         <div class="buildings-carousel">
-                            <button type="button" class="carousel-btn prev" id="buildings-prev" aria-label="Scroll left" style="display: none;">
+                            <button type="button" class="carousel-btn prev" id="buildings-prev" aria-label="Scroll left"
+                                style="display: none;">
                                 &#8249;
                             </button>
                             <div class="buildings-viewport">
                                 <div id="buildings-container"></div>
                             </div>
-                            <button type="button" class="carousel-btn next" id="buildings-next" aria-label="Scroll right" style="display: none;">
+                            <button type="button" class="carousel-btn next" id="buildings-next"
+                                aria-label="Scroll right" style="display: none;">
                                 &#8250;
                             </button>
                         </div>
 
                         <div class="data-table-section">
-                            <p> Out of the 17 cities with the highest rent (above $1500 / month) only one has a vacancy rate above 3%. Looking at the 
-                                other cities with lower rent, it can be seen that there is an increase in cities with vacancy rates above 3% as rent decreases. As such,
-                                it can be seen that there is some correlation between vacancy rates and rent, further indicating there are problems with supply. 
+                            <p> Out of the 17 cities with the highest rent (above $1500 / month) only one has a vacancy
+                                rate above 3%. Looking at the
+                                other cities with lower rent, it can be seen that there is an increase in cities with
+                                vacancy rates above 3% as rent decreases. As such,
+                                it can be seen that there is some correlation between vacancy rates and rent, further
+                                indicating there are problems with supply.
                             </p>
                         </div>
                     </div>
@@ -448,29 +488,38 @@
                             <div id="construction-visualization" style="min-height: 700px;"></div>
                         </div>
                     </div>
-                        <div class="data-table-section">
-                            <p> At the root of housing issues lies the rate of consutrction of housing units across Canada. In comparison to 
-                                the sharp increase in population that Canada has seen in the past 5 years, housing completions have remained 
-                                stagnant. Excluding Newfoundland and Labrador and Saskatchewen, which are notably two of the more affordable provinces, 
-                                the ratio of completions to population change has been steadily decreasing over the past few years across housing types. Looking 
-                                at British Columbia and Ontario, two of the least affordable provinces, housing completion ratios have gone under 0.1 in 2023,
-                                indicating significantly higher demand than supply and leading to decreased affordability.
-                            </p>
-                        </div>
+                    <div class="data-table-section">
+                        <p> At the root of housing issues lies the rate of consutrction of housing units across Canada.
+                            In comparison to
+                            the sharp increase in population that Canada has seen in the past 5 years, housing
+                            completions have remained
+                            stagnant. Excluding Newfoundland and Labrador and Saskatchewen, which are notably two of the
+                            more affordable provinces,
+                            the ratio of completions to population change has been steadily decreasing over the past few
+                            years across housing types. Looking
+                            at British Columbia and Ontario, two of the least affordable provinces, housing completion
+                            ratios have gone under 0.1 in 2023,
+                            indicating significantly higher demand than supply and leading to decreased affordability.
+                        </p>
+                    </div>
                 </div> <!-- /.viz-block -->
-                
+
             </div>
-            
+
             <div id="visualization-area-7" class="content" data-content="vis7">
-                                <!-- Opening Hook Section -->
+                <!-- Opening Hook Section -->
                 <div class="row justify-content-center" style="margin-top: 60px; margin-bottom: 60px;">
                     <div class="col-12 text-center">
                         <p
                             style="font-size: 1.4em; color: #2d3748; margin-top: 40px; max-width: 900px; margin-left: auto; margin-right: auto; line-height: 1.6;">
-                            In conclusion, the current housing crisis can be seen as a crisis of the government failing Canadians. Construction of housing has failed 
-                            to keep up with increases in population, which has driven up prices nationwide. Meanwhile, wages have increased at a much slower rate, making 
-                            housing unnaffordable for an increasing amount of Canadians. In order to stem this crisis, the Canadian government needs to increase housing supply 
-                            or limit the rate at which the population grows, and should aid in ensuring that wages and housing prices change at proportional rates.
+                            In conclusion, the current housing crisis can be seen as a crisis of the government failing
+                            Canadians. Construction of housing has failed
+                            to keep up with increases in population, which has driven up prices nationwide. Meanwhile,
+                            wages have increased at a much slower rate, making
+                            housing unnaffordable for an increasing amount of Canadians. In order to stem this crisis,
+                            the Canadian government needs to increase housing supply
+                            or limit the rate at which the population grows, and should aid in ensuring that wages and
+                            housing prices change at proportional rates.
                         </p>
                     </div>
                 </div>
@@ -478,11 +527,11 @@
 
             <div id="right-bend" class="page-corner-bend"></div>
             <div id="left-bend" class="page-corner-bend-left" style="display: none;"></div>
-            
+
         </div>
     </div>
 
-    
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -490,6 +539,7 @@
     <script src="js/populationRentChart.js"></script>
     <script src="js/vacancyVisualization.js"></script>
     <script src="js/incomeRentVisualization.js"></script>
+    <script src="js/incomeRentV2.js"></script>
     <script src="js/housingUnitsVisualization.js"></script>
     <script src="js/constructionVisualization.js"></script>
 

@@ -116,7 +116,9 @@ function changePage(page)   {
             destructMortgageVisualization();
         }
     }   else if (currTabNum == 3)    {
-        destructIncomeVis();
+        if (typeof destructIncomeVisV2 !== 'undefined') {
+            destructIncomeVisV2();
+        }
     }   else if (currTabNum == 4)   {
         popChart.destructVis();
     }   else if (currTabNum == 6)   {
@@ -130,7 +132,9 @@ function changePage(page)   {
             initMortgageVisualization();
         }
     }   else if (page == 3)  {
-        initIncomeVis(incomeRentData, incomeVisData);
+        if (typeof initIncomeVisV2 !== 'undefined') {
+            initIncomeVisV2(incomeRentData, incomeVisData);
+        }
     }   else if (page == 4)  {
         popChart.initVis();
     }   else if (page == 6)  {

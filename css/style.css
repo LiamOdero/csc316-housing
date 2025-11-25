@@ -106,6 +106,143 @@ h1 {
     margin-bottom: 30px;
 }
 
+.vis4-surface {
+    position: relative;
+    background: #f8f9fa;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.vis4-layout {
+    display: flex;
+    gap: 16px;
+    min-height: 620px;
+    height: 100%;
+    align-items: stretch;
+    width: 100%;
+}
+
+.vis4-main {
+    flex: 3 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+#vis4-container {
+    width: 100%;
+    height: 100%;
+    min-height: 600px;
+}
+
+.vis4-graph-shell {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+}
+
+.vis4-side-rail {
+    flex: 1 1 0;
+    min-width: 220px;
+    background: #ffffff;
+    border-left: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+    position: relative;
+    padding: 12px;
+    display: flex;
+    overflow-y: auto;
+}
+.vis4-side-rail::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, rgba(17,24,39,0.08), rgba(17,24,39,0.02));
+}
+
+.vis4-side-rail-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+.vis4-side-rail #vis4-rentinfo {
+    width: 100%;
+    padding: 0 !important;
+    margin: 0;
+}
+.vis4-side-rail #vis4-rentinfo .rent-info-wrapper {
+    width: 100%;
+    max-width: 240px;
+    margin: 0 auto;
+}
+
+.vis4v2-shell {
+    position: relative;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+    overflow: auto;
+    min-height: 760px;
+}
+
+#vis4v2-container {
+    width: 100%;
+    min-height: 760px;
+    overflow: auto;
+}
+
+#vis4v2-container svg {
+    display: block;
+}
+
+#visualization-area-3 .visualization-section {
+    padding-top: 20px;
+    padding-bottom: 48px;
+    margin-top: 0;
+}
+#visualization-area-3 .vis4v2-shell {
+    margin-top: 12px;
+}
+
+.info-row .info-row-bg {
+    stroke: transparent;
+    stroke-width: 1px;
+    transition: stroke 180ms ease, stroke-width 180ms ease;
+}
+
+.info-row .info-divider {
+    stroke: #e5e7eb;
+    transition: stroke 180ms ease, stroke-width 180ms ease;
+}
+.info-row:hover .info-row-bg {
+    stroke: rgb(96, 165, 250);
+    stroke-width: 1px;
+}
+.info-row:hover .info-divider {
+    stroke: rgb(96, 165, 250);
+    stroke-width: 1px;
+}
+.info-row.is-selected .info-row-bg {
+    stroke: rgb(96, 165, 250);
+    stroke-width: 1px;
+}
+.info-row.is-selected .info-divider {
+    stroke: rgb(96, 165, 250);
+    stroke-width: 1px;
+}
+
 .section-header {
     text-align: center;
     margin-bottom: 40px;
@@ -619,14 +756,12 @@ td { padding: 16px 20px; color: var(--text-primary); font-size: 0.938rem; }
 }
 
 #vis4-rentinfo .rent-info-wrapper {
-    background-color: #ffffff;
-    border: 1px solid #d1d5db;
-    border-radius: 18px;
-    padding: 20px 24px;
-    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
-    max-width: 1100px;
-    min-width: 1100px;
-    margin: 32px auto 0;
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    max-width: 240px;
+    min-width: 0;
+    margin: 0 auto;
     text-align: left;
     position: relative;
     z-index: 0;
@@ -639,104 +774,107 @@ td { padding: 16px 20px; color: var(--text-primary); font-size: 0.938rem; }
 
 #vis4-rentinfo .rent-info-content {
     width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
-#vis4-rentinfo .rent-info-legend-wrapper {
+#vis4-rentinfo .rent-info-legend-card {
     width: 100%;
-    background-color: #f3f4f6;
+    padding: 10px 12px;
     border: 1px solid #d1d5db;
-    border-radius: 16px;
-    padding: 14px 18px;
-    margin-bottom: 16px;
+    border-radius: 10px;
+    background: #f3f4f6;
     box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.05);
 }
-
-#vis4-rentinfo .rent-info-legend-title {
-    font-size: 0.75rem;
-    color: #4b5563;
-    margin-bottom: 8px;
-}
-
 #vis4-rentinfo .rent-info-legend {
-    color: #374151;
-}
-
-#vis4-rentinfo .rent-info-legend-item {
-    font-size: 0.85rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
     color: #1f2937;
 }
-
+#vis4-rentinfo .rent-info-legend-item {
+    font-size: 0.82rem;
+    color: #1f2937;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
 #vis4-rentinfo .rent-info-legend-swatch {
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
     border-radius: 4px;
     display: inline-block;
     border: 1px solid rgba(17, 24, 39, 0.2);
 }
-
 #vis4-rentinfo .rent-info-legend-text {
-    font-weight: 500;
+    font-weight: 600;
     color: #111827;
 }
 
-#vis4-rentinfo .rent-info-card-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    justify-content: space-between;
-    align-items: stretch;
-}
+#vis4-rentinfo .rent-info-card-row,
 #vis4-rentinfo .graph-prompt-row {
     display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 10px;
+    justify-content: flex-start;
     align-items: stretch;
 }
 #vis4-rentinfo .rent-info-content > .rent-info-card {
-    align-self: center;
+    align-self: stretch;
 }
 
 #vis4-rentinfo .rent-info-card {
-    background-color: #f9fafb;
+    background-color: #ffffff;
     border: 1px solid #d1d5db;
-    border-radius: 12px;
-    padding: 16px 20px;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
-    min-width: 260px;
-    max-width: 340px;
-    flex: 1 1 30%;
+    border-radius: 10px;
+    padding: 12px 14px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+    flex: 0 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 #vis4-rentinfo .rent-info-card-title {
-    font-weight: 600;
-    color: #111827;
-    font-size: 0.95rem;
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 0.9rem;
 }
 
 #vis4-rentinfo .rent-info-card p {
     margin: 0;
     color: #1f2937;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    line-height: 1.4;
 }
 
 #vis4-rentinfo .rent-info-card p + p {
-    margin-top: 6px;
+    margin-top: 4px;
 }
 
 #vis4-rentinfo .rent-info-card-primary {
-    border-top: 3px solid #2563eb;
+    border-left: 3px solid #2563eb;
 }
 
 #vis4-rentinfo .rent-info-card-secondary {
-    border-top: 3px solid #4b5563;
+    border-left: 3px solid #4b5563;
 }
 
 #vis4-rentinfo .rent-info-card-change {
-    border-top: 3px solid #059669;
+    border-left: 3px solid #059669;
+}
+#vis4-rentinfo .rent-info-card.flash {
+    animation: rentinfo-flash 0.6s ease;
+}
+
+@keyframes rentinfo-flash {
+    0% { box-shadow: 0 0 0 rgba(37, 99, 235, 0.35); }
+    30% { box-shadow: 0 0 12px rgba(37, 99, 235, 0.45); }
+    100% { box-shadow: 0 0 0 rgba(37, 99, 235, 0); }
 }
 
 #vis4-rentinfo .rent-info-card-empty {
@@ -745,8 +883,8 @@ td { padding: 16px 20px; color: var(--text-primary); font-size: 0.938rem; }
     color: #6b7280;
     align-items: center;
     text-align: center;
+    font-size: 0.85rem;
 }
-
 
 #vis4-rentinfo .graph-prompt-card {
     border-style: dashed;
@@ -755,6 +893,7 @@ td { padding: 16px 20px; color: var(--text-primary); font-size: 0.938rem; }
     align-items: center;
     text-align: center;
     flex: 0 0 auto;
+    font-size: 0.85rem;
 }
 
 #vis4-rentinfo .graph-prompt-title {
@@ -1709,4 +1848,15 @@ footer {
     border-radius: 4px;
     cursor: pointer;
     z-index: 1002;
+}
+
+/* Captions */
+mark {
+  background-color: #fff2ac;
+}
+
+.caption {
+    font-size: 1em;
+    color: #000000;
+    text-align: center;
 }
