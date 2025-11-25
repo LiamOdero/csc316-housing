@@ -1,4 +1,6 @@
 // Simplified income vs rent visualization (single-SVG layout)
+// income 9e9e9eff
+// rent c1121f
 (() => {
     const RENT_COLOR = '#c1121f';
     const INCOME_COLOR = '#9e9e9eff';
@@ -167,8 +169,8 @@
             const incomeSeries = data ? data.avgIncomeSeries : [];
             const rentSeries = data ? data.avgRentSeries : [];
             const series = [
-                { key: 'income', label: 'Average Monthly income', color: this.seriesColors.income, values: incomeSeries, isSelected: false },
-                { key: 'rent', label: 'Average Monthly rent', color: this.seriesColors.rent, values: rentSeries, isSelected: false }
+                { key: 'income', label: 'Average Monthly Income of the Largest Cities in Each Province', color: this.seriesColors.income, values: incomeSeries, isSelected: false },
+                { key: 'rent', label: 'Average Monthly Rent of the Largest Cities in Each Province', color: this.seriesColors.rent, values: rentSeries, isSelected: false }
             ];
 
             if (this.selectedCity && data) {
@@ -180,7 +182,7 @@
                 if (hasIncome) {
                     series.push({
                         key: 'selected-income',
-                        label: `Monthly income in ${cityLabel} `,
+                        label: `Average Monthly Income in ${cityLabel}`,
                         color: this.seriesColors.income,
                         values: cityIncome,
                         isSelected: true
@@ -189,7 +191,7 @@
                 if (hasRent) {
                     series.push({
                         key: 'selected-rent',
-                        label: `Monthly rent in ${cityLabel}`,
+                        label: `Average Monthly Rent in ${cityLabel}`,
                         color: this.seriesColors.rent,
                         values: cityRent,
                         isSelected: true
@@ -609,7 +611,11 @@
         };
         const stepPlayback = () => {
             const idx = years.indexOf(currentYear);
-            const nextIdx = idx === -1 ? 0 : (idx + 1) % years.length;
+            if (idx === -1 || idx >= years.length - 1) {
+                stopPlayback();
+                return;
+            }
+            const nextIdx = idx + 1;
             const nextYear = years[nextIdx];
             currentYear = nextYear;
             yearSlider.property('value', nextYear);
@@ -639,7 +645,7 @@
                 } else {
                     playing = true;
                     playBtn.text('❚❚ Pause');
-                    playTimer = setInterval(stepPlayback, 500);
+                    playTimer = setInterval(stepPlayback, 1000);
                 }
             }));
         buttonBase(yearCard.append('button')
@@ -689,23 +695,24 @@
             .style('font-size', '0.85rem')
             .text(years[years.length - 1] || '');
 
-    // Family controls
-    const familyCard = makeCard();
-    familyCard.append('span')
-        .style('font-weight', '600')
-        .style('color', '#4b5563')
-        .text('Family type:');
+        // Family controls
+        const familyCard = makeCard();
+        familyCard.append('span')
+            .style('font-weight', '600')
+            .style('color', '#4b5563')
+            .text('Family type:');
+        const familyOrder = ['Single individuals', 'Single-parent families', 'Dual-parent families'];
         const familyButtons = familyCard.append('div')
             .style('display', 'flex')
             .style('align-items', 'center')
             .style('gap', '8px')
             .style('flex-wrap', 'nowrap')
             .selectAll('button')
-            .data(['Dual-parent families', 'Single-parent families', 'Single individuals'])
-        .enter()
-        .append('button')
-        .attr('type', 'button')
-        .style('padding', '6px 10px')
+            .data(familyOrder)
+            .enter()
+            .append('button')
+            .attr('type', 'button')
+            .style('padding', '6px 10px')
             .style('border', '1px solid #d1d5db')
             .style('border-radius', '8px')
             .style('background', d => d === initialFamily ? '#e0f2fe' : '#f4f4f5')
@@ -721,9 +728,9 @@
             .on('click', (_, d) => {
                 familyButtons
                     .style('background', btn => btn === d ? '#e0f2fe' : '#f4f4f5')
-                .style('border-color', btn => btn === d ? '#60a5fa' : '#d1d5db');
-            onFamilyChange(d);
-        });
+                    .style('border-color', btn => btn === d ? '#60a5fa' : '#d1d5db');
+                onFamilyChange(d);
+            });
 
         return {
             setYear: year => {
@@ -741,18 +748,20 @@ let incomeRentVisV2Instance = null;
 let incomeRentControlsV2 = null;
 let precomputedIncomeRentData = null;
 
-window.initIncomeVisV2 = function () {
-    const startVis = () => {
-        incomeRentVisV2Instance = new IncomeRentV2({
-            parentElement: '#vis4v2-container',
-            precomputedData: precomputedIncomeRentData
-        });
-        incomeRentVisV2Instance.init();
+    window.initIncomeVisV2 = function () {
+        const startVis = () => {
+            const defaultFamily = 'Single individuals';
+            incomeRentVisV2Instance = new IncomeRentV2({
+                parentElement: '#vis4v2-container',
+                precomputedData: precomputedIncomeRentData
+            });
+            incomeRentVisV2Instance.selectedFamily = defaultFamily;
+            incomeRentVisV2Instance.init();
 
-        const familyTypes = incomeRentVisV2Instance.familyTypes;
-        const initialFamily = incomeRentVisV2Instance.selectedFamily;
-        const years = incomeRentVisV2Instance.availableYears;
-        const initialYear = incomeRentVisV2Instance.selectedYear || (years.length ? years[years.length - 1] : 2000);
+            const familyTypes = incomeRentVisV2Instance.familyTypes;
+            const initialFamily = defaultFamily;
+            const years = incomeRentVisV2Instance.availableYears;
+            const initialYear = incomeRentVisV2Instance.selectedYear || (years.length ? years[years.length - 1] : 2000);
 
         incomeRentControlsV2 = renderVis4v2Controls(
             '#vis4v2-controls',
