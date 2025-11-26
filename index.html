@@ -364,13 +364,14 @@
                                     </div>
                                 </div>
                                 <div class="filter-input-item">
-                                    <select id="year-filter" class="filter-select">
-                                        <option value="2023" selected>2023</option>
-                                        <option value="2022">2022</option>
-                                        <option value="2021">2021</option>
-                                        <option value="2020">2020</option>
-                                        <option value="2019">2019</option>
-                                    </select>
+                                    <div style="display: flex; flex-direction: column; justify-content: center; width: 100%; height: 44px; padding: 0 8px;">
+                                        <span id="year-display" style="font-weight: 600; font-size: 0.95em; text-align: center; color: #2d3748; margin-bottom: 2px;">2023</span>
+                                        <input type="range" id="year-filter" min="2019" max="2023" step="1" value="2023" style="width: 100%; margin: 0;">
+                                        <div style="display: flex; justify-content: space-between; font-size: 0.75em; color: #718096; margin-top: 2px;">
+                                            <span>2019</span>
+                                            <span>2023</span>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="filter-input-item">
                                     <select id="vacancy-filter" class="filter-select">

@@ -195,8 +195,9 @@ function setupFilterListeners() {
     return;
   }
 
-  yearFilter.addEventListener("change", (e) => {
+  yearFilter.addEventListener("input", (e) => {
     currentFilters.year = e.target.value;
+    document.getElementById("year-display").textContent = e.target.value;
     applyFilters();
   });
 
@@ -212,6 +213,7 @@ function setupFilterListeners() {
 
   resetButton.addEventListener("click", () => {
     yearFilter.value = "2023";
+    document.getElementById("year-display").textContent = "2023";
     vacancyFilter.value = "all";
     sortFilter.value = "custom";
     currentFilters = {
