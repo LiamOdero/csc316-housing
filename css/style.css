@@ -1194,6 +1194,15 @@ footer {
     border: 1px solid #e2e8f0;
 }
 
+/* Specific override for population/rent chart filters */
+#vis5-filters-container {
+    grid-template-columns: 1.5fr repeat(4, minmax(160px, 1fr)) auto;
+    background: white;
+    padding: 30px 35px;
+    box-shadow: none;
+    border: none;
+}
+
 .filter-labels-row {
     display: contents;
 }
