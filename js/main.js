@@ -234,33 +234,36 @@ function changePage(page)   {
     let newVis = d3.select('[data-content="vis' + page + '"]');
     newVis.attr("class", "content active")
 
-    if (currTabNum != page) {
-        if (currTabNum == 1)    {
-            // Cleanup mortgage visualization
-            if (typeof destructMortgageVisualization !== 'undefined') {
-                destructMortgageVisualization();
-            }
-        }   else if (currTabNum == 3)    {
-            destructIncomeVis();
-        }   else if (currTabNum == 4)   {
-            popChart.destructVis();
-        }   else if (currTabNum == 6)   {
-            // Destruct construction vis if needed
+    if (currTabNum == 1)    {
+        // Cleanup mortgage visualization
+        if (typeof destructMortgageVisualization !== 'undefined') {
+            destructMortgageVisualization();
         }
+    }   else if (currTabNum == 3)    {
+        if (typeof destructIncomeVisV2 !== 'undefined') {
+            destructIncomeVisV2();
+        }
+    }   else if (currTabNum == 4)   {
+        popChart.destructVis();
+    }   else if (currTabNum == 6)   {
+        // Destruct construction vis if needed
+    }
 
-        currTabNum = page;
-        if (page == 1)  {
-            // Initialize mortgage visualization (vis1)
-            if (typeof initMortgageVisualization !== 'undefined') {
-                initMortgageVisualization();
-            }
-        }   else if (page == 3)  {
-            initIncomeVis(incomeRentData, incomeVisData);
-        }   else if (page == 4)  {
-            popChart.initVis();
-        }   else if (page == 6)  {
-            initConstructionVisualization();
-        }   
+    currTabNum = page;
+    if (page == 1)  {
+        // Initialize mortgage visualization (vis1)
+        if (typeof initMortgageVisualization !== 'undefined') {
+            initMortgageVisualization();
+        }
+    }   else if (page == 3)  {
+        if (typeof initIncomeVisV2 !== 'undefined') {
+            initIncomeVisV2(incomeRentData, incomeVisData);
+        }
+    }   else if (page == 4)  {
+        popChart.initVis();
+    }   else if (page == 6)  {
+        initConstructionVisualization();
+    }   
 
         pageCount += 1;
         if (pageCount < 8)  {
@@ -269,8 +272,6 @@ function changePage(page)   {
         }
     }
 
-
-}
 
 // Initialize the housing units map visualization
 initCityMap();
