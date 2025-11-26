@@ -595,20 +595,14 @@ function createBuildingVisualization(cities) {
     // Create windows array - always exactly 32 windows
     const windows = [];
 
-    // Add occupied windows
-    for (let i = 0; i < occupiedCount; i++) {
-      windows.push({ type: "occupied" });
-    }
-
-    // Add vacant windows
+    // Add vacant windows first (so they appear at top-left)
     for (let i = 0; i < vacantCount; i++) {
       windows.push({ type: "vacant" });
     }
 
-    // Shuffle the windows array
-    for (let i = windows.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [windows[i], windows[j]] = [windows[j], windows[i]];
+    // Add occupied windows after
+    for (let i = 0; i < occupiedCount; i++) {
+      windows.push({ type: "occupied" });
     }
 
     // Add windows to grid - always exactly 32 windows
