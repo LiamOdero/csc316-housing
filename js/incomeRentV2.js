@@ -651,12 +651,12 @@
             playBtn.text('▶ Play');
         };
         const stepPlayback = () => {
-            const idx = years.indexOf(currentYear);
-            if (idx === -1 || idx >= years.length - 1) {
+            if (!years.length) {
                 stopPlayback();
                 return;
             }
-            const nextIdx = idx + 1;
+            const idx = years.indexOf(currentYear);
+            const nextIdx = idx === -1 ? 0 : (idx + 1) % years.length;
             const nextYear = years[nextIdx];
             currentYear = nextYear;
             yearSlider.property('value', nextYear);
