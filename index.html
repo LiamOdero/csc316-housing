@@ -299,12 +299,11 @@
             <div id="visualization-area-4" class="content" data-content="vis5">
                 <header>
                     <h1>What are the Vacancy Rates of the Most Expensive Cities?</h1>
-                    <p class="subtitle">                                
-                            Each building represents a major Canadian city. Building height shows population size,
-                            while windows represent housing units: <strong>lit windows are occupied</strong>,
-                            and <strong>dark windows are vacant</strong>. Chimney smoke indicates average
-                            rent prices—more smoke means higher rent. Cities with <strong>vacancy rates above 2%</strong>
-                            are highlighted in green.</p>
+                    <p class="subtitle">
+                            Each building represents a major Canadian city with 32 windows (8 rows × 4 columns).
+                            <strong>Orange windows are occupied</strong> and <strong>white windows are vacant</strong>.
+                            Each window represents approximately 3% of the housing stock.
+                            Cities with <strong>vacancy rates above 2%</strong> are highlighted in green.</p>
                 </header>
                 <div class="row justify-content-center g-5" id="vis5">
 
@@ -323,13 +322,10 @@
                                     </div>
                                 </div>
                                 <div class="filter-label-item">
-                                    <div class="label-text">Unit Type</div>
+                                    <div class="label-text">Year</div>
                                 </div>
                                 <div class="filter-label-item">
                                     <div class="label-text">Vacancy Rate</div>
-                                </div>
-                                <div class="filter-label-item">
-                                    <div class="label-text">Average Rent</div>
                                 </div>
                                 <div class="filter-label-item">
                                     <div class="label-text">Sort By</div>
@@ -354,12 +350,12 @@
                                     </div>
                                 </div>
                                 <div class="filter-input-item">
-                                    <select id="unit-type-filter" class="filter-select">
-                                        <option value="total" selected>All Units</option>
-                                        <option value="bachelor">Bachelor</option>
-                                        <option value="1_bedroom">1 Bedroom</option>
-                                        <option value="2_bedroom">2 Bedroom</option>
-                                        <option value="3_bedroom_plus">3+ Bedroom</option>
+                                    <select id="year-filter" class="filter-select">
+                                        <option value="2023" selected>2023</option>
+                                        <option value="2022">2022</option>
+                                        <option value="2021">2021</option>
+                                        <option value="2020">2020</option>
+                                        <option value="2019">2019</option>
                                     </select>
                                 </div>
                                 <div class="filter-input-item">
@@ -370,20 +366,10 @@
                                     </select>
                                 </div>
                                 <div class="filter-input-item">
-                                    <select id="rent-filter" class="filter-select">
-                                        <option value="all" selected>All Prices</option>
-                                        <option value="high">High (>$1500)</option>
-                                        <option value="medium">Medium ($1200-$1500)</option>
-                                        <option value="low">Low (<$1200)</option>
-                                    </select>
-                                </div>
-                                <div class="filter-input-item">
                                     <select id="sort-filter" class="filter-select">
-                                        <option value="population" selected>Population</option>
+                                        <option value="custom" selected>Custom (Major Cities First)</option>
                                         <option value="vacancy-high">Vacancy (High→Low)</option>
                                         <option value="vacancy-low">Vacancy (Low→High)</option>
-                                        <option value="rent-high">Rent (High→Low)</option>
-                                        <option value="rent-low">Rent (Low→High)</option>
                                         <option value="name">Name (A→Z)</option>
                                     </select>
                                 </div>
@@ -405,12 +391,6 @@
                             <div class="legend-item">
                                 <div class="legend-box vacant"></div>
                                 <span>Vacant Housing</span>
-                            </div>
-                            <div class="legend-item">
-                                <span>🏭 Chimney Height = Rent Price</span>
-                            </div>
-                            <div class="legend-item">
-                                <span>🏢 Height = Population</span>
                             </div>
                             <div class="legend-item">
                                 <span style="color: #2ecc71;">🟢 Green = High Vacancy (>2%)</span>

@@ -1,0 +1,14 @@
+[
+  {
+    "city": "St. John's",
+    "province": "Nfld.Lab.",
+    "year": 2022,
+    "vacancy_rate": 3.1
+  },
+  {
+    "city": "Halifax",
+    "province": "N.S.",
+    "year": 2022,
+    "vacancy_rate": 3.2
+  }
+]
