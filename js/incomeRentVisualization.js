@@ -143,7 +143,7 @@ function createSelection(data, defaultText, container, options = {}) {
 
     const menu = selectionDiv.append('div')
         .attr('class', 'dropdown-menu p-2');
-    
+
     const initialSelection = Array.isArray(options.initialSelected)
         ? options.initialSelected.map(city => city)
         : Array.isArray(options.initialSelected)
@@ -207,7 +207,7 @@ function createSelection(data, defaultText, container, options = {}) {
 
 let vis, caption, rentInfo, slider, rentData, incomeData;
 
-function initIncomeVis(rentData, incomeData)  {
+function initIncomeVis(rentData, incomeData) {
     rentData.forEach(d => {
         d.type = normalizeRentType(d.type);
         d.cityLabel = getCityLabel(d.city);
@@ -246,7 +246,8 @@ function initIncomeVis(rentData, incomeData)  {
     caption.init();
 
     rentInfo = new RentInfo({
-        parentElement: "#vis4-rentinfo"
+        parentElement: "#vis4-rentinfo",
+        legendElement: "#vis4-legend"
     });
 
     rentInfo.init();
@@ -261,9 +262,10 @@ function initIncomeVis(rentData, incomeData)  {
     });
 
     slider.init();
+
 }
 
-function destructIncomeVis()    {
+function destructIncomeVis() {
     d3.select("#vis4-container",).selectAll("*").remove();
     d3.select("#vis4-caption").selectAll("*").remove();
     d3.select("#vis4-rentinfo").selectAll("*").remove();
@@ -277,7 +279,7 @@ class IncomeRentComparison {
         this.parentElement = d3.select(this.parentSelector);
         this.rentData = this.config.rentData;
         this.incomeData = this.config.incomeData;
-        this.selectedApartmentTypes = new Set(this.rentData.map(d => d.type));
+        this.selectedApartmentTypes = new Set(['rent']);
         this.selectedCities = new Set(this.incomeData.map(d => d.city));
         this.selectedHousehold = null;
         this.cityMetrics = {};
@@ -288,6 +290,7 @@ class IncomeRentComparison {
         this.focusChartLeft = null;
         this.focusChartCenter = null;
         this.focusChartRight = null;
+        this.backButtonGroup = null;
         this.focusCityLabel = null;
         this.cardGroup = null;
         this.rentInfo = null;
@@ -295,26 +298,17 @@ class IncomeRentComparison {
         this.focusCardFixedWidth = null;
         this.seriesColors = {
             income: '#D9D9D9',
-            '0br': '#5a9216',
-            '1br': '#ffc107',
-            '2br': '#ff6b35',
-            '3br': '#c1121f'
+            rent: '#c1121f'
         };
         this.seriesLabels = {
             income: 'Monthly income',
-            '0br': 'Bachelor rent',
-            '1br': '1-bedroom rent',
-            '2br': '2-bedroom rent',
-            '3br': '3-bedroom rent'
+            rent: 'Monthly rent'
         };
         this.seriesTooltipLabels = {
             income: 'Income',
-            '0br': 'Bachelor',
-            '1br': '1BR',
-            '2br': '2BR',
-            '3br': '3BR'
+            rent: 'Rent'
         };
-        this.baseBlockWidth = 130;
+        this.baseBlockWidth = 75;
         this.focusCardWidth = 130;
         this.focusCardHalfWidth = this.focusCardWidth / 2;
         this.focusCardMinWidth = 40;
@@ -341,7 +335,7 @@ class IncomeRentComparison {
 
     createVisualization() {
         const vis = this;
-        vis.margin = { top: 60, right: 40, bottom: 60, left: 60 };
+        vis.margin = { top: 60, right: 20, bottom: 60, left: 60 };
 
         const containerNode = vis.parentElement.node();
         if (!containerNode) {
@@ -354,7 +348,7 @@ class IncomeRentComparison {
         const rawHeight = bounds.height - vis.margin.top - vis.margin.bottom;
 
         vis.width = Math.max(rawWidth, 320);
-        vis.height = Math.max(rawHeight, 240);
+        vis.height = Math.max(rawHeight, 360);
 
         const svgRoot = vis.parentElement.append('svg')
             .attr('width', vis.width + vis.margin.left + vis.margin.right)
@@ -364,7 +358,7 @@ class IncomeRentComparison {
             .attr('transform', `translate(${vis.margin.left},${vis.margin.top})`);
 
         vis.yScale = d3.scaleLinear()
-            .domain([0, 20000])
+            .domain([0, 12000])
             .range([0, vis.height]);
 
         const yAxis = d3.axisLeft(vis.yScale)
@@ -375,20 +369,11 @@ class IncomeRentComparison {
             .attr('class', 'axis axis-y')
             .call(yAxis);
 
-        vis.yAxisGroup.append('text')
-            .attr('class', 'axis-label')
-            .attr('x', -vis.margin.left + 12)
-            .attr('y', -50)
-            .attr('text-anchor', 'start')
-            .attr('fill', '#111827')
-            .attr('font-size', 12)
-            .attr('font-weight', 600)
-            .text('Monthly Income / Rent (CAD)');
 
         const xDomain = [2000, 2023];
         const xTickValues = d3.range(xDomain[0], xDomain[1] + 1);
 
-        vis.xPadding = this.focusCardHalfWidth;
+        vis.xPadding = 0;
 
         vis.xScale = d3.scaleLinear()
             .domain(xDomain)
@@ -409,9 +394,9 @@ class IncomeRentComparison {
             .attr('class', 'focus-year-marker')
             .attr('y1', 0)
             .attr('y2', vis.height)
-            .attr('stroke', '#111827')
-            .attr('stroke-width', 1)
-            .attr('stroke-dasharray', '4 3')
+            .attr('stroke', '#c1121f')
+            .attr('stroke-width', 1.2)
+            .attr('stroke-dasharray', '3 3')
             .style('opacity', 0)
             .style('pointer-events', 'none');
 
@@ -419,6 +404,14 @@ class IncomeRentComparison {
             .attr('class', 'focus-chart')
             .style('opacity', 0)
             .style('pointer-events', 'none');
+
+        vis.focusChartOverlay = vis.focusChartGroup.append('rect')
+            .attr('class', 'focus-chart-overlay')
+            .attr('fill', 'transparent')
+            .attr('pointer-events', 'all')
+            .on('click', event => this.handleFocusBandClick(event))
+            .on('mousemove', event => this.handleHoverMove(event))
+            .on('mouseleave', () => this.hideHoverMarker());
 
         vis.focusChartLeft = vis.focusChartGroup.append('g')
             .attr('class', 'focus-chart-left');
@@ -438,6 +431,34 @@ class IncomeRentComparison {
             .attr('font-weight', 600)
             .attr('font-size', 18)
             .style('opacity', 0);
+
+        vis.markerGroup = vis.svg.append('g')
+            .attr('class', 'year-marker-group');
+
+        vis.backButtonGroup = vis.svg.append('g')
+            .attr('class', 'back-to-rect-btn')
+            .style('opacity', 0)
+            .style('pointer-events', 'none')
+            .on('click', () => this.toggleCityFocus(null));
+
+        vis.backButtonGroup.append('rect')
+            .attr('class', 'back-btn-bg')
+            .attr('rx', 6)
+            .attr('ry', 6)
+            .attr('fill', '#ffffff')
+            .attr('stroke', '#6b7280')
+            .attr('stroke-width', 1.2)
+            .style('pointer-events', 'all');
+
+        vis.backButtonGroup.append('text')
+            .attr('class', 'back-btn-text')
+            .attr('fill', '#111827')
+            .attr('font-size', 12)
+            .attr('font-weight', 600)
+            .attr('text-anchor', 'middle')
+            .attr('dominant-baseline', 'middle')
+            .style('pointer-events', 'none')
+            .text('Back to rectangle view');
 
         this.lineGenerator = d3.line()
             .defined(d => Number.isFinite(d.value))
@@ -459,7 +480,7 @@ class IncomeRentComparison {
     }
 
     setApartmentTypes(types) {
-        this.selectedApartmentTypes = new Set(types || []);
+        this.selectedApartmentTypes = new Set(['rent']);
         this.update();
     }
 
@@ -518,12 +539,17 @@ class IncomeRentComparison {
             Object.entries(yearMap).forEach(([yearKey, typeMap]) => {
                 const numericYear = Number(yearKey);
                 const yearStore = cityStore[numericYear] = {};
-                Object.entries(typeMap).forEach(([type, stats]) => {
-                    yearStore[type] = {
-                        value: stats.count > 0 ? stats.sum / stats.count : null,
-                        count: stats.count
-                    };
-                });
+
+                // Average across available unit types into a single "rent" value
+                const typeAverages = Object.values(typeMap)
+                    .map(stats => stats.count > 0 ? stats.sum / stats.count : null)
+                    .filter(value => Number.isFinite(value));
+                const rentValue = typeAverages.length ? d3.mean(typeAverages) : null;
+
+                yearStore.rent = {
+                    value: rentValue,
+                    count: typeAverages.length
+                };
             });
         });
 
@@ -611,14 +637,13 @@ class IncomeRentComparison {
             return;
         }
 
-        const aptFilterActive = this.selectedApartmentTypes.size > 0;
+        const labelY = -24;
+        const labelRotationDeg = -30;
         const noCitySelection = this.selectedCities.size === 0;
         const yearFilterActive = Number.isFinite(this.selectedYear);
 
-        const rentTypeOrder = ['0br', '1br', '2br', '3br'];
-        const activeRentTypes = aptFilterActive
-            ? rentTypeOrder.filter(type => this.selectedApartmentTypes.has(type))
-            : rentTypeOrder;
+        const rentTypeOrder = ['rent'];
+        const activeRentTypes = rentTypeOrder;
 
         const cityKeys = noCitySelection ? [] : Array.from(this.selectedCities);
         const cityYearScopes = new Map();
@@ -699,10 +724,10 @@ class IncomeRentComparison {
         this.filteredRent = filteredRent;
         this.filteredIncome = filteredIncome;
 
-    const baseBlockWidth = this.baseBlockWidth / 4 * 3;
+        const baseBlockWidth = this.baseBlockWidth;
         const blockHeight = 80;
-        const gap = 20;
-        const startX = 10;
+        const gap = 8;
+        const startX = 8;
         const startY = 0;
         let overviewStartX = startX;
 
@@ -751,7 +776,7 @@ class IncomeRentComparison {
         this.focusCardHalfWidth = computedFocusWidth / 2;
 
         if (this.xScale) {
-            const padding = Math.max(this.focusCardHalfWidth, 1);
+            const padding = 0;
             this.xScale.range([padding, this.width - padding]);
             if (this.xAxisGroup && this.xAxis) {
                 this.xAxisGroup.call(this.xAxis);
@@ -762,10 +787,9 @@ class IncomeRentComparison {
 
         const blockWidth = hasFocusedCity ? this.focusCardFixedWidth : baseBlockWidth;
 
-        if (!hasFocusedCity && cityEntries.length > 0) {
-            const totalWidth = (cityEntries.length * baseBlockWidth) + ((cityEntries.length - 1) * gap);
-            const centeredX = (this.width - totalWidth) / 2;
-            overviewStartX = Math.max(0, centeredX);
+        // Keep overview cards flush to the left axis for space efficiency
+        if (!hasFocusedCity) {
+            overviewStartX = startX;
         }
 
         const computeCardLeft = year => {
@@ -773,11 +797,12 @@ class IncomeRentComparison {
                 return overviewStartX;
             }
             const desired = this.xScale(year) - (blockWidth / 2);
-            return Math.max(0, Math.min(desired, this.width - blockWidth));
+            const minLeft = 0;
+            const maxLeft = this.width - blockWidth;
+            return Math.max(minLeft, Math.min(desired, maxLeft));
         };
 
         const focusLeftX = hasFocusedCity && Number.isFinite(focusYear) ? computeCardLeft(focusYear) : null;
-        const focusRightX = focusLeftX !== null ? focusLeftX + blockWidth : null;
 
         if (this.focusCityLabel) {
             this.focusCityLabel
@@ -851,6 +876,15 @@ class IncomeRentComparison {
             });
         }
 
+        const markerData = hasFocusedCity
+            ? cardData
+                .filter(card => card.kind === 'primary' || card.kind === 'comparison')
+                .map(card => ({
+                    ...card,
+                    centerX: this.xScale ? this.xScale(card.year) : (card.leftX ?? 0)
+                }))
+            : [];
+
         if (this.rentInfo) {
             if (hasFocusedCity && primaryInfo && Number.isFinite(primaryInfo.year)) {
                 const comparisonPayload = comparisonInfo && Number.isFinite(comparisonInfo.year)
@@ -870,310 +904,210 @@ class IncomeRentComparison {
             }
         }
 
-        this.xAxisGroup
-            .style('opacity', hasFocusedCity ? 1 : 0);
+        if (this.backButtonGroup) {
+            const btnWidth = 170;
+            const btnHeight = 28;
+            const padding = 8;
+            const x = Math.max(padding, this.width - btnWidth - padding);
+            const y = Math.max(padding, this.height - btnHeight - padding);
 
-        if (this.focusChartGroup) {
-            const focusLeftData = [];
-            const focusMiddleData = [];
-            const focusRightData = [];
+            this.backButtonGroup
+                .attr('transform', `translate(${x},${y})`)
+                .style('opacity', hasFocusedCity ? 1 : 0)
+                .style('pointer-events', hasFocusedCity ? 'all' : 'none')
+                .style('cursor', hasFocusedCity ? 'pointer' : 'default');
 
-            if (hasFocusedCity && focusSeries.length > 0) {
-                const cardsForSegments = cardData
-                    .filter(card => card.kind === 'primary' || card.kind === 'comparison')
-                    .filter(card => Number.isFinite(card.year))
-                    .sort((a, b) => a.year - b.year);
+            this.backButtonGroup.select('.back-btn-bg')
+                .attr('width', btnWidth)
+                .attr('height', btnHeight);
 
-                const hasComparisonCard = cardsForSegments.length > 1;
-                const earliestCard = cardsForSegments[0] || null;
-                const latestCard = cardsForSegments.length > 0
-                    ? cardsForSegments[cardsForSegments.length - 1]
-                    : null;
-                const earliestWidth = earliestCard ? (earliestCard.width ?? blockWidth) : blockWidth;
-                const latestWidth = latestCard ? (latestCard.width ?? blockWidth) : blockWidth;
-                const earliestRightEdge = earliestCard ? earliestCard.leftX + earliestWidth : null;
-                const latestLeftEdge = latestCard ? latestCard.leftX : null;
-                const shouldRenderMiddle = hasComparisonCard
-                    && earliestCard
-                    && latestCard
-                    && earliestCard !== latestCard
-                    && latestLeftEdge !== null
-                    && earliestRightEdge !== null
-                    && (latestLeftEdge - earliestRightEdge) > 1;
+            this.backButtonGroup.select('.back-btn-text')
+                .attr('x', btnWidth / 2)
+                .attr('y', btnHeight / 2);
 
-                focusSeries.forEach(series => {
-                    const color = this.seriesColors[series.key] || '#111827';
-                    const values = Array.isArray(series.values) ? series.values : [];
-
-                    const clonePoint = point => ({ ...point });
-                    const findAnchor = year => values.find(
-                        point => Number.isFinite(point.value) && point.year === year
-                    );
-
-                    if (earliestCard) {
-                        const leftValues = values
-                            .filter(point => Number.isFinite(point.value) && point.year <= earliestCard.year)
-                            .map(clonePoint);
-
-                        if (leftValues.length) {
-                            const axisX = earliestCard.leftX;
-                            const centerX = this.xScale ? this.xScale(earliestCard.year) : null;
-                            let lastPoint = leftValues[leftValues.length - 1];
-                            if (lastPoint.year !== earliestCard.year) {
-                                const anchor = findAnchor(earliestCard.year);
-                                if (anchor) {
-                                    leftValues.push({ ...anchor });
-                                    lastPoint = leftValues[leftValues.length - 1];
-                                }
-                            }
-
-                            if (lastPoint.year === earliestCard.year) {
-                                const axisPoint = { ...lastPoint, xOverride: axisX };
-                                leftValues[leftValues.length - 1] = axisPoint;
-
-                                const hasDistinctCenter = Number.isFinite(centerX) && Math.abs(centerX - axisX) > 0.5;
-                                const centerPoint = {
-                                    ...axisPoint,
-                                    xOverride: hasDistinctCenter ? centerX : axisX + 0.5
-                                };
-                                leftValues.push(centerPoint);
-                            }
-                            if (leftValues.length >= 2) {
-                                focusLeftData.push({ key: series.key, color, values: leftValues });
-                            }
-                        }
-                    }
-
-                    if (shouldRenderMiddle) {
-                        const middleValues = values
-                            .filter(point => Number.isFinite(point.value)
-                                && point.year >= earliestCard.year
-                                && point.year <= latestCard.year)
-                            .map(clonePoint);
-
-                        if (middleValues.length) {
-                            let firstPoint = middleValues[0];
-                            if (firstPoint.year !== earliestCard.year) {
-                                const anchor = findAnchor(earliestCard.year);
-                                if (anchor) {
-                                    middleValues.unshift({ ...anchor });
-                                    firstPoint = middleValues[0];
-                                }
-                            }
-                            if (firstPoint.year === earliestCard.year) {
-                                firstPoint.xOverride = earliestRightEdge;
-                            }
-
-                            let lastPoint = middleValues[middleValues.length - 1];
-                            if (lastPoint.year !== latestCard.year) {
-                                const anchor = findAnchor(latestCard.year);
-                                if (anchor) {
-                                    middleValues.push({ ...anchor });
-                                    lastPoint = middleValues[middleValues.length - 1];
-                                }
-                            }
-                            if (lastPoint.year === latestCard.year) {
-                                lastPoint.xOverride = latestLeftEdge;
-                            }
-
-                            if (middleValues.length >= 2) {
-                                focusMiddleData.push({ key: series.key, color, values: middleValues });
-                            }
-                        }
-                    }
-
-                    if (latestCard) {
-                        const rightValues = values
-                            .filter(point => Number.isFinite(point.value) && point.year >= latestCard.year)
-                            .map(clonePoint);
-
-                        if (rightValues.length) {
-                            const edgeX = latestCard.leftX + latestWidth;
-                            const centerX = this.xScale ? this.xScale(latestCard.year) : null;
-                            let firstPoint = rightValues[0];
-                            if (firstPoint.year !== latestCard.year) {
-                                const anchor = findAnchor(latestCard.year);
-                                if (anchor) {
-                                    rightValues.unshift({ ...anchor });
-                                    firstPoint = rightValues[0];
-                                }
-                            }
-
-                            if (firstPoint.year === latestCard.year) {
-                                const hasDistinctCenter = Number.isFinite(centerX) && Math.abs(centerX - edgeX) > 0.5;
-                                const centerPoint = {
-                                    ...firstPoint,
-                                    xOverride: hasDistinctCenter ? centerX : edgeX - 0.5
-                                };
-                                const edgePoint = { ...firstPoint, xOverride: edgeX };
-                                rightValues[0] = centerPoint;
-                                rightValues.splice(1, 0, edgePoint);
-                            }
-                            if (rightValues.length >= 2) {
-                                focusRightData.push({ key: series.key, color, values: rightValues });
-                            }
-                        }
-                    }
-                });
-            }
-
-            const active = hasFocusedCity && (
-                focusLeftData.length > 0
-                || focusMiddleData.length > 0
-                || focusRightData.length > 0
-            );
-            this.focusChartGroup
-                .style('opacity', active ? 1 : 0)
-                .style('pointer-events', active ? 'all' : 'none');
-
-            const leftSelection = this.focusChartLeft
-                ? this.focusChartLeft.selectAll('.focus-series-left').data(focusLeftData, d => d.key)
-                : null;
-
-            if (leftSelection) {
-                leftSelection.exit().remove();
-
-                const leftEnter = leftSelection.enter()
-                    .append('g')
-                    .attr('class', 'focus-series-left');
-
-                leftEnter.append('path')
-                    .attr('class', 'focus-area focus-area-left');
-
-                leftEnter.append('path')
-                    .attr('class', 'focus-line focus-line-left')
-                    .attr('stroke-linecap', 'round')
-                    .attr('stroke-linejoin', 'round');
-
-                const leftMerged = leftEnter.merge(leftSelection);
-
-                leftMerged.select('.focus-area-left')
-                    .attr('fill', d => d.color)
-                    .attr('stroke', 'none')
-                    .attr('fill-opacity', 1)
-                    .attr('d', d => this.areaGenerator ? this.areaGenerator(d.values) : null)
-                    .style('pointer-events', 'all')
-                    .style('cursor', 'pointer')
-                    .on('click', event => this.handleFocusBandClick(event));
-
-                leftMerged.select('.focus-line-left')
-                    .attr('fill', 'none')
-                    .attr('stroke-width', 1)
-                    .attr('opacity', 1)
-                    .attr('stroke', d => d.color)
-                    .attr('d', d => this.lineGenerator ? this.lineGenerator(d.values) : null)
-                    .style('pointer-events', 'stroke')
-                    .style('cursor', 'pointer')
-                    .on('click', event => this.handleFocusBandClick(event));
-
-                if (this.focusChartLeft) {
-                    this.focusChartLeft.selectAll('.focus-series-left').order();
-                }
-            }
-
-            const middleSelection = this.focusChartCenter
-                ? this.focusChartCenter.selectAll('.focus-series-middle').data(focusMiddleData, d => d.key)
-                : null;
-
-            if (middleSelection) {
-                middleSelection.exit().remove();
-
-                const middleEnter = middleSelection.enter()
-                    .append('g')
-                    .attr('class', 'focus-series-middle');
-
-                middleEnter.append('path')
-                    .attr('class', 'focus-area focus-area-middle');
-
-                middleEnter.append('path')
-                    .attr('class', 'focus-line focus-line-middle')
-                    .attr('stroke-linecap', 'round')
-                    .attr('stroke-linejoin', 'round');
-
-                const middleMerged = middleEnter.merge(middleSelection);
-
-                middleMerged.select('.focus-area-middle')
-                    .attr('fill', d => d.color)
-                    .attr('stroke', 'none')
-                    .attr('fill-opacity', 1)
-                    .attr('d', d => this.areaGenerator ? this.areaGenerator(d.values) : null)
-                    .style('pointer-events', 'all')
-                    .style('cursor', 'pointer')
-                    .on('click', event => this.handleFocusBandClick(event));
-
-                middleMerged.select('.focus-line-middle')
-                    .attr('fill', 'none')
-                    .attr('stroke-width', 1)
-                    .attr('opacity', 1)
-                    .attr('stroke', d => d.color)
-                    .attr('d', d => this.lineGenerator ? this.lineGenerator(d.values) : null)
-                    .style('pointer-events', 'stroke')
-                    .style('cursor', 'pointer')
-                    .on('click', event => this.handleFocusBandClick(event));
-
-                if (this.focusChartCenter) {
-                    this.focusChartCenter.selectAll('.focus-series-middle').order();
-                }
-            }
-
-            const rightSelection = this.focusChartRight
-                ? this.focusChartRight.selectAll('.focus-series-right').data(focusRightData, d => d.key)
-                : null;
-
-            if (rightSelection) {
-                rightSelection.exit().remove();
-
-                const rightEnter = rightSelection.enter()
-                    .append('g')
-                    .attr('class', 'focus-series-right');
-
-                rightEnter.append('path')
-                    .attr('class', 'focus-area focus-area-right');
-
-                rightEnter.append('path')
-                    .attr('class', 'focus-line focus-line-right')
-                    .attr('stroke-linecap', 'round')
-                    .attr('stroke-linejoin', 'round');
-
-                const rightMerged = rightEnter.merge(rightSelection);
-
-                rightMerged.select('.focus-area-right')
-                    .attr('fill', d => d.color)
-                    .attr('stroke', 'none')
-                    .attr('fill-opacity', 1)
-                    .attr('d', d => this.areaGenerator ? this.areaGenerator(d.values) : null)
-                    .style('pointer-events', 'all')
-                    .style('cursor', 'pointer')
-                    .on('click', event => this.handleFocusBandClick(event));
-
-                rightMerged.select('.focus-line-right')
-                    .attr('fill', 'none')
-                    .attr('stroke-width', 1)
-                    .attr('opacity', 1)
-                    .attr('stroke', d => d.color)
-                    .attr('d', d => this.lineGenerator ? this.lineGenerator(d.values) : null)
-                    .style('pointer-events', 'stroke')
-                    .style('cursor', 'pointer')
-                    .on('click', event => this.handleFocusBandClick(event));
-
-                if (this.focusChartRight) {
-                    this.focusChartRight.selectAll('.focus-series-right').order();
-                }
-            }
-
-            if (active && typeof this.focusChartGroup.raise === 'function') {
-                this.focusChartGroup.raise();
+            if (typeof this.backButtonGroup.raise === 'function') {
+                this.backButtonGroup.raise();
             }
         }
 
+        if (this.markerGroup) {
+            const markers = this.markerGroup.selectAll('.year-marker')
+                .data(markerData, d => d.key);
+
+            markers.exit().remove();
+
+            const markersEnter = markers.enter()
+                .append('g')
+                .attr('class', 'year-marker')
+                .style('cursor', 'pointer')
+                .on('click', (_, d) => handleCardClick(d));
+
+            markersEnter.append('line')
+                .attr('class', 'year-marker-line');
+
+            markersEnter.append('circle')
+                .attr('class', 'year-marker-income');
+
+            markersEnter.append('circle')
+                .attr('class', 'year-marker-rent');
+
+            const markersMerged = markersEnter.merge(markers);
+
+            markersMerged
+                .attr('transform', d => `translate(${d.centerX ?? 0},0)`)
+                .style('pointer-events', hasFocusedCity ? 'all' : 'none')
+                .style('opacity', hasFocusedCity ? 1 : 0);
+
+            const getIncomeY = d => {
+                const value = d.metrics?.income;
+                return Number.isFinite(value) ? this.yScale(value) : null;
+            };
+            const getRentY = d => {
+                const value = Array.isArray(d.metrics?.rent) ? d.metrics.rent[0] : null;
+                return Number.isFinite(value) ? this.yScale(value) : null;
+            };
+
+            markersMerged.select('.year-marker-line')
+                .attr('x1', 0)
+                .attr('x2', 0)
+                .attr('y1', 0)
+                .attr('y2', this.height)
+                .attr('stroke', '#000')
+                .attr('stroke-width', 2)
+                .attr('stroke-dasharray', d => d.kind === 'comparison' ? '4 3' : null);
+
+            markersMerged.select('.year-marker-income')
+                .attr('cx', 0)
+                .attr('cy', d => getIncomeY(d) ?? -10)
+                .attr('r', 5)
+                .attr('fill', this.seriesColors.income)
+                .attr('stroke', '#000')
+                .attr('stroke-width', 1.2)
+                .style('display', d => Number.isFinite(getIncomeY(d)) ? null : 'none');
+
+            markersMerged.select('.year-marker-rent')
+                .attr('cx', 0)
+                .attr('cy', d => getRentY(d) ?? -10)
+                .attr('r', 5)
+                .attr('fill', this.seriesColors.rent)
+                .attr('stroke', '#000')
+                .attr('stroke-width', 1.2)
+                .style('display', d => Number.isFinite(getRentY(d)) ? null : 'none');
+
+            if (typeof this.markerGroup.raise === 'function') {
+                this.markerGroup.raise();
+            }
+        }
+
+        this.xAxisGroup
+            .style('opacity', hasFocusedCity ? 1 : 0);
+
+        if (this.focusChartLeft) this.focusChartLeft.selectAll('*').remove();
+        if (this.focusChartCenter) this.focusChartCenter.selectAll('*').remove();
+        if (this.focusChartRight) this.focusChartRight.selectAll('*').remove();
+
+        // ---------------------------------------------------------------------
+        // Focused graph view (lines/areas/markers) when a city is selected
+        // ---------------------------------------------------------------------
+        if (this.focusChartGroup) {
+            this.focusChartGroup
+                .style('opacity', hasFocusedCity ? 1 : 0)
+                .style('pointer-events', hasFocusedCity ? 'all' : 'none');
+
+            const seriesData = hasFocusedCity ? focusSeries : [];
+
+            const seriesSel = this.focusChartGroup
+                .selectAll('.focus-series')
+                .data(seriesData, d => d.key);
+
+            seriesSel.exit().remove();
+
+            const seriesEnter = seriesSel.enter()
+                .append('g')
+                .attr('class', 'focus-series');
+
+            seriesEnter.append('path')
+                .attr('class', 'focus-area');
+
+            seriesEnter.append('path')
+                .attr('class', 'focus-line')
+                .attr('fill', 'none')
+                .attr('stroke-linecap', 'round')
+                .attr('stroke-linejoin', 'round');
+
+            seriesEnter.append('g')
+                .attr('class', 'focus-nodes');
+
+            const seriesMerged = seriesEnter.merge(seriesSel);
+
+            seriesMerged
+                .style('opacity', hasFocusedCity ? 1 : 0)
+                .style('pointer-events', hasFocusedCity ? 'all' : 'none');
+
+            seriesMerged.select('.focus-area')
+                .attr('fill', d => this.seriesColors[d.key] || '#111827')
+                .attr('fill-opacity', 0.35)
+                .attr('stroke', 'none')
+                .attr('d', d => this.areaGenerator ? this.areaGenerator(d.values) : null);
+
+            seriesMerged.select('.focus-line')
+                .attr('stroke-width', 2)
+                .attr('stroke', d => this.seriesColors[d.key] || '#111827')
+                .attr('d', d => this.lineGenerator ? this.lineGenerator(d.values) : null);
+
+            seriesMerged.each((series, idx, nodes) => {
+                const nodeGroup = d3.select(nodes[idx]).select('.focus-nodes');
+                const nodeData = (series.values || []).filter(v => Number.isFinite(v.value));
+                const nodeSel = nodeGroup.selectAll('circle').data(nodeData, d => d.year);
+                nodeSel.exit().remove();
+                const nodeEnter = nodeSel.enter().append('circle');
+                nodeEnter.attr('r', 3);
+                const nodeMerged = nodeEnter.merge(nodeSel);
+                nodeMerged
+                    .attr('cx', d => this.xScale ? this.xScale(d.year) : 0)
+                    .attr('cy', d => this.yScale ? this.yScale(d.value) : 0)
+                    .attr('fill', this.seriesColors[series.key] || '#111827')
+                    .attr('stroke', '#111')
+                    .attr('stroke-width', 1);
+            });
+
+            if (typeof this.focusChartGroup.raise === 'function') {
+                this.focusChartGroup.raise();
+            }
+
+            if (this.focusChartOverlay) {
+                const btnHeight = 28;
+                const btnPadding = 8;
+                const reservedHeight = hasFocusedCity ? (btnHeight + btnPadding * 2) : 0;
+                const overlayHeight = Math.max(0, this.height - reservedHeight);
+                this.focusChartOverlay
+                    .attr('width', this.width)
+                    .attr('height', overlayHeight)
+                    .style('opacity', hasFocusedCity ? 1 : 0)
+                    .style('pointer-events', hasFocusedCity ? 'all' : 'none');
+                if (typeof this.focusChartOverlay.raise === 'function') {
+                    this.focusChartOverlay.raise();
+                }
+                if (this.focusMarker && typeof this.focusMarker.raise === 'function') {
+                    this.focusMarker.raise();
+                }
+                if (this.backButtonGroup && typeof this.backButtonGroup.raise === 'function') {
+                    this.backButtonGroup.raise();
+                }
+            }
+        }
+
+        // ---------------------------------------------------------------------
+        // Rectangle overview (city cards)
+        // ---------------------------------------------------------------------
         const cardRoot = this.cardGroup || this.svg;
         const cityGroups = cardRoot.selectAll('.city-card')
             .data(cardData, d => d.key);
 
         cityGroups.exit().remove();
-
         this.svg.selectAll('.vis-no-selection').remove();
 
+        // Base card shell; real sizes are set below using data-driven attrs
         const cityGroupsEnter = cityGroups.enter()
             .append('g')
             .attr('class', 'city-card');
@@ -1183,42 +1117,41 @@ class IncomeRentComparison {
             .attr('width', blockWidth)
             .attr('height', blockHeight)
             .attr('fill', this.seriesColors.income)
-            .attr('stroke', '#000000')
-            .attr('stroke-width', 1);
+            .attr('stroke', 'none')
+            .attr('stroke-width', 0)
+            .attr('pointer-events', 'none');
 
         cityGroupsEnter.append('rect')
-            .attr('class', 'threebr-block')
+            .attr('class', 'rent-block')
             .attr('width', blockWidth)
             .attr('height', blockHeight)
-            .attr('fill', this.seriesColors['3br'])
-            .attr('stroke', '#000000')
-            .attr('stroke-width', 1);
+            .attr('fill', this.seriesColors.rent)
+            .attr('stroke', 'none')
+            .attr('stroke-width', 0)
+            .attr('pointer-events', 'none');
+        
+        cityGroupsEnter.append('text')
+            .attr('class', 'rent-percentage-text')
+            .attr('x', blockWidth / 2)
+            .attr('y', blockHeight / 2)
+            .attr('text-anchor', 'middle')
+            .attr('fill', this.seriesColors.rent)
+            .attr('font-weight', '600')
+            .attr('font-size', 12);
+
         cityGroupsEnter.append('rect')
-            .attr('class', 'twobr-block')
+            .attr('class', 'city-card-overlay')
             .attr('width', blockWidth)
             .attr('height', blockHeight)
-            .attr('fill', this.seriesColors['2br'])
-            .attr('stroke', '#000000')
-            .attr('stroke-width', 1);
-        cityGroupsEnter.append('rect')
-            .attr('class', 'onebr-block')
-            .attr('width', blockWidth)
-            .attr('height', blockHeight)
-            .attr('fill', this.seriesColors['1br'])
-            .attr('stroke', '#000000')
-            .attr('stroke-width', 1);
-        cityGroupsEnter.append('rect')
-            .attr('class', 'bachelor-block')
-            .attr('width', blockWidth)
-            .attr('height', blockHeight)
-            .attr('fill', this.seriesColors['0br'])
+            .attr('fill', '#000')
+            .attr('fill-opacity', 0)
             .attr('stroke', '#000000')
             .attr('stroke-width', 1);
 
         cityGroupsEnter.append('text')
             .attr('class', 'city-card-label')
             .attr('x', blockWidth / 2)
-            .attr('y', -24)
+            .attr('y', labelY)
             .attr('text-anchor', 'middle')
             .attr('fill', '#1f2937')
             .attr('font-weight', '600')
@@ -1238,49 +1171,41 @@ class IncomeRentComparison {
 
         const cityGroupsMerged = cityGroupsEnter.merge(cityGroups);
 
+        const handleCardClick = d => {
+            if (!hasFocusedCity) {
+                this.toggleCityFocus(d.city);
+                return;
+            }
+            if (d.kind === 'primary') {
+                if (this.secondaryFocusYear !== null) {
+                    this.secondaryFocusYear = null;
+                    this.update();
+                } else {
+                    this.toggleCityFocus(d.city);
+                }
+            } else if (d.kind === 'comparison') {
+                this.secondaryFocusYear = null;
+                this.update();
+            }
+        };
+
         cityGroupsMerged
             .attr('transform', (d, i) => {
                 const cardWidth = d.width ?? (hasFocusedCity ? blockWidth : baseBlockWidth);
                 const left = Number.isFinite(d.leftX) ? d.leftX : (startX + i * (cardWidth + gap));
                 return `translate(${left}, ${startY})`;
             })
-            .style('cursor', 'pointer')
             .classed('is-focused', d => hasFocusedCity && d.kind === 'primary')
             .classed('is-secondary', d => hasFocusedCity && d.kind === 'comparison')
             .classed('is-hovered', false)
-            .on('mouseenter', function () {
-                if (!hasFocusedCity) {
-                    d3.select(this).classed('is-hovered', true);
-                }
-            })
-            .on('mouseleave', function () {
-                if (!hasFocusedCity) {
-                    d3.select(this).classed('is-hovered', false);
-                }
-            })
-            .on('click', (_, d) => {
-                if (!hasFocusedCity) {
-                    this.toggleCityFocus(d.city);
-                    return;
-                }
-                if (d.kind === 'primary') {
-                    if (this.secondaryFocusYear !== null) {
-                        this.secondaryFocusYear = null;
-                        this.update();
-                    } else {
-                        this.toggleCityFocus(d.city);
-                    }
-                } else if (d.kind === 'comparison') {
-                    this.secondaryFocusYear = null;
-                    this.update();
-                }
-            });
+            .style('display', hasFocusedCity ? 'none' : null);
 
         if (hasFocusedCity) {
             cityGroupsMerged.classed('is-hovered', false);
         }
 
         const hasIncome = metrics => metrics && Number.isFinite(metrics.income);
+        const cardWidthFor = d => d.width ?? (hasFocusedCity ? blockWidth : baseBlockWidth);
         const incomeHeight = metrics => hasIncome(metrics) ? this.yScale(metrics.income) : 0;
         const rentHeight = (metrics, index) => {
             if (!metrics || !Array.isArray(metrics.rent)) {
@@ -1289,36 +1214,66 @@ class IncomeRentComparison {
             const value = metrics.rent[index];
             return Number.isFinite(value) ? this.yScale(value) : 0;
         };
+        const percentageRentOfIncomeText = (metrics, index) => {
+            if (!metrics || !Array.isArray(metrics.rent) || !Number.isFinite(metrics.income) || metrics.income === 0) {
+                return null;
+            }
+            let val = metrics.rent[index] / metrics.income;
+            val = Math.round(val * 1000) / 10; // one decimal place
+            return `${val}%`;
+        };
 
         cityGroupsMerged.select('.city-card-label')
-            .attr('x', d => (d.width ?? (hasFocusedCity ? blockWidth : baseBlockWidth)) / 2)
-            .text(d => d.city)
+            .attr('x', d => cardWidthFor(d) / 2)
+            .attr('y', labelY)
+            .attr('transform', d => {
+                const w = cardWidthFor(d);
+                const cx = w / 2;
+                return `rotate(${labelRotationDeg} ${cx} ${labelY})`;
+            })
+            .text(d => d.city.split(',')[0])
             .style('display', hasFocusedCity ? 'none' : null);
 
         cityGroupsMerged.select('.city-card-bg')
-            .attr('width', d => d.width ?? (hasFocusedCity ? blockWidth : baseBlockWidth))
+            .attr('width', d => cardWidthFor(d))
             .attr('height', d => incomeHeight(d.metrics))
-            .style('display', d => hasIncome(d.metrics) ? null : 'none');
+            .style('display', d => hasIncome(d.metrics) && !hasFocusedCity ? null : 'none');
 
-        cityGroupsMerged.select('.bachelor-block')
-            .attr('width', d => d.width ?? (hasFocusedCity ? blockWidth : baseBlockWidth))
+        cityGroupsMerged.select('.rent-block')
+            .attr('width', d => cardWidthFor(d))
             .attr('height', d => rentHeight(d.metrics, 0))
-            .style('display', d => hasIncome(d.metrics) ? null : 'none');
+            .style('display', d => hasIncome(d.metrics) && !hasFocusedCity ? null : 'none');
+        
 
-        cityGroupsMerged.select('.onebr-block')
-            .attr('width', d => d.width ?? (hasFocusedCity ? blockWidth : baseBlockWidth))
-            .attr('height', d => rentHeight(d.metrics, 1))
-            .style('display', d => hasIncome(d.metrics) ? null : 'none');
+        cityGroupsMerged.select('.rent-percentage-text')
+            .attr('y', d => rentHeight(d.metrics, 0) + 15)
+            .attr('x', d => cardWidthFor(d) / 2)
+            .text(d => percentageRentOfIncomeText(d.metrics, 0))
+            .style('display', d => hasIncome(d.metrics) && !hasFocusedCity ? null : 'none');
 
-        cityGroupsMerged.select('.twobr-block')
-            .attr('width', d => d.width ?? (hasFocusedCity ? blockWidth : baseBlockWidth))
-            .attr('height', d => rentHeight(d.metrics, 2))
-            .style('display', d => hasIncome(d.metrics) ? null : 'none');
-
-        cityGroupsMerged.select('.threebr-block')
-            .attr('width', d => d.width ?? (hasFocusedCity ? blockWidth : baseBlockWidth))
-            .attr('height', d => rentHeight(d.metrics, 3))
-            .style('display', d => hasIncome(d.metrics) ? null : 'none');
+        cityGroupsMerged.select('.city-card-overlay')
+            .attr('width', d => cardWidthFor(d))
+            .attr('height', d => incomeHeight(d.metrics))
+            .style('display', d => hasIncome(d.metrics) && !hasFocusedCity ? null : 'none')
+            .style('cursor', 'pointer')
+            .on('mouseenter', function (_, d) {
+                if (!hasIncome(d.metrics)) return;
+                d3.select(this).attr('fill-opacity', 0.08);
+            })
+            .on('mouseleave', function (_, d) {
+                if (!hasIncome(d.metrics)) return;
+                d3.select(this).attr('fill-opacity', 0);
+            })
+            .on('click', (_, d) => {
+                if (!hasIncome(d.metrics)) return;
+                handleCardClick(d);
+            })
+            .each(function () {
+                // keep overlay (and its outline) on top of underlying rectangles
+                if (this.parentNode && this.parentNode.appendChild) {
+                    this.parentNode.appendChild(this);
+                }
+            });
 
         cityGroupsMerged.select('.city-card-status')
             .attr('x', d => (d.width ?? (hasFocusedCity ? blockWidth : baseBlockWidth)) / 2)
@@ -1326,94 +1281,10 @@ class IncomeRentComparison {
             .style('display', d => hasIncome(d.metrics) ? 'none' : null);
 
         cityGroupsMerged.select('.city-card-tooltips')
-            .style('display', hasFocusedCity ? null : 'none');
-
-        if (hasFocusedCity) {
-            cityGroupsMerged.each((card, index, nodes) => {
-                const tooltipGroup = d3.select(nodes[index]).select('.city-card-tooltips');
-                if (!Number.isFinite(card.year)) {
-                    tooltipGroup
-                        .attr('transform', `translate(0, ${blockHeight + 12})`)
-                        .style('display', 'none')
-                        .selectAll('.tooltip-pill')
-                        .remove();
-                    return;
-                }
-
-                const cardWidth = card.width ?? (hasFocusedCity ? blockWidth : baseBlockWidth);
-                const tooltipData = this.buildTooltipDisplayData(card.city, card.year, cardWidth);
-                if (!tooltipData.length) {
-                    tooltipGroup
-                        .attr('transform', `translate(0, ${blockHeight + 12})`)
-                        .style('display', 'none')
-                        .selectAll('.tooltip-pill')
-                        .remove();
-                    return;
-                }
-
-                const tooltipWidth = tooltipData[0].width;
-                const maxValue = d3.max(tooltipData.map(d => d.value));
-                const tooltipOffsetX = Math.max(0, (cardWidth - tooltipWidth) / 2);
-                const baseY = Number.isFinite(maxValue) ? this.yScale(maxValue) : blockHeight;
-                const tooltipPadding = 12;
-                const tooltipHeight = d3.max(tooltipData, d => (d.offsetY ?? 0) + (d.height ?? 0)) || 0;
-                const baseTranslateY = baseY + tooltipPadding;
-                const maxTranslateY = this.height - tooltipHeight - tooltipPadding;
-                const translateY = Math.max(tooltipPadding, Math.min(baseTranslateY, maxTranslateY));
-
-                tooltipGroup
-                    .style('display', null)
-                    .attr('transform', `translate(${tooltipOffsetX}, ${translateY})`);
-
-                const tooltipPills = tooltipGroup.selectAll('.tooltip-pill')
-                    .data(tooltipData, d => d.key);
-
-                tooltipPills.exit().remove();
-
-                const tooltipPillsEnter = tooltipPills.enter()
-                    .append('g')
-                    .attr('class', 'tooltip-pill');
-
-                tooltipPillsEnter.append('rect')
-                    .attr('rx', 6)
-                    .attr('ry', 6)
-                    .attr('stroke', '#111827')
-                    .attr('stroke-width', 0.6);
-
-                tooltipPillsEnter.append('text')
-                    .attr('text-anchor', 'middle')
-                    .attr('dominant-baseline', 'middle')
-                    .attr('font-size', 12)
-                    .attr('font-weight', 600);
-
-                const tooltipPillsMerged = tooltipPillsEnter.merge(tooltipPills);
-
-                tooltipPillsMerged
-                    .attr('transform', d => `translate(0, ${d.offsetY})`);
-
-                tooltipPillsMerged.select('rect')
-                    .attr('width', d => d.width)
-                    .attr('height', d => d.height)
-                    .attr('fill', d => d.color)
-                    .attr('opacity', 0.9);
-
-                tooltipPillsMerged.select('text')
-                    .attr('x', d => d.width / 2)
-                    .attr('y', d => d.height / 2)
-                    .attr('fill', d => d.textColor || '#111827')
-                    .text(d => d.text);
-
-                if (typeof tooltipGroup.raise === 'function') {
-                    tooltipGroup.raise();
-                }
-            });
-        } else {
-            cityGroupsMerged.select('.city-card-tooltips')
-                .attr('transform', `translate(0, ${blockHeight + 12})`)
-                .style('display', 'none')
-                .selectAll('.tooltip-pill')
-                .remove();
-        }
+            .attr('transform', `translate(0, ${blockHeight + 12})`)
+            .style('display', 'none')
+            .selectAll('.tooltip-pill')
+            .remove();
 
         if (hasFocusedCity && this.focusChartGroup && typeof this.focusChartGroup.raise === 'function') {
             this.focusChartGroup.raise();
@@ -1425,6 +1296,10 @@ class IncomeRentComparison {
 
         if (this.focusCityLabel && typeof this.focusCityLabel.raise === 'function') {
             this.focusCityLabel.raise();
+        }
+
+        if (this.backButtonGroup && typeof this.backButtonGroup.raise === 'function') {
+            this.backButtonGroup.raise();
         }
 
         if (this.focusMarker) {
@@ -1446,7 +1321,7 @@ class IncomeRentComparison {
         if (!city || !Number.isFinite(year)) {
             return null;
         }
-        const rentTypeOrder = ['0br', '1br', '2br', '3br'];
+        const rentTypeOrder = ['rent'];
         const rentValues = rentTypeOrder.map(type => {
             const stats = this.getRentStats(city, year, type);
             return Number.isFinite(stats.value) ? stats.value : null;
@@ -1510,6 +1385,41 @@ class IncomeRentComparison {
         this.update();
     }
 
+    handleHoverMove(event) {
+        if (!this.focusedCity || !this.xScale || !this.focusMarker || !this.svg) {
+            this.hideHoverMarker();
+            return;
+        }
+        const [mouseX] = d3.pointer(event, this.svg.node());
+        if (!Number.isFinite(mouseX)) {
+            this.hideHoverMarker();
+            return;
+        }
+        const rawYear = this.xScale.invert(mouseX);
+        const nearestYear = this.findNearestAvailableYear(this.focusedCity, rawYear);
+        if (!Number.isFinite(nearestYear)) {
+            this.hideHoverMarker();
+            return;
+        }
+        const xPos = this.xScale(nearestYear);
+        this.focusMarker
+            .attr('x1', xPos)
+            .attr('x2', xPos)
+            .style('opacity', 0.7);
+        if (typeof this.focusMarker.raise === 'function') {
+            this.focusMarker.raise();
+        }
+        if (this.backButtonGroup && typeof this.backButtonGroup.raise === 'function') {
+            this.backButtonGroup.raise();
+        }
+    }
+
+    hideHoverMarker() {
+        if (this.focusMarker) {
+            this.focusMarker.style('opacity', 0);
+        }
+    }
+
     buildFocusSeries(cityName) {
         if (!cityName) {
             return [];
@@ -1523,10 +1433,8 @@ class IncomeRentComparison {
             return [];
         }
 
-        const rentRenderOrder = ['3br', '2br', '1br', '0br'];
-        const activeTypes = this.selectedApartmentTypes.size > 0
-            ? rentRenderOrder.filter(type => this.selectedApartmentTypes.has(type))
-            : rentRenderOrder;
+        const rentRenderOrder = ['rent'];
+        const activeTypes = rentRenderOrder;
 
         const incomeSeries = years.map(year => {
             const stats = this.getIncomeStats(cityName, year, this.selectedHousehold);
@@ -1566,10 +1474,8 @@ class IncomeRentComparison {
             return [];
         }
 
-        const rentTypeOrder = ['0br', '1br', '2br', '3br'];
-        const activeTypes = this.selectedApartmentTypes.size > 0
-            ? rentTypeOrder.filter(type => this.selectedApartmentTypes.has(type))
-            : rentTypeOrder;
+        const rentTypeOrder = ['rent'];
+        const activeTypes = rentTypeOrder;
 
         const items = [];
 
@@ -1657,17 +1563,17 @@ class RentInfo {
     constructor(config) {
         this.config = config || {};
         this.container = d3.select(this.config.parentElement);
+        this.legendContainer = this.config.legendElement ? d3.select(this.config.legendElement) : null;
         this.content = null;
-        this.defaultRentTypes = ['0br', '1br', '2br', '3br'];
+        this.defaultRentTypes = ['rent'];
         this.seriesColors = this.config.seriesColors || null;
         this.tooltipLabels = this.config.tooltipLabels || null;
         this.defaultLabels = this.config.defaultLabels || {
-            '0br': 'Bachelor',
-            '1br': '1 Bedroom',
-            '2br': '2 Bedroom',
-            '3br': '3 Bedroom'
+            rent: 'Rent'
         };
         this.legendLabels = this.config.legendLabels || null;
+        this.lastPrimaryKey = null;
+        this.lastComparisonKey = null;
     }
 
     init() {
@@ -1680,11 +1586,14 @@ class RentInfo {
 
         this.content = this.container
             .append('div')
-            .attr('class', 'rent-info-wrapper d-flex justify-content-center');
+            .attr('class', 'rent-info-wrapper')
+            .style('max-width', '240px')
+            .style('margin', '0 auto');
 
         this.inner = this.content
             .append('div')
-            .attr('class', 'rent-info-content d-flex flex-column gap-2 align-items-stretch small');
+            .attr('class', 'rent-info-content')
+            .style('width', '100%');
 
         this.update(null);
     }
@@ -1706,25 +1615,27 @@ class RentInfo {
             return;
         }
 
+        // Clear legend container separately so it can live outside the info box
+        const legendRoot = this.legendContainer && !this.legendContainer.empty()
+            ? this.legendContainer
+            : null;
+        if (legendRoot) {
+            legendRoot.selectAll('*').remove();
+        }
+
         this.inner.selectAll('*').remove();
 
         const legendItems = [
             { type: 'income', label: this.legendLabels?.income || this.tooltipLabels?.income || this.defaultLabels?.income || 'Income', color: this.seriesColors?.income },
-            { type: '0br', label: this.legendLabels?.['0br'] || this.tooltipLabels?.['0br'] || this.defaultLabels?.['0br'] || 'Bachelor', color: this.seriesColors?.['0br'] },
-            { type: '1br', label: this.legendLabels?.['1br'] || this.tooltipLabels?.['1br'] || this.defaultLabels?.['1br'] || '1 Bedroom', color: this.seriesColors?.['1br'] },
-            { type: '2br', label: this.legendLabels?.['2br'] || this.tooltipLabels?.['2br'] || this.defaultLabels?.['2br'] || '2 Bedroom', color: this.seriesColors?.['2br'] },
-            { type: '3br', label: this.legendLabels?.['3br'] || this.tooltipLabels?.['3br'] || this.defaultLabels?.['3br'] || '3 Bedroom', color: this.seriesColors?.['3br'] }
+            { type: 'rent', label: this.legendLabels?.rent || this.tooltipLabels?.rent || this.defaultLabels?.rent || 'Rent', color: this.seriesColors?.rent }
         ].filter(item => item.color);
 
-        if (legendItems.length) {
-            const legendWrapper = this.inner.append('div')
-                .attr('class', 'rent-info-legend-wrapper d-flex flex-column align-items-center text-center w-100');
+        const renderLegend = root => {
+            if (!root || !legendItems.length) return;
+            const legendCard = root.append('div')
+                .attr('class', 'rent-info-legend-card rent-info-card d-flex flex-column align-items-center text-center w-100');
 
-            legendWrapper.append('span')
-                .attr('class', 'rent-info-legend-title fw-semibold text-uppercase')
-                .text('Rent Types');
-
-            const legendRow = legendWrapper.append('div')
+            const legendRow = legendCard.append('div')
                 .attr('class', 'rent-info-legend d-flex flex-wrap justify-content-center align-items-center gap-3');
 
             const legendEntries = legendRow.selectAll('.rent-info-legend-item')
@@ -1735,14 +1646,25 @@ class RentInfo {
 
             legendEntries.append('span')
                 .attr('class', 'rent-info-legend-swatch')
-                .style('background-color', d => d.color);
+                .style('background-color', d => d.color)
+                .style('width', '32px')
+                .style('height', '14px')
+                .style('border-radius', '6px');
 
             legendEntries.append('span')
                 .attr('class', 'rent-info-legend-text')
                 .text(d => d.label);
+        };
+
+        if (legendRoot) {
+            renderLegend(legendRoot);
+        } else {
+            const legendWrapper = this.inner.append('div')
+                .attr('class', 'rent-info-legend-wrapper d-flex flex-column align-items-center text-center w-100');
+            renderLegend(legendWrapper);
         }
 
-        const appendCard = (parent, title, lines, extraClass = '') => {
+        const appendCard = (parent, title, lines, extraClass = '', options = {}) => {
             const classes = ['rent-info-card'];
             if (extraClass) {
                 classes.push(extraClass);
@@ -1756,10 +1678,16 @@ class RentInfo {
             lines.forEach(line => {
                 card.append('p').text(line);
             });
+            if (options.flash) {
+                card.classed('flash', true);
+                setTimeout(() => card.classed('flash', false), 400);
+            }
             return card;
         };
 
         if (!payload || !payload.city || !payload.primary) {
+            this.lastPrimaryKey = null;
+            this.lastComparisonKey = null;
             const promptWrapper = this.inner.append('div').attr('class', 'rent-info-legend-wrapper d-flex flex-column align-items-center text-center w-100');
             promptWrapper.append('p')
                 .attr('class', 'graph-prompt-title')
@@ -1767,14 +1695,14 @@ class RentInfo {
             promptWrapper.append('p')
                 .attr('class', 'text-muted')
                 .text('Click on a city\'s rectangle to visualise the income and rent data of that city over time.');
-            
+
             return;
         }
 
         const row = this.inner.append('div').attr('class', 'graph-prompt-row');
 
         const city = payload.city;
-        const familyLabel = payload.familyType || 'All households';
+        const familyLabel = payload.familyType;
         const primaryYear = Number.isFinite(payload.primary.year) ? payload.primary.year : null;
         const primaryMetrics = payload.primary.metrics || {};
         const comparison = payload.comparison && payload.comparison.metrics ? payload.comparison : null;
@@ -1785,7 +1713,7 @@ class RentInfo {
         const activeRentTypes = Array.isArray(payload.activeRentTypes) && payload.activeRentTypes.length
             ? rentTypeOrder.filter(type => payload.activeRentTypes.includes(type))
             : rentTypeOrder;
-    const tooltipLabels = payload.tooltipLabels || this.tooltipLabels || {};
+        const tooltipLabels = payload.tooltipLabels || this.tooltipLabels || {};
 
         const rentIndex = new Map(rentTypeOrder.map((type, index) => [type, index]));
         const getRentValue = (metrics, type) => {
@@ -1805,76 +1733,102 @@ class RentInfo {
         const yearText = primaryYear !== null ? primaryYear : 'the selected year';
 
         const primaryLines = [];
+        const primaryKey = primaryYear !== null
+            ? `${city}::${familyLabel}::${primaryYear}::${activeRentTypes.join('|')}`
+            : null;
+        const comparisonYear = Number.isFinite(comparison?.year) ? comparison.year : null;
+        const comparisonKey = comparisonYear !== null
+            ? `${city}::${familyLabel}::${comparisonYear}::${activeRentTypes.join('|')}`
+            : null;
+        const primaryChanged = primaryKey !== this.lastPrimaryKey;
+        const comparisonChanged = comparisonKey !== this.lastComparisonKey;
+
+        const computeShare = (incomeVal, metrics) => {
+            if (!Number.isFinite(incomeVal) || !metrics || !Array.isArray(metrics.rent) || incomeVal === 0) {
+                return null;
+            }
+            const rents = activeRentTypes
+                .map(type => getRentValue(metrics, type))
+                .filter(v => Number.isFinite(v));
+            if (!rents.length) return null;
+            return d3.mean(rents.map(r => (r / incomeVal) * 100));
+        };
 
         const incomeValue = Number.isFinite(primaryMetrics.income) ? primaryMetrics.income : null;
         const incomeAvailable = incomeValue !== null;
 
         if (incomeAvailable) {
-            primaryLines.push(`${familyLabel} living in ${city} made ${formatMoney(incomeValue)} a month on average in ${yearText}.`);
+            primaryLines.push(`Income: ${formatMoney(incomeValue)} / mo (${yearText})`);
         } else {
-            primaryLines.push(`Income data for ${familyLabel} living in ${city} in ${yearText} is unavailable.`);
+            primaryLines.push(`Income: unavailable (${yearText})`);
         }
 
         if (!activeRentTypes.length) {
-            primaryLines.push('No apartment types are currently selected.');
+            primaryLines.push('No rent types selected.');
         }
+
+        const primaryShare = computeShare(incomeValue, primaryMetrics);
 
         activeRentTypes.forEach(type => {
             const label = tooltipLabels[type] || type;
             const rentValue = getRentValue(primaryMetrics, type);
 
-            if (Number.isFinite(rentValue) && incomeAvailable && incomeValue > 0) {
-                const percent = (rentValue / incomeValue) * 100;
-                primaryLines.push(`They would pay ${formatPercent(percent)} of their income to afford ${label} rent.`);
-            } else if (Number.isFinite(rentValue)) {
-                primaryLines.push(`Rent for ${label} was ${formatMoney(rentValue)} in ${yearText}, but income data is unavailable for this calculation.`);
+            if (Number.isFinite(rentValue)) {
+                primaryLines.push(`${label}: ${formatMoney(rentValue)}`);
             } else {
-                primaryLines.push(`Rent data for ${label} in ${yearText} is unavailable.`);
+                primaryLines.push(`${label}: no rent data`);
             }
         });
+
+        if (Number.isFinite(primaryShare)) {
+            primaryLines.unshift(`Income share: ${formatPercent(primaryShare)}`);
+        }
 
         const hasComparison = Boolean(comparison);
 
         if (!hasComparison) {
-            appendCard(row, `${familyLabel} in ${city} (${yearText})`, primaryLines, 'rent-info-card-primary');
+            appendCard(row, `${familyLabel} in ${city} (${yearText})`, primaryLines, 'rent-info-card-primary', { flash: primaryChanged });
             appendCard(row, 'Add a comparison year', [
                 'Click on the chart to compare metrics between the selected year and another year.'
             ], 'rent-info-card-empty');
             appendCard(row, 'Change summary', [
                 'Select a comparison year to see how incomes and rents change between years.'
             ], 'rent-info-card-empty');
+            this.lastPrimaryKey = primaryKey;
+            this.lastComparisonKey = null;
             return;
         }
 
-        const comparisonYear = Number.isFinite(comparison.year) ? comparison.year : null;
         const comparisonYearText = comparisonYear !== null ? comparisonYear : 'the comparison year';
         const comparisonMetrics = comparison.metrics;
         const comparisonIncome = Number.isFinite(comparisonMetrics.income) ? comparisonMetrics.income : null;
 
         const comparisonDetailLines = [];
         if (Number.isFinite(comparisonIncome)) {
-            comparisonDetailLines.push(`${familyLabel} living in ${city} made ${formatMoney(comparisonIncome)} in ${comparisonYearText}.`);
+            comparisonDetailLines.push(`Income: ${formatMoney(comparisonIncome)} / mo (${comparisonYearText})`);
         } else {
-            comparisonDetailLines.push(`Income data for ${familyLabel} living in ${city} in ${comparisonYearText} is unavailable.`);
+            comparisonDetailLines.push(`Income: unavailable (${comparisonYearText})`);
         }
 
         if (!activeRentTypes.length) {
-            comparisonDetailLines.push('No apartment types are currently selected.');
+            comparisonDetailLines.push('No rent types selected.');
         }
+
+        const comparisonShare = computeShare(comparisonIncome, comparisonMetrics);
 
         activeRentTypes.forEach(type => {
             const label = tooltipLabels[type] || type;
             const rentValue = getRentValue(comparisonMetrics, type);
-
-            if (Number.isFinite(rentValue) && Number.isFinite(comparisonIncome) && comparisonIncome > 0) {
-                const percent = (rentValue / comparisonIncome) * 100;
-                comparisonDetailLines.push(`They would pay ${formatPercent(percent)} of their income to afford ${label} rent.`);
-            } else if (Number.isFinite(rentValue)) {
-                comparisonDetailLines.push(`Rent for ${label} was ${formatMoney(rentValue)} in ${comparisonYearText}, but income data is unavailable for this calculation.`);
+            if (Number.isFinite(rentValue)) {
+                comparisonDetailLines.push(`${label}: ${formatMoney(rentValue)}`);
             } else {
-                comparisonDetailLines.push(`Rent data for ${label} in ${comparisonYearText} is unavailable.`);
+                comparisonDetailLines.push(`${label}: no rent data`);
             }
         });
+
+        if (Number.isFinite(comparisonShare)) {
+            comparisonDetailLines.unshift(`Income share: ${formatPercent(comparisonShare)} `);
+        }
 
         const hasBothYears = Number.isFinite(primaryYear) && Number.isFinite(comparisonYear);
         const earlierIsPrimary = !hasBothYears || primaryYear <= comparisonYear;
@@ -1892,20 +1846,14 @@ class RentInfo {
 
         if (Number.isFinite(earlierIncome) && Number.isFinite(laterIncome) && earlierIncome !== 0) {
             const changePercent = ((laterIncome - earlierIncome) / earlierIncome) * 100;
-            if (Math.abs(changePercent) < 0.05) {
-                changeLines.push(`Incomes for ${familyLabel} did not change between ${earlierYearText} and ${laterYearText}.`);
-            } else {
-                const verb = changePercent > 0 ? 'increased' : 'decreased';
-                changeLines.push(`Incomes for ${familyLabel} ${verb} by ${formatPercent(Math.abs(changePercent))} from ${earlierYearText} to ${laterYearText}.`);
-            }
-        } else if (Number.isFinite(earlierIncome) && Number.isFinite(laterIncome) && earlierIncome === 0) {
-            changeLines.push(`Incomes for ${familyLabel} cannot be compared because income in ${earlierYearText} is zero.`);
-        } else if (!Number.isFinite(earlierIncome) && Number.isFinite(laterIncome)) {
-            changeLines.push(`Income change between ${earlierYearText} and ${laterYearText} is unavailable because ${earlierYearText} income is missing.`);
+            const verb = changePercent > 0 ? '▲' : '▼';
+            changeLines.push(`Income: ${verb} ${formatPercent(Math.abs(changePercent))} (${earlierYearText} → ${laterYearText})`);
         } else if (Number.isFinite(earlierIncome) && !Number.isFinite(laterIncome)) {
-            changeLines.push(`Income change between ${earlierYearText} and ${laterYearText} is unavailable because ${laterYearText} income is missing.`);
+            changeLines.push(`Income: missing for ${laterYearText}`);
+        } else if (!Number.isFinite(earlierIncome) && Number.isFinite(laterIncome)) {
+            changeLines.push(`Income: missing for ${earlierYearText}`);
         } else {
-            changeLines.push(`Income change between ${earlierYearText} and ${laterYearText} is unavailable.`);
+            changeLines.push('Income change: unavailable');
         }
 
         if (!activeRentTypes.length) {
@@ -1919,31 +1867,30 @@ class RentInfo {
 
             if (Number.isFinite(earlierValue) && Number.isFinite(laterValue) && earlierValue !== 0) {
                 const changePercent = ((laterValue - earlierValue) / earlierValue) * 100;
-                if (Math.abs(changePercent) < 0.05) {
-                    changeLines.push(`Rent prices for ${label} did not change between ${earlierYearText} and ${laterYearText}.`);
-                } else {
-                    const verb = changePercent > 0 ? 'increased' : 'decreased';
-                    changeLines.push(`Rent prices for ${label} ${verb} by ${formatPercent(Math.abs(changePercent))} from ${earlierYearText} to ${laterYearText}.`);
-                }
-            } else if (Number.isFinite(earlierValue) && Number.isFinite(laterValue) && earlierValue === 0) {
-                if (earlierValue === laterValue) {
-                    changeLines.push(`Rent prices for ${label} did not change between ${earlierYearText} and ${laterYearText}.`);
-                } else {
-                    const verb = laterValue > earlierValue ? 'increased' : 'decreased';
-                    changeLines.push(`Rent prices for ${label} ${verb} from ${formatMoney(earlierValue)} to ${formatMoney(laterValue)} between ${earlierYearText} and ${laterYearText}.`);
-                }
+                const verb = changePercent > 0 ? '▲' : '▼';
+                changeLines.push(`${label}: ${verb} ${formatPercent(Math.abs(changePercent))} (${earlierYearText} → ${laterYearText})`);
             } else if (!Number.isFinite(earlierValue) && Number.isFinite(laterValue)) {
-                changeLines.push(`Rent change data for ${label} between ${earlierYearText} and ${laterYearText} is unavailable because ${earlierYearText} rent is missing.`);
+                changeLines.push(`${label}: missing ${earlierYearText}`);
             } else if (Number.isFinite(earlierValue) && !Number.isFinite(laterValue)) {
-                changeLines.push(`Rent change data for ${label} between ${earlierYearText} and ${laterYearText} is unavailable because ${laterYearText} rent is missing.`);
+                changeLines.push(`${label}: missing ${laterYearText}`);
             } else {
-                changeLines.push(`Rent change data for ${label} between ${earlierYearText} and ${laterYearText} is unavailable.`);
+                changeLines.push(`${label}: change unavailable`);
             }
         });
 
-        appendCard(row, `${familyLabel} in ${city} (${yearText})`, primaryLines, 'rent-info-card-primary');
-        appendCard(row, `${familyLabel} in ${city} (${comparisonYearText})`, comparisonDetailLines, 'rent-info-card-secondary');
-        appendCard(row, `Change from ${earlierYearText} to ${laterYearText}`, changeLines, 'rent-info-card-change');
+        const earlierShare = computeShare(earlierIncome, earlierMetrics);
+        const laterShare = computeShare(laterIncome, laterMetrics);
+        if (Number.isFinite(earlierShare) && Number.isFinite(laterShare) && earlierShare !== 0) {
+            const shareChange = ((laterShare - earlierShare) / earlierShare) * 100;
+            const verb = shareChange > 0 ? '▲' : '▼';
+            changeLines.unshift(`Income share: ${verb} ${formatPercent(Math.abs(shareChange))}`);
+        }
+
+        appendCard(row, `${familyLabel} in ${city} (${yearText})`, primaryLines, 'rent-info-card-primary', { flash: primaryChanged });
+        appendCard(row, `${familyLabel} in ${city} (${comparisonYearText})`, comparisonDetailLines, 'rent-info-card-secondary', { flash: comparisonChanged });
+        appendCard(row, `Change from ${earlierYearText} to ${laterYearText}`, changeLines, 'rent-info-card-change', { flash: (primaryChanged || comparisonChanged) });
+        this.lastPrimaryKey = primaryKey;
+        this.lastComparisonKey = comparisonKey;
     }
 }
 
@@ -1962,6 +1909,7 @@ class Caption {
     init() {
         const { cities, households } = this.collectOptions();
         this.createCaption(cities, households);
+        this.handleCityChange(cities);
     }
 
     collectOptions() {
@@ -1979,21 +1927,15 @@ class Caption {
                 .text(this.text);
         }
 
-        container.append('span').text('Compare affordability in');
-        const citySelection = createSelection(cities, 'Select cities', container, {
-            initialSelected: cities,
-            onChange: selected => this.handleCityChange(selected)
-        });
-
-        container.append('span').text('for');
+        container.append('span').text('Compare affordability across all cities for ');
         const householdDropdown = createDropdown(households, 'Select household type', container, {
             initialSelected: households[0] || null,
             onChange: selected => this.handleHouseholdChange(selected)
         });
 
-        container.append('span').text('earning the typical local income.');
+        container.append('span').text(' earning the typical local income.');
 
-        this.controls = { citySelection, householdDropdown };
+        this.controls = { householdDropdown };
     }
 
     handleCityChange(selectedCities) {
