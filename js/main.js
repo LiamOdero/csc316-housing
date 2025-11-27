@@ -16,9 +16,9 @@ function loadData() {
         popChart = new PopulationRentChart("vis5-area", "vis5-city-search", "vis5-city-list", "vis5-city-dropdown", "vis5-area-list", 
                                             "vis5-selected-cities", cleanedPopData)
 
-        // Load and create the building visualization
+        // Load and create the building visualization (D3/SVG version)
         d3.json("data/BURAK_cities_data_by_unit_type.json").then(data => {
-            initVacancyVis(data);
+            initVacancyVisD3(data);
             initControl()
 
             Promise.all([

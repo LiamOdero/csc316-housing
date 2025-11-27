@@ -311,149 +311,52 @@
 
             <div id="visualization-area-4" class="content" data-content="vis5">
                 <header>
-                    <h1>What are the Vacancy Rates of the Most Expensive Cities?</h1>
+                    <h1>How Tight Are Vacancy Rates in Major Cities?</h1>
                     <p class="subtitle">
-                        Each building represents a major Canadian city. Building height shows population size,
-                        while windows represent housing units: <strong>lit windows are occupied</strong>,
-                        and <strong>dark windows are vacant</strong>. Chimney smoke indicates average
-                        rent prices—more smoke means higher rent. Cities with <strong>vacancy rates above 2%</strong>
-                        are highlighted in green.</p>
+                        Each building represents a major Canadian city. Windows now show the estimated number of vacant homes (based on the selected year's housing supply × vacancy rate), with gray windows stacked from the bottom up; the size of each window auto-scales to fill the 5×20 grid.</p>
                 </header>
                 <div class="row justify-content-center g-5" id="vis5">
 
                     <div class="col-12 visualization-section">
-
-
-                        <!-- Filters -->
-                        <div class="filters-container">
-                            <!-- Filter Labels Row -->
-                            <div class="filter-labels-row">
-                                <div class="filter-label-item filter-label-location">
-                                    <div class="label-text">Location Selection</div>
-                                    <div class="selector-tabs">
-                                        <button id="tab-cities" class="selector-tab active">Cities</button>
-                                        <button id="tab-provinces" class="selector-tab">Provinces</button>
-                                    </div>
-                                </div>
-                                <div class="filter-label-item">
-                                    <div class="label-text">Unit Type</div>
-                                </div>
-                                <div class="filter-label-item">
-                                    <div class="label-text">Vacancy Rate</div>
-                                </div>
-                                <div class="filter-label-item">
-                                    <div class="label-text">Average Rent</div>
-                                </div>
-                                <div class="filter-label-item">
-                                    <div class="label-text">Sort By</div>
-                                </div>
-                                <div class="filter-label-item filter-label-button">
-                                    <div class="label-text">&nbsp;</div>
+                        <div class="vacancy-controls">
+                            <div class="vacancy-control">
+                                <label for="vacancy-year-slider">Year</label>
+                                <div class="vacancy-year-readout" id="vacancy-year-display">2023</div>
+                                <input type="range" id="vacancy-year-slider" min="2000" max="2023" step="1" value="2023">
+                                <div class="vacancy-year-labels">
+                                    <span id="vacancy-year-min">2000</span>
+                                    <span id="vacancy-year-max">2023</span>
                                 </div>
                             </div>
-
-                            <!-- Filter Inputs Row -->
-                            <div class="filter-inputs-row">
-                                <div class="filter-input-item filter-input-location">
-                                    <div class="city-selector-container">
-                                        <input type="text" id="city-search" class="city-search-input"
-                                            placeholder="Search cities...">
-                                        <select id="province-select" class="province-select" style="display: none;">
-                                            <option value="">Select a province...</option>
-                                        </select>
-
-                                        <div id="city-dropdown" class="city-dropdown" style="display: none;">
-                                            <div id="city-list" class="city-list"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="filter-input-item">
-                                    <select id="unit-type-filter" class="filter-select">
-                                        <option value="total" selected>All Units</option>
-                                        <option value="bachelor">Bachelor</option>
-                                        <option value="1_bedroom">1 Bedroom</option>
-                                        <option value="2_bedroom">2 Bedroom</option>
-                                        <option value="3_bedroom_plus">3+ Bedroom</option>
-                                    </select>
-                                </div>
-                                <div class="filter-input-item">
-                                    <select id="vacancy-filter" class="filter-select">
-                                        <option value="all" selected>All Rates</option>
-                                        <option value="high">High (>2%)</option>
-                                        <option value="low">Low (≤2%)</option>
-                                    </select>
-                                </div>
-                                <div class="filter-input-item">
-                                    <select id="rent-filter" class="filter-select">
-                                        <option value="all" selected>All Prices</option>
-                                        <option value="high">High (>$1500)</option>
-                                        <option value="medium">Medium ($1200-$1500)</option>
-                                        <option value="low">Low (<$1200)< /option>
-                                    </select>
-                                </div>
-                                <div class="filter-input-item">
-                                    <select id="sort-filter" class="filter-select">
-                                        <option value="population" selected>Population</option>
-                                        <option value="vacancy-high">Vacancy (High→Low)</option>
-                                        <option value="vacancy-low">Vacancy (Low→High)</option>
-                                        <option value="rent-high">Rent (High→Low)</option>
-                                        <option value="rent-low">Rent (Low→High)</option>
-                                        <option value="name">Name (A→Z)</option>
-                                    </select>
-                                </div>
-                                <div class="filter-input-item filter-input-button">
-                                    <button id="reset-filters" class="reset-btn">Reset Filters</button>
-                                </div>
-                            </div>
-
-                            <!-- Selected Cities Display -->
-                            <div id="selected-cities" class="selected-cities"></div>
-                        </div>
-
-                        <!-- Legend -->
-                        <div class="legend vis3-legend">
-                            <div class="legend-item">
-                                <div class="legend-box occupied"></div>
-                                <span>Occupied Housing</span>
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-box vacant"></div>
-                                <span>Vacant Housing</span>
-                            </div>
-                            <div class="legend-item">
-                                <span>🏭 Chimney Height = Rent Price</span>
-                            </div>
-                            <div class="legend-item">
-                                <span>🏢 Height = Population</span>
-                            </div>
-                            <div class="legend-item">
-                                <span style="color: #2ecc71;">🟢 Green = High Vacancy (>2%)</span>
+                            <div class="vacancy-control">
+                                <label>Select up to 4 cities</label>
+                                <div class="vacancy-city-buttons" id="vacancy-city-buttons"></div>
+                                <div class="vacancy-note">Click to toggle; selecting more than 4 pops the oldest choice.</div>
                             </div>
                         </div>
 
-                        <!-- Buildings Container -->
-                        <div class="buildings-carousel">
-                            <button type="button" class="carousel-btn prev" id="buildings-prev" aria-label="Scroll left"
-                                style="display: none;">
-                                &#8249;
-                            </button>
-                            <div class="buildings-viewport">
-                                <div id="buildings-container"></div>
+                        <div class="vacancy-wrapper">
+                            <div class="vacancy-left">
+                                <div class="buildings-viewport">
+                                    <div id="buildings-container"></div>
+                                </div>
                             </div>
-                            <button type="button" class="carousel-btn next" id="buildings-next"
-                                aria-label="Scroll right" style="display: none;">
-                                &#8250;
-                            </button>
+                            <div class="vacancy-info-panel">
+                                <div class="vacancy-scale">
+                                    <div class="label">Current scale</div>
+                                    <div class="value" id="vacancy-scale-value">–</div>
+                                    <div class="note" id="vacancy-scale-note">Adjusts when cities/year change</div>
+                                </div>
+                                <h3>Displayed Cities</h3>
+                                <div id="vacancy-city-list" class="vacancy-city-list"></div>
+                                <p class="vacancy-note">Pick up to four cities to compare; details update with the selected year.</p>
+                            </div>
                         </div>
 
                         <div class="data-table-section">
-                            <p> Out of the 17 cities with the highest rent (above $1500 / month) only one has a vacancy
-                                rate above 3%. Looking at the
-                                other cities with lower rent, it can be seen that there is an increase in cities with
-                                vacancy rates above 3% as rent decreases. As such,
-                                it can be seen that there is some correlation between vacancy rates and rent, further
-                                indicating there are problems with supply.
-                            </p>
+                            <p>The gray stacks show the scale of vacant homes directly: Toronto still lands around forty thousand empty units even at a 1–2% vacancy rate,
+                                while many other cities barely fill a handful of windows. Stacked from the ground up, the small number of gray windows makes the scarcity
+                                of available units obvious across the country&rsquo;s largest rental markets.</p>
                         </div>
                     </div>
                 </div>
@@ -519,6 +422,7 @@
     <!-- Visualization Objects -->
     <script src="js/populationRentChart.js"></script>
     <script src="js/vacancyVisualization.js"></script>
+    <script src="js/vacancyVisD3.js"></script>
     <script src="js/incomeRentVisualization.js"></script>
     <script src="js/incomeRentV2.js"></script>
     <script src="js/housingUnitsVisualization.js"></script>

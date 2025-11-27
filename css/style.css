@@ -1547,7 +1547,7 @@ footer {
     flex: 1;
     overflow-x: auto;
     overflow-y: hidden;
-    padding: 40px 20px;
+    padding: 30px 20px;
     scroll-snap-type: x mandatory;
     scroll-padding-left: 1px;
     scroll-padding-right: 1px;
@@ -1579,8 +1579,8 @@ footer {
     align-items: flex-end;
     gap: 25px;
     flex-wrap: nowrap;
-    padding: 40px 20px;
-    min-height: 500px;
+    padding: 20px 10px;
+    min-height: 520px;
 }
 
 .carousel-btn {
@@ -1606,6 +1606,207 @@ footer {
     opacity: 0.35;
     cursor: not-allowed;
     box-shadow: none;
+}
+
+.vacancy-wrapper {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+    gap: 24px;
+    align-items: stretch;
+    width: 100%;
+}
+
+@media (max-width: 992px) {
+    .vacancy-wrapper {
+        grid-template-columns: 1fr;
+    }
+}
+
+.vacancy-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+    align-items: end;
+}
+
+.vacancy-control label {
+    display: block;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 6px;
+}
+
+.vacancy-control input[type="range"] {
+    width: 100%;
+}
+
+.vacancy-control select {
+}
+
+.vacancy-year-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: #718096;
+    margin-top: 4px;
+}
+
+.vacancy-left {
+    background: #f7fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+}
+
+.vacancy-left .buildings-viewport {
+    max-height: 620px;
+}
+
+.vacancy-info-panel {
+    background: linear-gradient(180deg, #ffffff 0%, #f7fafc 100%);
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px 22px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.vacancy-info-panel h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #1a365d;
+}
+
+.vacancy-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #ffffff;
+    font-size: 0.95rem;
+    color: #4a5568;
+}
+
+.vacancy-stat strong {
+    font-size: 1.05rem;
+    color: #2d3748;
+}
+
+.vacancy-note {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #718096;
+}
+
+.vacancy-city-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.vacancy-scale {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: #edf2f7;
+    margin-bottom: 10px;
+}
+
+.vacancy-scale .label {
+    font-size: 0.85rem;
+    color: #4a5568;
+}
+
+.vacancy-scale .value {
+    font-weight: 700;
+    color: #1a365d;
+}
+
+.vacancy-scale .note {
+    font-size: 0.8rem;
+    color: #718096;
+}
+
+.vacancy-city-row {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: #ffffff;
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    align-items: center;
+    overflow-wrap: anywhere;
+    min-height: 68px;
+}
+
+.vacancy-city-row .name {
+    font-weight: 700;
+    color: #1a365d;
+}
+
+.vacancy-city-row .label {
+    font-size: 0.85rem;
+    color: #4a5568;
+}
+
+.vacancy-city-row .value {
+    font-weight: 600;
+    color: #2d3748;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.vacancy-estimate-tag {
+    font-size: 0.65rem;
+    color: #718096;
+    font-weight: 500;
+    margin-left: 4px;
+}
+
+.vacancy-empty {
+    width: 100%;
+    text-align: center;
+    color: #718096;
+    padding: 80px 20px;
+    border: 1px dashed #cbd5e0;
+    border-radius: 12px;
+    background: #f7fafc;
+}
+
+.vacancy-city-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.vacancy-city-btn {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #2d3748;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.vacancy-city-btn:hover {
+    border-color: #cbd5e0;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.vacancy-city-btn.active {
+    background: #ebf8ff;
+    border-color: #63b3ed;
+    color: #1a365d;
+    box-shadow: 0 4px 12px rgba(99, 179, 237, 0.25);
 }
 
 .city-building {
