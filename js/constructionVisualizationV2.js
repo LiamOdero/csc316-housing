@@ -4,6 +4,7 @@ class ConstructionVisualization   {
         this.prepData(housingData, populationText)
         this.container = d3.select('#construction-visualization');
         this.currYear = 2023;
+        this.ratioMode = false;
     }
 
     prepData(housingData, populationText)  {
@@ -68,7 +69,7 @@ class ConstructionVisualization   {
                 const year = +d.Year;
                 return year >= 2013 && year <= 2023 && d.Province && d.Total;
             }),
-            v => d3.sum(v, d => +d.Total || 0),
+            v => d3.sum(v, d => +d.Apartment_and_Other + +d.Singles + +d.Row + +d.Semis || 0),
             d => d.Year,
             d => d.Province
         );
@@ -77,7 +78,6 @@ class ConstructionVisualization   {
         // Check what data exists for a specific year
         const year2014Data = housingByProvince.get('2014');
             this.ratioData = [];
-            console.log(populationData)
             this.allProvinces.forEach(province => {
                 this.years.forEach((year, idx) => {
                     if (idx === 0) return;
@@ -98,7 +98,7 @@ class ConstructionVisualization   {
                             ratio: ratio,
                             completions: completions,
                             popChange: popChange,
-                            peoplePerUnit: Math.round(popChange / completions)
+                            peoplePerUnit: Math.round(1 / ratio)
                         });
                     } else if (idx === 1 && province === this.allProvinces[0]) {
                         // skip empty points
@@ -271,14 +271,14 @@ class ConstructionVisualization   {
             .style('font-size', '0.85rem')
             .text(vis.years[vis.years.length - 1] || '');
 
-        vis.sort = "province"
+        vis.sort = "completions"
         // Family controls
         const familyCard = makeCard();
         familyCard.append('span')
             .style('font-weight', '600')
             .style('color', '#4b5563')
-            .text('Sort By:');
-        const familyOrder = ['Province', 'Population', 'Housing Completions', "Completion : Population Ratio"];
+            .text('Visualize:');
+        const familyOrder = ['Completions vs Population Change', "Completion : Population Change Ratio"];
         const familyButtons = familyCard.append('div')
             .style('display', 'flex')
             .style('align-items', 'center')
@@ -292,7 +292,7 @@ class ConstructionVisualization   {
             .style('padding', '6px 10px')
             .style('border', '1px solid #d1d5db')
             .style('border-radius', '8px')
-            .style('background', d => d === "Province" ? '#e0f2fe' : '#f4f4f5')
+            .style('background', d => d === "Completions vs Population Change" ? '#e0f2fe' : '#f4f4f5')
             .style('color', '#1f2937')
             .style('font-weight', '600')
             .style('min-height', '32px')
@@ -306,15 +306,21 @@ class ConstructionVisualization   {
                 familyButtons
                     .style('background', btn => btn === d ? '#e0f2fe' : '#f4f4f5')
                     .style('border-color', btn => btn === d ? '#60a5fa' : '#d1d5db');
-                if (d === "Province")   {   
-                    vis.sort = "province"
-                }   else if (d === 'Housing Completions')   {
+
+                if (d === "Completions vs Population Change")   {
+                    vis.ratioMode = false;
                     vis.sort = "completions"
-                }   else if (d === 'Population')    {
-                    vis.sort = "popChange"
+
+                    vis.constructionText.text("Housing Completions by Province")
+                    vis.populationText.text("Population Increase by Province")
                 }   else    {
+                    vis.ratioMode = true;
                     vis.sort = "ratio"
+
+                    vis.constructionText.text("1 Completion")
+                    vis.populationText.text("People per Completion")
                 }
+
                 vis.wrangleData();
             });
 
@@ -322,8 +328,15 @@ class ConstructionVisualization   {
         vis.constructionScale = d3.scaleLinear()
             .range([vis.width / 2 - 100, 0]);
 
+        vis.completionRatioScale = d3.scaleLinear()
+            .range([vis.width / 2 - 100, 0])
+            .domain([1, 0])
+
         vis.popScale = d3.scaleLinear()
             .range([0, vis.width / 2 - 100]);
+        
+        vis.popRatioScale = d3.scaleLinear()
+            .range([0, vis.width / 2 - 100])
 
         vis.yScale = d3.scaleBand()
             .domain(vis.allProvinces)
@@ -333,9 +346,16 @@ class ConstructionVisualization   {
             .tickFormat(d3.format('d'))
             .ticks(10)
 
+        vis.completionRatioAxis = d3.axisTop(vis.completionRatioScale)
+            .tickFormat(d3.format('d'))
+            .ticks(0)
+
         vis.popAxis = d3.axisTop(vis.popScale)
             .tickFormat(d3.format('d'))
             .ticks(10)
+
+        vis.popRatioAxis = d3.axisTop(vis.popRatioScale)
+            .tickFormat(d3.format('d'))
         
         vis.yAxis = d3.axisLeft(vis.yScale)
 
@@ -377,7 +397,7 @@ class ConstructionVisualization   {
             .style('font-weight', 'bold')
             //.text('Completed Housing Units per New Person');
 
-        vis.svg.append('text')
+        vis.constructionText = vis.svg.append('text')
             .attr('class', 'chart-title')
             .attr('x', vis.width / 4)
             .attr('y', -30)
@@ -386,7 +406,7 @@ class ConstructionVisualization   {
             .style('font-weight', 'bold')
             .text('Housing Completions by Province');
 
-        vis.svg.append('text')
+        vis.populationText = vis.svg.append('text')
             .attr('class', 'chart-title')
             .attr('x', vis.width / 4 * 3 + 100)
             .attr('y', -30)
@@ -426,11 +446,18 @@ class ConstructionVisualization   {
         const maxPopChange = d3.max(vis.ratioData, d => d.popChange);
         vis.constructionScale.domain([0, maxPopChange]);
         vis.popScale.domain([0, maxPopChange]);
+        vis.popRatioScale.domain([0, d3.max(vis.displayData, d => d.peoplePerUnit)])
         let currentProvinces = vis.displayData.map(d => d.province);
         vis.yScale.domain(currentProvinces)
 
+
         vis.constructionGroup = vis.svg.selectAll(".construction-rect")
            .data(vis.displayData)
+
+        vis.popRatioAxis.ticks(vis.popRatioScale.domain()[1])
+
+        vis.currConstructionAxis = (vis.ratioMode) ? vis.completionRatioAxis : vis.constructionAxis;
+        vis.currPopAxis = (vis.ratioMode) ? vis.popRatioAxis : vis.popAxis;
 
         vis.constructionGroup.enter().append("rect")
                                      .attr("class", "construction-rect")
@@ -485,7 +512,7 @@ class ConstructionVisualization   {
                                         return centerLine - barLength;
                                         })
                                      .attr("y", d => vis.yScale(d.province) + 5) 
-                                     .attr("width", d => vis.popScale(d.completions)) 
+                                     .attr("width", d => vis.popScale(d.completions) * (vis.ratioMode === false)) 
                                      .attr("height", vis.yScale.bandwidth() - 4) 
                                      .attr("fill", "steelblue");
 
@@ -543,9 +570,10 @@ class ConstructionVisualization   {
             .duration(350) 
             .attr("x", vis.width / 2 + 150) // Start position to the right of the Y-Axis labels
             .attr("y", d => vis.yScale(d.province) + 5)
-            .attr("width", d => vis.popScale(d.popChange)) // Width is simply the scaled value
+            .attr("width", d => (vis.ratioMode) ? vis.popRatioScale(d.peoplePerUnit) :  vis.popScale(d.popChange)) // Width is simply the scaled value
             .attr("height", vis.yScale.bandwidth() - 4)
-            .attr("fill", "salmon");
+            .attr("fill", "salmon")
+            .attr("opacity", 1 - 0.75 * vis.ratioMode);
             
         // Exit
         vis.popGroup.exit().remove();
@@ -586,11 +614,11 @@ class ConstructionVisualization   {
                 .attr("x", d => {
                     const barLength = vis.popScale(d.completions);
                     const centerLine = vis.width / 2 - 50;
-                    return centerLine - barLength;
+                    return centerLine;
                 })
                 .attr("y", 5) // Center vertically within the band
                 .style("text-anchor", "end")
-                .style("font-size", "18px")
+                .style("font-size", 18 * vis.ratioMode + "px")
                 .style("font-weight", "bold")
                 .text("🏠")
                 .attr("fill", "#059669")
@@ -606,10 +634,10 @@ class ConstructionVisualization   {
             for (let i = 0; i < figuresToDisplay; i++) {
                 group.append("text")
                     .attr("class", "ratio-element stick-figure")
-                    .attr("x", d => vis.width / 2 + 150 + (i * spacing) + 5)
+                    .attr("x", d => vis.width / 2 + 145 + vis.popRatioScale(i))
                     .attr("y", 5)
                     .style("text-anchor", "start")
-                    .style("font-size", "18px")
+                    .style("font-size", 18 * vis.ratioMode + "px")
                     .style("font-weight", "bold")
                     .text("🧍")
                     .attr("fill", "#dc2626")
@@ -617,8 +645,8 @@ class ConstructionVisualization   {
             }
         });
 
-        vis.svg.select(".x-axis1").call(vis.constructionAxis);
-        vis.svg.select(".x-axis2").call(vis.popAxis);
+        vis.svg.select(".x-axis1").call(vis.currConstructionAxis);
+        vis.svg.select(".x-axis2").call(vis.currPopAxis);
 
         const t = vis.svg.select(".y-axis").transition().duration(750);
         t.call(vis.yAxis)
