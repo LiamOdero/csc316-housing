@@ -607,15 +607,41 @@ input[type="range"]::-moz-range-track {
 .info-card:last-child { border-right: none; }
 .info-card:hover { background: #f8f9fa; }
 
-/* =========================
-   Data Table
-   ========================= */
-.data-table-section { 
-    padding: 20px 30px; 
+/* data table (visualization summary) styling */
+.data-table-section {
+    max-width: 1100px;
+    margin: 28px auto 20px;
+    padding: 28px 40px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.88) 100%);
+    border-radius: 14px;
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow: 0 8px 28px rgba(15,23,42,0.06), 0 1.5px 4px rgba(15,23,42,0.04);
+    text-align: center;
 }
 .data-table-section p {
-    line-height: 1.4;
-    font-size: 0.9rem;
+    line-height: 1.75;
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+.data-table-section p + p {
+    margin-top: 20px;
+}
+
+/* Emphasis utilities inside summary sections */
+.data-table-section strong,
+.data-table-section .highlight {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+.data-table-section .stat {
+    display: inline;
+    background: transparent;
+    color: inherit;
+    font-weight: 700;
+    padding: 0;
+    border-radius: 0;
+    margin: 0 2px;
 }
 .surge-text {
     font-size: 12rem;
@@ -2224,6 +2250,7 @@ footer {
 mark {
   background-color: #fff2ac;
 }
+
 
 .caption {
     font-size: 1em;
