@@ -4,6 +4,7 @@
 let currTabNum = 0
 let pageCount = 1;
 let popChart;
+let constructionChart;
 let cleanedPopData;
 let incomeRentData;
 let incomeVisData;
@@ -21,15 +22,13 @@ function loadData() {
             initVacancyVis(data);
             initControl()
 
-            Promise.all([
-                d3.csv("data/jeff/rent-prices.csv").then(rows => rows.map(row => mapRowBySchema(row, RENT_DATA_MAP))),
-                d3.csv("data/jeff/income-data.csv").then(rows => reshapeIncomeData(rows))
-            ]).then(([rawRentData, rawIncomeData]) => {
-                incomeRentData = rawRentData;
-                incomeVisData = rawIncomeData;
-            }).catch(error => {
-                console.error("Failed to load income/rent datasets", error);
-            });
+        Promise.all([
+            d3.csv('data/construction/housing_completions_dwelling_type_by_province_2013-2023.csv'),
+            d3.text('data/construction/canadian-population.csv')
+        ]).then(([housingData, populationText]) => {
+            constructionChart = new ConstructionVisualization(housingData, populationText)
+        })
+
         }).catch(error => {
             console.error('Error loading data:', error);
             document.getElementById('buildings-container').innerHTML =
@@ -246,7 +245,7 @@ function changePage(page)   {
     }   else if (currTabNum == 4)   {
         popChart.destructVis();
     }   else if (currTabNum == 6)   {
-        // Destruct construction vis if needed
+        constructionChart.destructVis();
     }
 
     currTabNum = page;
@@ -262,7 +261,7 @@ function changePage(page)   {
     }   else if (page == 4)  {
         popChart.initVis();
     }   else if (page == 6)  {
-        initConstructionVisualization();
+        constructionChart.initVis();
     }   
 
         pageCount += 1;
