@@ -4,7 +4,6 @@ class ConstructionVisualization   {
         this.prepData(housingData, populationText)
         this.container = d3.select('#construction-visualization');
         this.currYear = 2023;
-        console.log(this.ratioData)
     }
 
     prepData(housingData, populationText)  {
@@ -63,7 +62,6 @@ class ConstructionVisualization   {
                 }
             }
         });
-
         // Housing data is already aggregated by province in the new CSV
         const housingByProvince = d3.rollup(
             housingData.filter(d => {
@@ -79,7 +77,7 @@ class ConstructionVisualization   {
         // Check what data exists for a specific year
         const year2014Data = housingByProvince.get('2014');
             this.ratioData = [];
-
+            console.log(populationData)
             this.allProvinces.forEach(province => {
                 this.years.forEach((year, idx) => {
                     if (idx === 0) return;
@@ -99,7 +97,8 @@ class ConstructionVisualization   {
                             province: province,
                             ratio: ratio,
                             completions: completions,
-                            popChange: popChange
+                            popChange: popChange,
+                            peoplePerUnit: Math.round(popChange / completions)
                         });
                     } else if (idx === 1 && province === this.allProvinces[0]) {
                         // skip empty points
@@ -412,7 +411,12 @@ class ConstructionVisualization   {
         })
 
         this.displayData.sort((a, b) =>   {
-            return a[vis.sort] - b[vis.sort];
+            if (vis.sort === "ratio")   {
+                return a[vis.sort] - b[vis.sort];
+            }   else    {
+                return b[vis.sort] - a[vis.sort];
+            }
+            
         })
         this.updateVis();
     }
@@ -422,7 +426,6 @@ class ConstructionVisualization   {
         const maxPopChange = d3.max(vis.ratioData, d => d.popChange);
         vis.constructionScale.domain([0, maxPopChange]);
         vis.popScale.domain([0, maxPopChange]);
-
         let currentProvinces = vis.displayData.map(d => d.province);
         vis.yScale.domain(currentProvinces)
 
@@ -448,7 +451,7 @@ class ConstructionVisualization   {
                                                     <strong>${d.province}</strong><br/>
                                                     Completions: ${d.completions.toLocaleString()}<br/>
                                                     Pop. Change: ${d.popChange.toLocaleString()}<br/>
-                                                    Completion : Population Ratio: ${d.ratio.toLocaleString()}
+                                                    Completion : Population Ratio: ${1 + " : " + Math.round(1 / d.ratio)}
                                                 `);
                                         }
 
@@ -511,7 +514,7 @@ class ConstructionVisualization   {
                         <strong>${d.province}</strong><br/>
                         Completions: ${d.completions.toLocaleString()}<br/>
                         Pop. Change: ${d.popChange.toLocaleString()}<br/>
-                        Completion : Population Ratio: ${d.ratio.toLocaleString()}
+                        Completion : Population Ratio: ${1 + " : " + Math.round(1 / d.ratio)}
                     `);
                 }
 
@@ -546,6 +549,73 @@ class ConstructionVisualization   {
             
         // Exit
         vis.popGroup.exit().remove();
+
+    const centerLineX = vis.width / 2 + 105; // Center X position where Y-axis labels sit
+
+        const ratioGroup = vis.svg.selectAll(".ratio-group")
+            .data(vis.displayData, d => d.province);
+
+        // Exit
+        ratioGroup.exit()
+            .transition().duration(350).attr("opacity", 0).remove();
+
+        // Enter
+        const ratioGroupEnter = ratioGroup.enter().append("g")
+            .attr("class", "ratio-group")
+            .attr("opacity", 0); 
+
+        // Merge and Transition
+        const ratioGroupUpdate = ratioGroupEnter.merge(ratioGroup)
+            .transition()
+            .duration(350)
+            .attr("transform", d => `translate(0, ${vis.yScale(d.province) + vis.yScale.bandwidth() / 2})`)
+            .attr("opacity", 1); 
+
+        // Remove old ratio elements before re-adding, ensuring clean update
+        ratioGroupUpdate.each(function() {
+            d3.select(this).selectAll(".ratio-element").remove();
+        });
+
+        // Re-add ratio elements
+        ratioGroupUpdate.each(function(d) {
+            const group = d3.select(this);
+            
+            // --- A. House Icon (Left Side of Ratio) ---
+            group.append("text")
+                .attr("class", "ratio-element house-icon")
+                .attr("x", d => {
+                    const barLength = vis.popScale(d.completions);
+                    const centerLine = vis.width / 2 - 50;
+                    return centerLine - barLength;
+                })
+                .attr("y", 5) // Center vertically within the band
+                .style("text-anchor", "end")
+                .style("font-size", "18px")
+                .style("font-weight", "bold")
+                .text("🏠")
+                .attr("fill", "#059669")
+                .style("pointer-events", "none"); 
+
+            // --- B. Stick Figures (Right Side of Ratio) ---
+            const peoplePerUnit = Math.ceil(d.peoplePerUnit);
+            const startX = vis.width / 2 + 105; // Start position slightly right of center line
+            const spacing = 16; // Horizontal spacing between figures
+            const maxDisplayedFigures = 30; // Limit the number of icons shown for clarity
+            const figuresToDisplay = Math.min(peoplePerUnit, maxDisplayedFigures);
+
+            for (let i = 0; i < figuresToDisplay; i++) {
+                group.append("text")
+                    .attr("class", "ratio-element stick-figure")
+                    .attr("x", d => vis.width / 2 + 150 + (i * spacing) + 5)
+                    .attr("y", 5)
+                    .style("text-anchor", "start")
+                    .style("font-size", "18px")
+                    .style("font-weight", "bold")
+                    .text("🧍")
+                    .attr("fill", "#dc2626")
+                    .style("pointer-events", "none");
+            }
+        });
 
         vis.svg.select(".x-axis1").call(vis.constructionAxis);
         vis.svg.select(".x-axis2").call(vis.popAxis);
