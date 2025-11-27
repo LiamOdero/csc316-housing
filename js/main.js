@@ -163,9 +163,25 @@ function initCornerDrag() {
             // Wait for animation, then change page
             setTimeout(() => {
                 if (isRightCorner) {
-                    changePage(currTabNum + 1);
+                    if (currTabNum == 2)  {
+                        changePage(4)
+                    }   else if (currTabNum == 6) {
+                        changePage(3)
+                    }   else if (currTabNum == 3) {
+                        changePage(7)
+                    }   else    {
+                        changePage(currTabNum + 1)
+                    }
                 } else {
-                    changePage(currTabNum - 1);
+                    if (currTabNum == 4)  {
+                        changePage(2)
+                    }   else if (currTabNum == 7) {
+                        changePage(3)
+                    }   else if (currTabNum == 3) {
+                        changePage(6)
+                    }   else    {
+                        changePage(currTabNum - 1, currTabNum)
+                    }
                 }
                 // Reset transform after page change
                 folderPage.style.transition = 'none';
@@ -214,10 +230,27 @@ function changePage(page)   {
         rightBend.style("display", "block")
     }
     leftBend.on("click", function() {
-        changePage(page - 1, page)
+        if (page == 4)  {
+            changePage(2)
+        }   else if (page == 7) {
+            changePage(3)
+        }   else if (page == 3) {
+            changePage(6)
+        }   else    {
+            changePage(page - 1, page)
+        }
+        
     })
     rightBend.on("click", function() {
-        changePage(page + 1, page)
+        if (page == 2)  {
+            changePage(4)
+        }   else if (page == 6) {
+            changePage(3)
+        }   else if (page == 3) {
+            changePage(7)
+        }   else    {
+            changePage(page + 1, page)
+        }
     })
 
 
