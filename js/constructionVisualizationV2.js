@@ -371,21 +371,17 @@ class ConstructionVisualization   {
             .selectAll('text')
             .style('font-size', '12px');
 
-        vis.svg.append('g')
-            .attr('class', 'y-axis')
-            .attr('transform', `translate(${vis.width / 2 + 105},0)`)
-            .attr('stroke', 'none')
-            .selectAll('text')
-            .style('font-size', '12px')
+        vis.yAxisGroup = vis.svg.append('g')
+                    .attr('class', 'y-axis')
+                    .attr('transform', `translate(${vis.width / 2 + 60},0)`)
+                    .call(vis.yAxis); // <-- Call axis generator here
+                    
+                vis.yAxisGroup.select('.domain').attr('stroke', 'none');
+                vis.yAxisGroup.selectAll('.tick line').attr('stroke', 'none');
 
-        vis.svg.append('text')
-            .attr('class', 'x-axis-label')
-            .attr('x', vis.width / 2)
-            .attr('y', vis.height + 45)
-            .attr('text-anchor', 'middle')
-            .style('font-size', '14px')
-            .style('font-weight', 'bold')
-            //.text('Year');
+        vis.yAxisGroup.selectAll('text')
+            .style('font-size', '20px')
+            .attr("text-anchor", "middle")
 
         vis.svg.append('text')
             .attr('class', 'y-axis-label')
@@ -395,7 +391,6 @@ class ConstructionVisualization   {
             .attr('text-anchor', 'middle')
             .style('font-size', '14px')
             .style('font-weight', 'bold')
-            //.text('Completed Housing Units per New Person');
 
         vis.constructionText = vis.svg.append('text')
             .attr('class', 'chart-title')
@@ -422,6 +417,7 @@ class ConstructionVisualization   {
         let vis = this;
         d3.select("#construction-visualization").selectAll("*").remove();
         vis.stopPlayback();
+        vis.ratioMode = false;
     }
 
     wrangleData()   {
@@ -578,7 +574,7 @@ class ConstructionVisualization   {
         // Exit
         vis.popGroup.exit().remove();
 
-    const centerLineX = vis.width / 2 + 105; // Center X position where Y-axis labels sit
+    const centerLineX = vis.width / 2 + 105; // Center X position where Y-axis labels siattr('stroke', 'none');
 
         const ratioGroup = vis.svg.selectAll(".ratio-group")
             .data(vis.displayData, d => d.province);
@@ -658,5 +654,8 @@ class ConstructionVisualization   {
         vis.svg.select(".y-axis")
                 .selectAll('.tick line') // Selects the small lines that make up the ticks
                 .attr('stroke', 'none');
+        vis.yAxisGroup.selectAll('text')
+            .style('font-size', '14px')
+            .attr("text-anchor", "middle")
     }
 }

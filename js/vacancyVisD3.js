@@ -935,7 +935,7 @@
         this.updateInfoPanelList([]);
         return;
       }
-
+      
       const baseVisuals = cities.map((city) => {
         const {
           cityData,
