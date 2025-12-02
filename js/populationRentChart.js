@@ -541,9 +541,6 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
                         .attr("stroke-width", 1.5)
                         .style("opacity", 0)
 
-                    g.transition()
-                        .duration(350)
-
                     // Hover events
                     g.on("mouseover", function(event, d) {
                         d3.select(this)
@@ -611,8 +608,6 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
                     return update;
                 },
                 exit => exit
-                            .transition()
-                            .duration(350) 
                             .remove() 
                             );
             vis.svg.select(".x-axis")
