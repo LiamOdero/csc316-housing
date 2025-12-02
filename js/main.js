@@ -72,148 +72,6 @@ function initControl()  {
     rightBend.on("click", function() {
         changePage(1, 0)
     })
-    
-    // Initialize drag-to-flip functionality
-    initCornerDrag();
-}
-
-function initCornerDrag() {
-    const rightCorner = document.getElementById('right-bend');
-    const leftCorner = document.getElementById('left-bend');
-    const folderPage = document.getElementById('folder-page');
-    
-    let isDragging = false;
-    let startX = 0;
-    let startY = 0;
-    let dragDistance = 0;
-    let currentCorner = null;
-    const dragThreshold = 100; // pixels to drag before flipping
-    
-    function handleDragStart(e, corner, direction) {
-        isDragging = true;
-        currentCorner = corner;
-        const touch = e.touches ? e.touches[0] : e;
-        startX = touch.clientX;
-        startY = touch.clientY;
-        dragDistance = 0;
-        
-        corner.style.cursor = 'grabbing';
-        corner.style.transition = 'none';
-        folderPage.style.transition = 'none';
-        
-        e.preventDefault();
-    }
-    
-    function handleDragMove(e) {
-        if (!isDragging || !currentCorner) return;
-        
-        const touch = e.touches ? e.touches[0] : e;
-        const deltaX = touch.clientX - startX;
-        const deltaY = touch.clientY - startY;
-        
-        // Determine if it's right or left corner
-        const isRightCorner = currentCorner.id === 'right-bend';
-        
-        // Only allow dragging in the correct direction
-        if (isRightCorner && deltaX < 0) {
-            dragDistance = Math.abs(deltaX);
-        } else if (!isRightCorner && deltaX > 0) {
-            dragDistance = Math.abs(deltaX);
-        } else {
-            dragDistance = 0;
-        }
-        
-        // Visual feedback - scale up the corner as you drag
-        const scale = 1 + (dragDistance / dragThreshold) * 0.5;
-        const clampedScale = Math.min(scale, 1.5);
-        currentCorner.style.transform = `scale(${clampedScale})`;
-        
-        // Add page curl effect
-        const curlAmount = Math.min(dragDistance / 2, 100);
-        if (isRightCorner) {
-            folderPage.style.transform = `perspective(2000px) rotateY(-${curlAmount * 0.1}deg)`;
-        } else {
-            folderPage.style.transform = `perspective(2000px) rotateY(${curlAmount * 0.1}deg)`;
-        }
-        
-        e.preventDefault();
-    }
-    
-    function handleDragEnd(e) {
-        if (!isDragging || !currentCorner) return;
-        
-        const isRightCorner = currentCorner.id === 'right-bend';
-        
-        // Reset visual state with animation
-        currentCorner.style.transition = 'transform 0.3s ease';
-        currentCorner.style.transform = 'scale(1)';
-        currentCorner.style.cursor = 'pointer';
-        
-        folderPage.style.transition = 'transform 0.5s ease';
-        
-        // If dragged far enough, flip the page
-        if (dragDistance >= dragThreshold) {
-            // Add flipping class to fade out content
-            folderPage.classList.add('flipping');
-            
-            // Add flip animation
-            const flipDirection = isRightCorner ? -180 : 180;
-            folderPage.style.transform = `perspective(2000px) rotateY(${flipDirection}deg)`;
-            
-            // Wait for animation, then change page
-            setTimeout(() => {
-                if (isRightCorner) {
-                    if (currTabNum == 2)  {
-                        changePage(4)
-                    }   else if (currTabNum == 6) {
-                        changePage(3)
-                    }   else if (currTabNum == 3) {
-                        changePage(7)
-                    }   else    {
-                        changePage(currTabNum + 1)
-                    }
-                } else {
-                    if (currTabNum == 4)  {
-                        changePage(2)
-                    }   else if (currTabNum == 7) {
-                        changePage(3)
-                    }   else if (currTabNum == 3) {
-                        changePage(6)
-                    }   else    {
-                        changePage(currTabNum - 1, currTabNum)
-                    }
-                }
-                // Reset transform after page change
-                folderPage.style.transition = 'none';
-                folderPage.style.transform = 'perspective(2000px) rotateY(0deg)';
-                folderPage.classList.remove('flipping');
-                setTimeout(() => {
-                    folderPage.style.transition = 'transform 0.5s ease';
-                }, 50);
-            }, 300);
-        } else {
-            // Reset if not dragged far enough
-            folderPage.style.transform = 'perspective(2000px) rotateY(0deg)';
-        }
-        
-        isDragging = false;
-        currentCorner = null;
-        dragDistance = 0;
-        
-        e.preventDefault();
-    }
-    
-    // Mouse events
-    rightCorner.addEventListener('mousedown', (e) => handleDragStart(e, rightCorner, 'next'));
-    leftCorner.addEventListener('mousedown', (e) => handleDragStart(e, leftCorner, 'prev'));
-    document.addEventListener('mousemove', handleDragMove);
-    document.addEventListener('mouseup', handleDragEnd);
-    
-    // Touch events for mobile
-    rightCorner.addEventListener('touchstart', (e) => handleDragStart(e, rightCorner, 'next'));
-    leftCorner.addEventListener('touchstart', (e) => handleDragStart(e, leftCorner, 'prev'));
-    document.addEventListener('touchmove', handleDragMove, { passive: false });
-    document.addEventListener('touchend', handleDragEnd);
 }
 
 function changePage(page)   {
@@ -266,6 +124,7 @@ function changePage(page)   {
     let newVis = d3.select('[data-content="vis' + page + '"]');
     newVis.attr("class", "content active")
 
+    if (currTabNum != page) {
     if (currTabNum == 1)    {
         // Cleanup mortgage visualization
         if (typeof destructMortgageVisualization !== 'undefined') {
@@ -281,29 +140,29 @@ function changePage(page)   {
         constructionChart.destructVis();
     }
 
-    currTabNum = page;
-    if (page == 1)  {
-        // Initialize mortgage visualization (vis1)
-        if (typeof initMortgageVisualization !== 'undefined') {
-            initMortgageVisualization();
-        }
-    }   else if (page == 3)  {
-        if (typeof initIncomeVisV2 !== 'undefined') {
-            initIncomeVisV2(incomeRentData, incomeVisData);
-        }
-    }   else if (page == 4)  {
-        popChart.initVis();
-    }   else if (page == 6)  {
-        constructionChart.initVis();
-    }   
+        currTabNum = page;
+        if (page == 1)  {
+            // Initialize mortgage visualization (vis1)
+            if (typeof initMortgageVisualization !== 'undefined') {
+                initMortgageVisualization();
+            }
+        }   else if (page == 3)  {
+            if (typeof initIncomeVisV2 !== 'undefined') {
+                initIncomeVisV2(incomeRentData, incomeVisData);
+            }
+        }   else if (page == 4)  {
+            popChart.initVis();
+        }   else if (page == 6)  {
+            constructionChart.initVis();
+        }   
 
-        pageCount += 1;
-        if (pageCount < 8)  {
-            let nextTab = d3.select('[data-target="vis' + pageCount + '"]');
-            nextTab.style("display", "block")
+            pageCount += 1;
+            if (pageCount < 8)  {
+                let nextTab = d3.select('[data-target="vis' + pageCount + '"]');
+                nextTab.style("display", "block")
+            }
         }
     }
-
 
 // Initialize the housing units map visualization
 initCityMap();
