@@ -76,11 +76,8 @@
                                 <h1>How Quickly Have Mortgage Rates Increased?</h1>
                                 <p>Mortgage prices have <strong>skyrocketed since 2020</strong>, with the pandemic triggering an
                                 unprecedented surge in housing costs.
-                                While there has been a slight cooling off since 2024, the damage is done: the average
-                                Canadian income of approximately
-                                <span class="stat">$60,000–$70,000/year</span> now makes housing unaffordable across most of Canada. What
-                                would have been comfortably affordable
-                                in 2012 is now out of reach for the majority of working Canadians. In many provinces,
+                                The average Canadian income of approximately
+                                <span class="stat">$60,000–$70,000/year</span> is now insufficient across most of Canada. In many provinces,
                                 even households earning significantly
                                     above the national average are spending <span class="stat">40–50%+ of their income</span> on mortgage
                                 payments—well beyond the <span class="stat">30% affordability threshold</span>.
@@ -180,32 +177,31 @@
                 <!-- Visualization 2: Canadian Rental Price Explorer -->
                 <header>
                     <h1>How Quickly Has Rent Increased?</h1>
+                    <p>The rental market hasn't fared any better, with rent in many cities only steadily decreasing
+                        in the 2010's to
+                        <strong>noticeably climbing across unit types</strong> in the past five years. Thus we begin to explore: <em>what
+                        factors have led to
+                        the current housing crisis?</em>
+                    </p>
                 </header>
                 <div class="row justify-content-center g-5" id="vis2">
 
                     <div id="map" style="min-height: 700px;"></div>
 
-                    <div class="data-table-section">
-                        <p>The rental market hasn't fared any better, with rent in many cities only steadily decreasing
-                            in the 2010's to
-                            <strong>noticeably climbing across unit types</strong> in the past five years. Thus we begin to explore: <em>what
-                            factors have led to
-                            the current housing crisis?</em>
-                        </p>
-                    </div>
                 </div>
+                <footer>
+                    <a href="https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=3410013301">
+                        Rent Data Source: Statistics Canada</a>
+                </footer>
             </div>
 
             <div id="visualization-area-3" class="content" data-content="vis3">
                 <h1 class = "text-center">How has the share of income spent on rent changed in the last 20 years?</h1>
                 <div class="row justify-content-center g-5" id="vis3">
                     <p class="caption">
-                        In Canadian cities, the price of rent has gone up significantly over the past two decades. 
-                        For families, this is still manageable, but for single individuals, rent has increased to the point 
-                        where it now consumes a large portion of their income. 
-                        The average Canadian single would be spending 43% of their income on rent in 2023 
-                        as opposed to only 36.5% in 2000. This is even worse in larger cities such as Toronto and Vancouver, 
-                        where <b>in 2023, the average single Torontonian/Vancouverite would be spending over 60% of their income on rent.</b> 
+                        In Canadian cities, the price of rent has gone up significantly over the past two decades, with income struggling to keep up. 
+                        <strong>The average single Canadian was spending 43% of their income on rent in 2023 
+                        as opposed to only 36.5% in 2000</strong>.
                         In fact, we can see that even the share of income spent on rent for the family type with the most income - dual parent families - is steadily increaing in the Post -COVID era,
                          <b>indicating that rent increases are outpacing income increases across the board.</b>
 
@@ -218,6 +214,11 @@
                     </div>
                     
                 </div>
+                <footer>
+                    <a href="https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=3410013301">
+                        Rent Data Source: Statistics Canada</a> <br>
+                    <a href="https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1110000901">Income Data Source: Statistics Canada</a>
+                </footer>
             </div>
 
             <div id="visualization-area-5" class="content" data-content="vis4">
@@ -228,7 +229,7 @@
                             <p>Overall, most years and locations in which there is a high percentage increase in rent also see a corresponding increase 
                                 in population. There are of course exceptions, such as PEI in 2023 which saw a mere 0.93% increase in average rent despite 
                                 a 4.52% increase in population, or Ontario in 2022 which saw a 7% increase in average rent with only a 0.27% increase in population. 
-                                However, positive correlation between population and average rent increases suggests that supply is struggling to keep up with demand,
+                                However, <strong>positive correlation between population and average rent increases suggests that supply is struggling to keep up with demand</strong>,
                                 driving up prices. 
                             </p>
                     </header>
@@ -303,13 +304,20 @@
                         </div>
                     </div>
                 </div>
+                <footer>
+                    <a href="https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1710000501&pickMembers%5B0%5D=1.7&pickMembers%5B1%5D=2.1&cubeTimeFrame.startYear=2012&cubeTimeFrame.endYear=2025&referencePeriods=20120101%2C20250101">
+                        Population Data Source: Statistics Canada</a> <br>
+                    <a href="https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=3410013301">
+                        Rent Data Source: Statistics Canada</a>
+                </footer>
             </div>
 
             <div id="visualization-area-4" class="content" data-content="vis5">
                 <header>
                     <h1>How Tight Are Vacancy Rates in Major Cities?</h1>
-                    <p class="subtitle">
-                        Each building represents a major Canadian city. Windows show the estimated number of vacant homes (based on the selected year's housing supply × vacancy rate), with gray windows stacked from the bottom up; the size of each window auto-scales to fill the 5×20 grid.</p>
+                    <p> Looking at the vacancy rates of major cities, it can be seen that the cities have low vacancy rates, which when combined with the knowledge 
+                        that population has been exploding over the past few years suggests even further that <strong>supply has not been able to keep up with demand</strong>.
+                    </p>
                 </header>
                 <div class="row justify-content-center g-5" id="vis5">
 
@@ -354,6 +362,12 @@
                         </div>
                     </div>
                 </div>
+                <footer>
+                    <a href="https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1710000501&pickMembers%5B0%5D=1.7&pickMembers%5B1%5D=2.1&cubeTimeFrame.startYear=2012&cubeTimeFrame.endYear=2025&referencePeriods=20120101%2C20250101">
+                        Population Data Source: Statistics Canada</a> <br>
+                    <a href="https://www150.statcan.gc.ca/n1/en/type/data?text=vacancy&subject_levels=46">
+                        Vacancy Data Source: Statistics Canada</a>
+                </footer>
             </div>
 
             <div id="visualization-area-6" class="content" data-content="vis6">
@@ -361,7 +375,8 @@
                     <h1>Does Housing Construction Keep Up With Population Growth?</h1>
                             <p>At the root of housing issues lies the rate of construction of housing units across Canada. 
                             In comparison to the sharp increase in population that Canada has seen in the past five years, 
-                            <strong>housing completions have remained stagnant</strong> leading to overhwhelming demand over supply.<br><br>
+                            <strong>housing completions have remained stagnant</strong> leading to overhwhelming demand over supply. This is reflected 
+                            in the ratio between new people and new homes, seen with Alberta in 2023 having <strong>1 new home for every 21 new people</strong>.<br><br>
                         </p>
                 </header>
                 <div class="row justify-content-center g-5">
@@ -369,6 +384,13 @@
                         <div id="construction-visualization" style="width: 100%; height: 80vh; min-height: 700px; border: thin solid transparent;"></div>
                     </div>
                 </div>
+
+                <footer>
+                    <a href="https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1710000501&pickMembers%5B0%5D=1.7&pickMembers%5B1%5D=2.1&cubeTimeFrame.startYear=2012&cubeTimeFrame.endYear=2025&referencePeriods=20120101%2C20250101">
+                        Population Data Source: Statistics Canada</a> <br>
+                    <a href="https://www.cmhc-schl.gc.ca/professionals/housing-markets-data-and-research/housing-data/data-tables/housing-market-data/monthly-housing-starts-construction-data-tables">
+                        Construction Data Source: CMHC</a>
+                </footer>
             </div>
 
             <div id="visualization-area-7" class="content" data-content="vis7">
