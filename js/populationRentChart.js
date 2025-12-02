@@ -38,7 +38,7 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
         this.cityFilter[e.province].push(e.city)
     });
 
-    this.cityVis = ["Toronto", "Ottowa", "Victoria", "Vancouver", "Edmonton", "Winnipeg", "Fredericton", "St. John's", "Halifax", "Charlottetown", "Regina", "Québec", "Montéal"]
+    this.cityVis = ["Toronto", "Ottowa", "Victoria", "Vancouver", "Edmonton", "Winnipeg", "Fredericton", "St. John's", "Halifax", "Charlottetown", "Regina", "Québec", "Montéal", "Moncton"]
 
     // Inverse mapping of cities to provinces
     this.cityProvinceMap = {}
@@ -436,7 +436,7 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
         vis.legendArea.selectAll("*").remove();
 
         // Calculate total height dynamically
-        const totalHeight = padding * 1.5 + numRows * rowHeight;
+        const totalHeight = padding + numRows * rowHeight;
 
         // Append SVG
         const svg = vis.legendArea.append("svg")
@@ -504,7 +504,7 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
                         .attr("width", bw)
                         .attr("height", bh)
                         .style("fill", "none")
-                        .style("stroke", "#555")
+                        .style("stroke", "black")
                         .style("stroke-width", 1);
 
                     // Population triangle
@@ -531,11 +531,15 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
                         .attr("stroke-width", 1.5)
                         .style("opacity", 0)
 
+                    g.transition()
+                        .duration(350)
+                        .attr("opacity", 1);
+
                     // Hover events
                     g.on("mouseover", function(event, d) {
-                        d3.select(this).select("rect")
+                        d3.select(this)
                             .style("stroke", "black")
-                            .style("stroke-width", 2);
+                            .style("stroke-width", 1);
 
                         d3.select(this).select(".diag")
                             .style("opacity", 1);
@@ -555,9 +559,8 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
                             .style("top", (event.pageY + 10) + "px");
                     })
                     .on("mouseleave", function() {
-                        d3.select(this).select("rect")
-                            .style("stroke", "#555")
-                            .style("stroke-width", 1);
+                        d3.select(this)
+                            .style("stroke-width", 0);
 
                         d3.select(this).select(".diag")
                             .style("opacity", 0);
@@ -574,7 +577,7 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
 
                     update
                     .transition()
-                        .attr("transform", d => `translate(${vis.x(d.year)}, ${vis.y(d.category)})`);
+                    .attr("transform", d => `translate(${vis.x(d.year)}, ${vis.y(d.category)})`);
 
                     update.select("rect")
                         .transition()
@@ -598,11 +601,20 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
 
                     return update;
                 },
-                exit => exit.remove()
-            );
-
-        vis.svg.select(".x-axis").call(vis.xAxis);
-        vis.svg.select(".y-axis").call(vis.yAxis);
-
+                exit => exit
+                            .transition()
+                            .duration(350) 
+                            .attr("opacity", 0) 
+                            .remove() 
+                            );
+            vis.svg.select(".x-axis")
+                .transition()
+                .duration(350)
+                .call(vis.xAxis);
+                
+            vis.svg.select(".y-axis")
+                .transition()
+                .duration(350)
+                .call(vis.yAxis);
 	}
 }
