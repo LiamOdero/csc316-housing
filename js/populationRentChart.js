@@ -73,7 +73,8 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
     this.filterParent = d3.select("#" + filterParent);
     this.highlight = d3.select("#vis5-highlight")
     this.highlight.property("value", "both")
-    vis.legendArea = d3.select("#vis5-legend");
+    this.legendArea = d3.select("#vis5-legend");
+    this.transitionLock = false;
 }
 
 	/*
@@ -133,6 +134,7 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
         const tabProvinces = document.getElementById("vis5-tab-provinces");
         // Tab switching
         tabCities.addEventListener("click", () => {
+
             tabCities.classList.add("active");
             tabProvinces.classList.remove("active");
 
@@ -149,6 +151,7 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
         });
 
         tabProvinces.addEventListener("click", () => {
+
             tabProvinces.classList.add("active");
             tabCities.classList.remove("active");
 
@@ -459,6 +462,13 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
 	updateVis(){
         let vis = this;
 
+        if (vis.transitionLock)    {
+            setTimeout(function()   {
+                vis.updateVis()
+            }, 500);
+        }
+
+        this.transitionLock = true;
         vis.x.domain([...new Set(vis.displayData.map(d => d.year))]);
         vis.y.domain(vis.displayCategories); // includes new rows
 
@@ -610,11 +620,15 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
             vis.svg.select(".x-axis")
                 .transition()
                 .duration(350)
-                .call(vis.xAxis);
+                .call(vis.xAxis)
+
                 
             vis.svg.select(".y-axis")
                 .transition()
                 .duration(350)
-                .call(vis.yAxis);
+                .call(vis.yAxis)
+                .on("end", function() {
+                    vis.transitionLock = false;
+                });
 	}
 }
