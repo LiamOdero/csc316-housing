@@ -18,7 +18,7 @@ function loadData() {
                                             "vis5-selected-cities", cleanedPopData)
 
         // Load and create the building visualization (D3/SVG version)
-        d3.json("data/BURAK_cities_data_multi_year.json").then(data => {
+        d3.json("data/BURAK_cities_data_by_unit_type.json").then(data => {
             initVacancyVisD3(data);
             initControl()
 

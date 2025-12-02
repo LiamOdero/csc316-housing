@@ -1662,24 +1662,22 @@ footer {
 
 .vacancy-wrapper {
     display: grid;
-    grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+    grid-template-columns: minmax(0, 2fr) minmax(240px, 0.7fr);
     gap: 24px;
     align-items: stretch;
     width: 100%;
-}
-
-@media (max-width: 992px) {
-    .vacancy-wrapper {
-        grid-template-columns: 1fr;
-    }
 }
 
 .vacancy-controls {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 16px;
-    margin-bottom: 16px;
+    margin-bottom: 10px;
     align-items: end;
+}
+
+.vacancy-legend-bar {
+    margin-bottom: 10px;
 }
 
 .vacancy-control label {
@@ -1712,7 +1710,8 @@ footer {
 }
 
 .vacancy-left .buildings-viewport {
-    max-height: 620px;
+    max-height: none;
+    overflow-y: visible;
 }
 
 .vacancy-info-panel {
@@ -1782,6 +1781,12 @@ footer {
 .vacancy-scale .note {
     font-size: 0.8rem;
     color: #718096;
+}
+
+@media (max-width: 900px) {
+    .vacancy-wrapper {
+        grid-template-columns: 1fr;
+    }
 }
 
 .vacancy-city-row {

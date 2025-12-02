@@ -1,9 +1,3 @@
-/*
- * vacancyVisD3.js
- * SVG/D3 rewrite of the vacancy visualization so every shape is drawn in a single SVG.
- * Usage: after loading D3, call `initVacancyVisD3(data)` instead of `initVacancyVis`.
- */
-
 (function () {
   "use strict";
 
@@ -19,11 +13,6 @@
     "P.E.I.": "Prince Edward Island",
     "Que": "Quebec",
     "Sask.": "Saskatchewan",
-  };
-
-  const DEFAULT_FILTERS = {
-    rent: "all",
-    sort: "vacancy-high",
   };
 
   // Match the city set used in incomeRentV2 (largest city per province)
@@ -43,12 +32,12 @@
 
   // Visual tuning values for the SVG layout
   const CONFIG = {
-    windowCols: 5,
+    windowCols: 10,
     windowRows: 20,
     windowSize: 16,
     windowGap: 5,
     buildingPadding: 10,
-    vacancyUnitPerWindow: 1250,
+    vacancyPercentPerWindow: 0.5,
     cardPaddingX: 18,
     cardGapX: 32,
     cardGapY: 42,
@@ -62,7 +51,7 @@
     windowBorder: "#1a202c",
     windowOccupied: "#ed8936",
     windowOccupiedAlt: "#f6ad55",
-    windowVacant: "#e2e8f0",
+    windowVacant: "#5f5244ff",
     windowPartialStroke: "#ed8936",
     labelBg: "#ffffff",
     labelText: "#1a365d",
@@ -104,7 +93,6 @@
       this.housingSupply = new Map();
       this.allCitiesData = [];
       this.selectedCities = [];
-      this.currentFilters = { ...DEFAULT_FILTERS };
       this.tooltip = null;
 
       this.svg = null;
@@ -116,6 +104,11 @@
 
       this.currentYear = 2023;
       this.supplyYearExtent = [2023, 2023];
+      this.vacancyYearExtent = [null, null];
+      this.populationYearExtent = [null, null];
+      this.populationData = new Map();
+      this.vacancyRates = new Map();
+      this.percentPerWindow = CONFIG.vacancyPercentPerWindow;
 
       this.resizeTimeout = null;
       this.handleResize = this.handleResize.bind(this);
@@ -145,23 +138,27 @@
       this.selectedCities = this.allCitiesData
         .slice()
         .sort((a, b) => b.population - a.population)
-        .slice(0, 4)
+        .slice(0, 3)
         .map((d) => d.city);
-      this.setupCitySelector();
-      this.setupFilterListeners();
       this.cacheInfoElements();
       this.setupControlPanel();
 
-      this.loadHousingSupply()
-        .catch((err) =>
-          console.error("[VacancyVisD3] Failed to load housing supply", err)
-        )
-        .finally(() =>
-          this.recomputeGlobalMax().then(() => {
-            this.setupControlPanel();
-            this.render();
-          })
-        );
+      Promise.all([
+        this.loadHousingSupply().catch((err) => {
+          console.error("[VacancyVisD3] Failed to load housing supply", err);
+        }),
+        this.loadPopulationData().catch((err) => {
+          console.error("[VacancyVisD3] Failed to load population data", err);
+        }),
+        this.loadVacancyRates().catch((err) => {
+          console.error("[VacancyVisD3] Failed to load vacancy rates", err);
+        }),
+      ])
+        .finally(() => {
+          this.syncCurrentYearFromData();
+          this.setupControlPanel();
+          this.render();
+        });
 
       window.addEventListener("resize", this.handleResize);
       return this;
@@ -193,164 +190,147 @@
             .map((e) => e.year);
           const extent = d3.extent(allYears);
           this.supplyYearExtent = extent;
-          this.currentYear = extent && Number.isFinite(extent[1]) ? extent[1] : this.currentYear;
+          this.currentYear =
+            extent && Number.isFinite(extent[1]) ? extent[1] : this.currentYear;
         });
+    }
+
+    loadPopulationData() {
+      // Population by city/year comes from the rent+population CSV.
+      return d3.csv("data/avg_rent_by_pop.csv").then((rows) => {
+        const lookup = new Map();
+
+        rows.forEach((row) => {
+          if (!row || !row.GEO) return;
+          const cityName = row.GEO.split(",")[0].trim();
+          const year = parseInt(row.REF_DATE, 10);
+          const pop = parseFloat(row.POP);
+          if (!cityName || !Number.isFinite(year) || !Number.isFinite(pop)) return;
+
+          const key = normalizeCityName(cityName);
+          if (!lookup.has(key)) lookup.set(key, []);
+          const entries = lookup.get(key);
+          if (!entries.find((e) => e.year === year)) {
+            entries.push({ year, pop });
+          }
+        });
+
+        lookup.forEach((arr) => arr.sort((a, b) => a.year - b.year));
+
+        const allYears = Array.from(lookup.values())
+          .flat()
+          .map((e) => e.year);
+        this.populationYearExtent = d3.extent(allYears);
+        this.populationData = lookup;
+      });
+    }
+
+    loadVacancyRates() {
+      return d3.json("data/vacancy/vacancy_rates.json").then((raw) => {
+        const lookup = new Map();
+
+        Object.entries(raw || {}).forEach(([cityKey, entries]) => {
+          if (!Array.isArray(entries) || !entries.length) return;
+          const cityName = cityKey.split(",")[0].trim();
+          const cleaned = entries
+            .map((e) => ({
+              year: Number.isFinite(e.year) ? e.year : parseInt(e.year, 10),
+              vacancy_rate: Number.isFinite(e.vacancy_rate)
+                ? e.vacancy_rate
+                : parseFloat(e.vacancy_rate),
+            }))
+            .filter(
+              (e) =>
+                e &&
+                Number.isFinite(e.year) &&
+                Number.isFinite(e.vacancy_rate)
+            )
+            .sort((a, b) => a.year - b.year);
+          if (!cleaned.length) return;
+          lookup.set(normalizeCityName(cityName), cleaned);
+        });
+
+        const allYears = Array.from(lookup.values())
+          .flat()
+          .map((e) => e.year);
+        this.vacancyRates = lookup;
+        this.vacancyYearExtent = allYears.length
+          ? d3.extent(allYears)
+          : [null, null];
+      });
+    }
+
+    getYearExtent() {
+      const extents = [
+        this.supplyYearExtent,
+        this.vacancyYearExtent,
+        this.populationYearExtent,
+      ].filter(
+        (ext) =>
+          Array.isArray(ext) &&
+          ext.length === 2 &&
+          Number.isFinite(ext[0]) &&
+          Number.isFinite(ext[1])
+      );
+      if (!extents.length) return null;
+      const minYear = d3.min(extents, (e) => e[0]);
+      const maxYear = d3.max(extents, (e) => e[1]);
+      return [minYear, maxYear];
+    }
+
+    syncCurrentYearFromData() {
+      const extent = this.getYearExtent();
+      if (!extent) return;
+      const [, maxYear] = extent;
+      if (Number.isFinite(maxYear)) {
+        this.currentYear = maxYear;
+      }
     }
 
     computeCityVacantUnits(city, yearOverride) {
-      const cityData = city._agg || this.getAveragedUnitData(city);
-      const supplyEntry = this.getHousingSupply(
+      const targetYear = Number.isFinite(yearOverride)
+        ? yearOverride
+        : this.currentYear;
+      const baseCityData = city._agg || this.getAveragedUnitData(city);
+      const vacancyEntry = this.getVacancyRate(
         city.city,
-        yearOverride || this.currentYear
+        targetYear,
+        baseCityData,
+        city.year
       );
-      const housingSupply = supplyEntry ? supplyEntry.homes : null;
-      const vacantUnits =
-        Number.isFinite(housingSupply) && Number.isFinite(cityData.vacancy_rate)
-          ? housingSupply * (cityData.vacancy_rate / 100)
-          : null;
+      const vacancyRate =
+        vacancyEntry && Number.isFinite(vacancyEntry.vacancy_rate)
+          ? vacancyEntry.vacancy_rate
+          : baseCityData && Number.isFinite(baseCityData.vacancy_rate)
+            ? baseCityData.vacancy_rate
+            : null;
+      const cityData = baseCityData
+        ? { ...baseCityData, vacancy_rate: vacancyRate }
+        : { vacancy_rate: vacancyRate };
+      const supplyEntry = this.getHousingSupply(city.city, targetYear);
+      const populationEntry = this.getPopulation(city.city, targetYear);
       return {
         cityData,
+        vacancyRate,
+        vacancyYear: vacancyEntry ? vacancyEntry.year : city.year || null,
         supplyEntry,
-        housingSupply,
-        vacantUnits,
+        population: populationEntry ? populationEntry.pop : null,
+        populationYear: populationEntry ? populationEntry.year : null,
       };
-    }
-
-    recomputeGlobalMax() {
-      return new Promise((resolve) => {
-        const maxVacantUnits =
-          d3.max(
-            this.allCitiesData,
-            (city) => this.computeCityVacantUnits(city, this.currentYear).vacantUnits || null
-          ) || 0;
-        this.allMaxVacantUnits = maxVacantUnits;
-        resolve(maxVacantUnits);
-      });
-    }
-
-    setupFilterListeners() {
-      const rentFilter = document.getElementById("rent-filter");
-      const sortFilter = document.getElementById("sort-filter");
-      const resetButton = document.getElementById("reset-filters");
-
-      if (!sortFilter || !resetButton) {
-        return;
-      }
-
-      if (rentFilter) {
-        rentFilter.addEventListener("change", (e) => {
-          this.currentFilters.rent = e.target.value;
-          this.render();
-        });
-      }
-
-      sortFilter.addEventListener("change", (e) => {
-        this.currentFilters.sort = e.target.value;
-        this.render();
-      });
-
-      resetButton.addEventListener("click", () => {
-        if (rentFilter) rentFilter.value = DEFAULT_FILTERS.rent;
-        sortFilter.value = DEFAULT_FILTERS.sort;
-        this.currentFilters = { ...DEFAULT_FILTERS };
-        this.selectedCities = [];
-        this.updateSelectedCitiesDisplay();
-        this.render();
-      });
     }
 
     getAveragedUnitData(city) {
-      const data = city && city.data ? city.data : null;
-      if (!data || typeof data !== "object") return null;
-
-      const entries = Object.entries(data).filter(
-        ([, v]) =>
-          v &&
-          typeof v === "object" &&
-          Number.isFinite(v.vacancy_rate)
-      );
-
-      const nonTotal = entries.filter(([k]) => k !== "total");
-      const useEntries = nonTotal.length ? nonTotal : entries;
-      if (!useEntries.length) return null;
-
-      const sums = useEntries.reduce(
-        (acc, [, v]) => {
-          acc.vacancy += v.vacancy_rate;
-          if (Number.isFinite(v.avg_rent)) {
-            acc.rent += v.avg_rent;
-            acc.rentCount += 1;
-          }
-          return acc;
-        },
-        { rent: 0, rentCount: 0, vacancy: 0 }
-      );
-      const count = useEntries.length;
+      if (!city || typeof city !== "object") return null;
+      const vacancyRate = Number.isFinite(city.vacancy_rate)
+        ? city.vacancy_rate
+        : null;
+      const avgRent = Number.isFinite(city.avg_rent) ? city.avg_rent : null;
+      if (vacancyRate === null && avgRent === null) return null;
       return {
-        avg_rent: sums.rentCount ? sums.rent / sums.rentCount : null,
-        vacancy_rate: sums.vacancy / count,
-        unitCount: count,
+        avg_rent: avgRent,
+        vacancy_rate: vacancyRate,
+        unitCount: 1,
       };
-    }
-
-    setupCitySelector() {
-      const searchInput = document.getElementById("city-search");
-      const cityDropdown = document.getElementById("city-dropdown");
-      const provinceSelect = document.getElementById("province-select");
-      const tabCities = document.getElementById("tab-cities");
-      const tabProvinces = document.getElementById("tab-provinces");
-
-      if (
-        !searchInput ||
-        !cityDropdown ||
-        !provinceSelect ||
-        !tabCities ||
-        !tabProvinces
-      ) {
-        return;
-      }
-
-      this.populateProvinceDropdown();
-
-      tabCities.addEventListener("click", () => {
-        tabCities.classList.add("active");
-        tabProvinces.classList.remove("active");
-        searchInput.style.display = "block";
-        provinceSelect.style.display = "none";
-        cityDropdown.style.display = "none";
-      });
-
-      tabProvinces.addEventListener("click", () => {
-        tabProvinces.classList.add("active");
-        tabCities.classList.remove("active");
-        searchInput.style.display = "none";
-        provinceSelect.style.display = "block";
-        cityDropdown.style.display = "none";
-      });
-
-      provinceSelect.addEventListener("change", (e) => {
-        const province = e.target.value;
-        if (province) {
-          this.selectProvinceCities(province);
-          e.target.value = "";
-        }
-      });
-
-      searchInput.addEventListener("focus", () => {
-        this.updateCityDropdown("");
-        cityDropdown.style.display = "block";
-      });
-
-      searchInput.addEventListener("input", (e) => {
-        const searchTerm = e.target.value;
-        this.updateCityDropdown(searchTerm);
-      });
-
-      document.addEventListener("click", (e) => {
-        if (!e.target.closest(".city-selector-container")) {
-          cityDropdown.style.display = "none";
-        }
-      });
     }
 
     cacheInfoElements() {
@@ -404,11 +384,17 @@
       }
 
       if (yearSlider && yearDisplay) {
-        const [minYear, maxYear] = this.supplyYearExtent || [2000, 2023];
-        yearSlider.min = Number.isFinite(minYear) ? minYear : 2000;
-        yearSlider.max = Number.isFinite(maxYear) ? maxYear : 2023;
-        yearSlider.value = this.currentYear || yearSlider.max;
-        yearDisplay.textContent = this.currentYear || yearSlider.value;
+        const minYear = 2000;
+        const maxYear = 2023;
+        const clampedYear = Math.max(
+          minYear,
+          Math.min(maxYear, this.currentYear || maxYear)
+        );
+        yearSlider.min = minYear;
+        yearSlider.max = maxYear;
+        yearSlider.value = clampedYear;
+        this.currentYear = clampedYear;
+        yearDisplay.textContent = clampedYear;
         if (this.infoElements.yearMin)
           this.infoElements.yearMin.textContent = yearSlider.min;
         if (this.infoElements.yearMax)
@@ -417,179 +403,11 @@
           const yr = parseInt(e.target.value, 10);
           this.currentYear = yr;
           yearDisplay.textContent = yr;
-          this.recomputeGlobalMax().then(() => this.render());
+          this.render();
         };
       }
 
-      this.updateScaleDisplay(null);
-    }
-
-    populateProvinceDropdown() {
-      const provinceSelect = document.getElementById("province-select");
-      if (!provinceSelect) return;
-
-      // Clear existing (except placeholder)
-      while (provinceSelect.options.length > 1) {
-        provinceSelect.remove(1);
-      }
-
-      const provincesMap = new Map();
-      this.allCitiesData.forEach((d) => {
-        if (!provincesMap.has(d.province)) {
-          const citiesInProvince = this.allCitiesData.filter(
-            (c) => c.province === d.province
-          );
-          provincesMap.set(d.province, citiesInProvince.length);
-        }
-      });
-
-      const provinces = Array.from(provincesMap.entries()).sort((a, b) =>
-        a[0].localeCompare(b[0])
-      );
-
-      provinces.forEach(([province, count]) => {
-        const option = document.createElement("option");
-        option.value = province;
-        option.textContent = `${getFullProvinceName(province)} (${count} cities)`;
-        provinceSelect.appendChild(option);
-      });
-    }
-
-    selectProvinceCities(province) {
-      const citiesInProvince = this.allCitiesData
-        .filter((d) => d.province === province)
-        .map((d) => d.city);
-
-      citiesInProvince.forEach((city) => {
-        if (!this.selectedCities.includes(city)) {
-          this.selectedCities.push(city);
-        }
-      });
-
-      this.updateSelectedCitiesDisplay();
-      this.render();
-    }
-
-    updateCityDropdown(searchTerm) {
-      const cityList = document.getElementById("city-list");
-      const dropdown = document.getElementById("city-dropdown");
-      const searchInput = document.getElementById("city-search");
-      if (!cityList || !dropdown || !searchInput) return;
-
-      const cityMap = new Map();
-      this.allCitiesData.forEach((d) => {
-        if (!cityMap.has(d.city)) cityMap.set(d.city, d.province);
-      });
-
-      let availableCities = Array.from(cityMap, ([name, province]) => ({
-        name,
-        province,
-      }));
-
-      if (searchTerm) {
-        availableCities = availableCities.filter(
-          (city) =>
-            city.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            city.province.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      }
-
-      cityList.innerHTML = "";
-
-      const header = document.createElement("div");
-      header.className = "dropdown-header";
-      header.textContent = searchTerm
-        ? `${availableCities.length} cities found`
-        : `All ${cityMap.size} cities`;
-      cityList.appendChild(header);
-
-      if (availableCities.length === 0) {
-        cityList.innerHTML +=
-          '<div style="padding: 20px; text-align: center; color: #718096;">No cities match your search</div>';
-        return;
-      }
-
-      const citiesByProvince = new Map();
-      availableCities.forEach((city) => {
-        if (!citiesByProvince.has(city.province)) {
-          citiesByProvince.set(city.province, []);
-        }
-        citiesByProvince.get(city.province).push(city);
-      });
-
-      const sortedProvinces = Array.from(citiesByProvince.keys()).sort();
-
-      sortedProvinces.forEach((province) => {
-        const provinceHeader = document.createElement("div");
-        provinceHeader.className = "province-group-header";
-        provinceHeader.textContent = `${getFullProvinceName(province)} (${
-          citiesByProvince.get(province).length
-        })`;
-        cityList.appendChild(provinceHeader);
-
-        const cities = citiesByProvince
-          .get(province)
-          .sort((a, b) => a.name.localeCompare(b.name));
-
-        cities.forEach((city) => {
-          const isSelected = this.selectedCities.includes(city.name);
-          const option = document.createElement("div");
-          option.className = "city-option";
-          if (isSelected) option.classList.add("selected");
-
-          const cityName = document.createElement("span");
-          cityName.textContent = city.name;
-          option.appendChild(cityName);
-
-          option.addEventListener("click", () => {
-            this.toggleCitySelection(city.name);
-            searchInput.value = "";
-            this.updateCityDropdown("");
-          });
-
-          cityList.appendChild(option);
-        });
-      });
-    }
-
-    toggleCitySelection(cityName) {
-      const index = this.selectedCities.indexOf(cityName);
-      if (index > -1) {
-        this.selectedCities.splice(index, 1);
-      } else {
-        this.selectedCities.push(cityName);
-      }
-      this.updateSelectedCitiesDisplay();
-      this.render();
-    }
-
-    updateSelectedCitiesDisplay() {
-      const container = document.getElementById("selected-cities");
-      if (!container) return;
-
-      container.innerHTML = "";
-
-      if (this.selectedCities.length === 0) {
-        container.innerHTML =
-          '<div style="color: #718096; font-size: 0.9em; padding: 5px;">No cities selected - showing all</div>';
-        return;
-      }
-
-      this.selectedCities.forEach((cityName) => {
-        const tag = document.createElement("div");
-        tag.className = "selected-city-tag";
-        tag.innerHTML = `
-          <span>${cityName}</span>
-          <span class="remove-city" data-city="${cityName}">×</span>
-        `;
-        tag
-          .querySelector(".remove-city")
-          .addEventListener("click", (e) => {
-            e.stopPropagation();
-            this.toggleCitySelection(cityName);
-          });
-        container.appendChild(tag);
-      });
+      this.updateScaleDisplay(this.percentPerWindow);
     }
 
     getHousingSupply(cityName, year) {
@@ -608,17 +426,57 @@
       return closest;
     }
 
+    getPopulation(cityName, year) {
+      const key = normalizeCityName(cityName);
+      const entries = this.populationData && this.populationData.get(key);
+      if (!entries || !entries.length) return null;
+      if (!Number.isFinite(year)) return entries[entries.length - 1];
+      let closest = entries[0];
+      entries.forEach((e) => {
+        const diff = Math.abs(e.year - year);
+        const closestDiff = Math.abs(closest.year - year);
+        if (diff < closestDiff || (diff === closestDiff && e.year > closest.year)) {
+          closest = e;
+        }
+      });
+      return closest;
+    }
+
+    getVacancyRate(cityName, year, fallbackData, fallbackYear) {
+      const key = normalizeCityName(cityName);
+      const entries = this.vacancyRates && this.vacancyRates.get(key);
+      if (entries && entries.length) {
+        if (!Number.isFinite(year)) return entries[entries.length - 1];
+        let closest = entries[0];
+        entries.forEach((e) => {
+          const diff = Math.abs(e.year - year);
+          const closestDiff = Math.abs(closest.year - year);
+          if (diff < closestDiff || (diff === closestDiff && e.year > closest.year)) {
+            closest = e;
+          }
+        });
+        return closest;
+      }
+      if (fallbackData && Number.isFinite(fallbackData.vacancy_rate)) {
+        return {
+          year: Number.isFinite(fallbackYear) ? fallbackYear : null,
+          vacancy_rate: fallbackData.vacancy_rate,
+        };
+      }
+      return null;
+    }
+
     toggleCityQueue(cityName) {
       const existingIdx = this.selectedCities.indexOf(cityName);
       if (existingIdx >= 0) {
         this.selectedCities.splice(existingIdx, 1);
       } else {
-        this.selectedCities.push(cityName);
-        if (this.selectedCities.length > 4) {
-          this.selectedCities.shift();
+          this.selectedCities.push(cityName);
+          if (this.selectedCities.length > 3) {
+            this.selectedCities.shift();
+          }
         }
       }
-    }
 
     ensureTooltip() {
       if (this.tooltip && !this.tooltip.empty()) return this.tooltip;
@@ -658,26 +516,28 @@
     }
 
     buildTooltipHtml(data) {
-      if (!Number.isFinite(data.vacantUnits)) {
-        return `<div><strong>${data.city}</strong></div><div>Vacant homes unavailable</div>`;
+      if (!Number.isFinite(data.vacancyRate)) {
+        return `<div><strong>${data.city}</strong></div><div>Vacancy rate unavailable</div>`;
       }
-      const est = data.housingSupplyEstimate ? " (estimate)" : " (reported)";
-      return `<div><strong>${data.city}</strong></div><div>≈ ${formatNumber(
-        data.vacantUnits
-      )} vacant homes${est}</div><div style="color:#cbd5e0;font-size:11px;">Each window ≈ ${formatNumber(
-        data.vacancyUnitPerWindow
-      )} homes</div>`;
+      const yearLabel = data.vacancyYear ? ` (${data.vacancyYear})` : "";
+      const perWindow =
+        Number.isFinite(data.vacancyPercentPerWindow) && data.vacancyPercentPerWindow > 0
+          ? data.vacancyPercentPerWindow
+          : this.percentPerWindow;
+      return `<div><strong>${data.city}</strong></div><div>${data.vacancyRate.toFixed(
+        1
+      )}% vacancy rate${yearLabel}</div><div style="color:#cbd5e0;font-size:11px;">Each window = ${perWindow}% (rounded up)</div>`;
     }
 
-    updateScaleDisplay(unitPerWindow) {
+    updateScaleDisplay(percentPerWindow) {
       if (!this.infoElements.scaleValue) return;
-      const display = unitPerWindow
-        ? `Each window ≈ ${formatNumber(unitPerWindow)} homes`
+      const display = Number.isFinite(percentPerWindow)
+        ? `Each window = ${percentPerWindow}% vacancy (rounded up)`
         : "–";
       this.infoElements.scaleValue.textContent = display;
       if (this.infoElements.scaleNote) {
         this.infoElements.scaleNote.textContent =
-          "Scale updates when cities or year change";
+          "Raw vacancy rates; windows stack bottom-up on a 10×20 grid.";
       }
     }
 
@@ -692,7 +552,9 @@
       const containerNode = this.infoElements.cityList;
       const containerWidth =
         (containerNode && containerNode.clientWidth) || 0;
-      const svgWidth = Math.max(520, containerWidth || 0);
+      const svgWidth = containerWidth
+        ? Math.max(320, Math.floor(containerWidth * 0.7))
+        : 320;
 
       if (!data.length) {
         const svg = listSel
@@ -714,9 +576,7 @@
       const height = padding * 2 + rowHeight * data.length;
       const colName = 6;
       const colPop = 12;
-      const colVac = 90;
-      const colVacUnits = 170;
-      const colSup = 290;
+      const colVac = 150;
       const svg = listSel
         .append("svg")
         .attr("class", "vacancy-city-svg")
@@ -758,23 +618,7 @@
         .attr("y", 36)
         .attr("fill", "#4a5568")
         .attr("font-size", "12px")
-        .text("Vacancy");
-
-      rows
-        .append("text")
-        .attr("x", colVacUnits)
-        .attr("y", 36)
-        .attr("fill", "#4a5568")
-        .attr("font-size", "12px")
-        .text("Vacant units (est.)");
-
-      rows
-        .append("text")
-        .attr("x", colSup)
-        .attr("y", 36)
-        .attr("fill", "#4a5568")
-        .attr("font-size", "12px")
-        .text("Housing supply");
+        .text("Vacancy rate");
 
       rows
         .append("text")
@@ -799,74 +643,49 @@
         );
 
       rows
+        .filter((d) => d.vacancyYear)
         .append("text")
-        .attr("x", colVacUnits)
-        .attr("y", 56)
-        .attr("fill", "#2d3748")
-        .attr("font-size", "14px")
-        .attr("font-weight", "600")
-        .text((d) =>
-          Number.isFinite(d.vacantUnits) ? formatNumber(d.vacantUnits) : "–"
-        );
-
-      rows
-        .append("text")
-        .attr("x", colSup)
-        .attr("y", 56)
-        .attr("fill", "#2d3748")
-        .attr("font-size", "14px")
-        .attr("font-weight", "600")
-        .text((d) =>
-          Number.isFinite(d.housingSupply) ? formatNumber(d.housingSupply) : "–"
-        );
-
-      rows
-        .filter((d) => d.housingSupplyEstimate)
-        .append("text")
-        .attr("x", colSup)
+        .attr("x", colVac)
         .attr("y", 72)
         .attr("fill", "#718096")
         .attr("font-size", "10px")
-        .text("(estimated)");
+        .text((d) => `(year ${d.vacancyYear})`);
     }
 
     applyFilters() {
-      let filteredData = this.allCitiesData
-        .map((city) => ({
-          ...city,
-          _agg: this.getAveragedUnitData(city),
-        }))
+      const withVacancy = this.allCitiesData
+        .map((city) => {
+          const agg = this.getAveragedUnitData(city);
+          const vacancyEntry = this.getVacancyRate(
+            city.city,
+            this.currentYear,
+            agg,
+            city.year
+          );
+          const vacancyRate =
+            vacancyEntry && Number.isFinite(vacancyEntry.vacancy_rate)
+              ? vacancyEntry.vacancy_rate
+              : agg && Number.isFinite(agg.vacancy_rate)
+                ? agg.vacancy_rate
+                : null;
+          return {
+            ...city,
+            _agg: agg,
+            _vacancyRate: vacancyRate,
+          };
+        })
         .filter(
           (d) =>
             d._agg &&
-            Number.isFinite(d._agg.vacancy_rate)
+            Number.isFinite(d._vacancyRate)
         );
 
-      if (this.selectedCities.length > 0) {
-        filteredData = filteredData.filter((d) =>
-          this.selectedCities.includes(d.city)
-        );
-      } else {
-        filteredData = [];
-      }
+      const selectedOnly = this.selectedCities.length
+        ? withVacancy.filter((d) => this.selectedCities.includes(d.city))
+        : [];
 
-      switch (this.currentFilters.sort) {
-        case "vacancy-low":
-          filteredData.sort(
-            (a, b) => a._agg.vacancy_rate - b._agg.vacancy_rate
-          );
-          break;
-        case "name":
-          filteredData.sort((a, b) => a.city.localeCompare(b.city));
-          break;
-        default:
-          filteredData.sort(
-            (a, b) => b._agg.vacancy_rate - a._agg.vacancy_rate
-          );
-          break;
-      }
-
-      return filteredData;
+      selectedOnly.sort((a, b) => b._vacancyRate - a._vacancyRate);
+      return selectedOnly;
     }
 
     render() {
@@ -926,43 +745,42 @@
       if (!this.containerEl) return;
 
       if (!cities || cities.length === 0) {
+        this.percentPerWindow = CONFIG.vacancyPercentPerWindow;
         if (this.svg) {
           this.svg.remove();
           this.svg = null;
         }
         this.containerEl.innerHTML =
-          '<div class="vacancy-empty">No cities selected. Choose up to four cities to view buildings.</div>';
+          '<div class="vacancy-empty">No cities selected. Choose up to three cities to view buildings.</div>';
         this.updateInfoPanelList([]);
         return;
       }
-      
+
       const baseVisuals = cities.map((city) => {
         const {
           cityData,
           supplyEntry,
-          housingSupply,
-          vacantUnits,
+          population,
+          populationYear,
+          vacancyRate,
+          vacancyYear,
         } = this.computeCityVacantUnits(city);
+        const housingSupply = supplyEntry ? supplyEntry.homes : null;
         return {
           key: `${city.city}-${city.province}-${city.year}-avg`,
           city: city.city,
           province: city.province,
           year: city.year,
-          population: city.population,
-          vacancyRate: cityData.vacancy_rate,
+          population,
+          populationYear,
+          vacancyRate,
+          vacancyYear,
           avgRent: cityData.avg_rent,
           housingSupply,
           housingSupplyYear: supplyEntry ? supplyEntry.year : null,
           housingSupplyEstimate: supplyEntry ? supplyEntry.estimate : false,
-          vacantUnits,
         };
       });
-
-      const maxVacantUnits =
-        d3.max(
-          baseVisuals,
-          (d) => (Number.isFinite(d.vacantUnits) ? d.vacantUnits : null)
-        ) || 0;
 
       const uniformTotalWindows =
         (CONFIG.windowCols || 4) * (CONFIG.windowRows || 25);
@@ -975,23 +793,17 @@
         Math.max(0, uniformRows - 1) * CONFIG.windowGap +
         2 * CONFIG.buildingPadding;
 
-      const unitPerWindow =
-        maxVacantUnits > 0
-          ? Math.max(1, maxVacantUnits / uniformTotalWindows)
-          : CONFIG.vacancyUnitPerWindow;
+      const percentPerWindow =
+        Number.isFinite(this.percentPerWindow) && this.percentPerWindow > 0
+          ? this.percentPerWindow
+          : CONFIG.vacancyPercentPerWindow;
+      this.percentPerWindow = percentPerWindow;
 
       const visuals = baseVisuals.map((d) => {
-        const vacantWindowsRaw =
-          d.vacantUnits === null
-            ? 0
-            : Math.max(
-                d.vacantUnits > 0 ? 1 : 0,
-                Math.round(d.vacantUnits / unitPerWindow)
-              );
-        const vacantWindows = Math.max(
-          0,
-          Math.min(vacantWindowsRaw, uniformTotalWindows)
-        );
+        const vacantWindowsRaw = Number.isFinite(d.vacancyRate)
+          ? Math.ceil(Math.max(0, d.vacancyRate) / percentPerWindow)
+          : 0;
+        const vacantWindows = Math.max(0, Math.min(vacantWindowsRaw, uniformTotalWindows));
         const windows = this.buildWindows(
           vacantWindows,
           uniformTotalWindows,
@@ -1000,7 +812,7 @@
         return {
           ...d,
           vacantWindows,
-          vacancyUnitPerWindow: unitPerWindow,
+          vacancyPercentPerWindow: percentPerWindow,
           windowCount: uniformTotalWindows,
           windows,
           rows: uniformRows,
@@ -1008,7 +820,7 @@
         };
       });
 
-      this.updateScaleDisplay(unitPerWindow);
+      this.updateScaleDisplay(percentPerWindow);
       this.updateInfoPanelList(visuals);
 
       const maxBuildingHeight = uniformBuildingHeight;
@@ -1151,13 +963,24 @@
         )
         .style("pointer-events", "none");
 
-      windowsEnter.merge(windows).attr(
+      const windowsMerged = windowsEnter.merge(windows);
+
+      windowsMerged.attr(
         "transform",
         (w) =>
           `translate(${w.col * (windowSize + windowGap)}, ${
             w.row * (windowSize + windowGap)
           })`
       );
+
+      windowsMerged
+        .select("rect")
+        .transition()
+        .duration(400)
+        .ease(d3.easeCubicOut)
+        .attr("fill", (w) =>
+          w.type === "vacant" ? COLORS.windowVacant : COLORS.windowOccupied
+        );
       windows.exit().remove();
 
       // Label block
