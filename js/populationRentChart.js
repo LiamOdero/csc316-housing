@@ -82,7 +82,7 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
 	initVis(){
 		let vis = this;
 
-		vis.margin = {top: 25, right: 100, bottom: 25, left: 175};
+		vis.margin = {top: 0, right: 100, bottom: 25, left: 175};
 
 		vis.width = document.getElementById(vis.parentElement).getBoundingClientRect().width - vis.margin.left - vis.margin.right;
 		vis.height = document.getElementById(vis.parentElement).getBoundingClientRect().height - vis.margin.top - vis.margin.bottom;

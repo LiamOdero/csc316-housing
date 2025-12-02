@@ -607,15 +607,41 @@ input[type="range"]::-moz-range-track {
 .info-card:last-child { border-right: none; }
 .info-card:hover { background: #f8f9fa; }
 
-/* =========================
-   Data Table
-   ========================= */
-.data-table-section { 
-    padding: 20px 30px; 
+/* data table (visualization summary) styling */
+.data-table-section {
+    max-width: 1100px;
+    margin: 28px auto 20px;
+    padding: 28px 40px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.88) 100%);
+    border-radius: 14px;
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow: 0 8px 28px rgba(15,23,42,0.06), 0 1.5px 4px rgba(15,23,42,0.04);
+    text-align: center;
 }
 .data-table-section p {
-    line-height: 1.4;
-    font-size: 0.9rem;
+    line-height: 1.75;
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+.data-table-section p + p {
+    margin-top: 20px;
+}
+
+/* Emphasis utilities inside summary sections */
+.data-table-section strong,
+.data-table-section .highlight {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+.data-table-section .stat {
+    display: inline;
+    background: transparent;
+    color: inherit;
+    font-weight: 700;
+    padding: 0;
+    border-radius: 0;
+    margin: 0 2px;
 }
 .surge-text {
     font-size: 12rem;
@@ -716,14 +742,20 @@ td { padding: 16px 20px; color: var(--text-primary); font-size: 0.938rem; }
     border: 3px solid #2d3748;
     border-top: none;
     position: relative;
+    min-height: 360px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.windows-grid { display: grid; gap: 8px; }
-.window { width: 35px; height: 35px; border: 2px solid #2d3748; border-radius: 3px; transition: all 0.3s ease; }
+.windows-grid {
+    display: grid;
+    gap: 8px;
+    width: 100%;
+}
+.window { width: 35px; height: 35px; border: 2px solid #2d3748; border-radius: 3px; }
 .window.occupied { background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%); box-shadow: 0 0 12px rgba(237,137,54,0.5); }
 .window.vacant { background: #e2e8f0; box-shadow: inset 0 0 5px rgba(0,0,0,0.1); }
-.window.partial { box-shadow: 0 0 8px rgba(237,137,54,0.3); border: 2px solid #ed8936; }
-.window:hover { transform: scale(1.1); }
 
 .city-label {
     text-align: center;
@@ -736,18 +768,10 @@ td { padding: 16px 20px; color: var(--text-primary); font-size: 0.938rem; }
 }
 .city-label.high-vacancy {
     background: rgba(72,187,120,0.15);
-    border: 2px solid rgba(72,187,120,0.6);
 }
 
 .high-vacancy-badge {
-    display: inline-block;
-    background: rgba(72,187,120,0.9);
-    color: #fff;
-    padding: 3px 8px;
-    border-radius: 3px;
-    font-size: 0.7em;
-    font-weight: bold;
-    margin-top: 5px;
+    display: none;
 }
 
 .city-name { font-weight: bold; font-size: 1.1em; margin-bottom: 5px; color: #1a365d; }
@@ -1183,18 +1207,26 @@ footer {
    Visualization 3 Filter Styles (Enhanced by Burak)
    ========================= */
 .filters-container {
-    --filters-grid-columns: 1.5fr repeat(4, minmax(160px, 1fr)) auto;
     display: grid;
-    grid-template-columns: var(--filters-grid-columns);
+    grid-template-columns: 2fr 0.8fr 1fr 1fr auto;
     grid-auto-rows: auto;
     column-gap: 20px;
-    row-gap: 15px;
+    row-gap: 12px;
     margin-bottom: 35px;
-    padding: 30px 35px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 28px 32px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
     border: 1px solid #e2e8f0;
+}
+
+/* Specific override for population/rent chart filters */
+#vis5-filters-container {
+    grid-template-columns: 1.5fr repeat(4, minmax(160px, 1fr)) auto;
+    background: white;
+    padding: 30px 35px;
+    box-shadow: none;
+    border: none;
 }
 
 .filter-labels-row {
@@ -1210,11 +1242,13 @@ footer {
 
 .label-text {
     font-weight: 600;
-    font-size: 0.9em;
-    color: #2d3748;
-    letter-spacing: -0.1px;
+    font-size: 0.85em;
+    color: #4a5568;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
     padding-left: 0;
-    margin-bottom: 0;
+    margin-bottom: 8px;
+    display: block;
 }
 
 .filter-label-location {
@@ -1258,81 +1292,92 @@ footer {
 
 .selector-tabs {
     display: inline-flex;
-    gap: 0;
-    border: 1px solid #cbd5e0;
-    border-radius: 6px;
-    overflow: hidden;
-    background: #f7fafc;
+    gap: 4px;
+    padding: 4px;
+    border: none;
+    border-radius: 8px;
+    overflow: visible;
+    background: #f1f5f9;
 }
 
 .selector-tab {
-    padding: 4px 12px;
+    padding: 6px 16px;
     background: transparent;
     border: none;
-    border-right: 1px solid #cbd5e0;
+    border-radius: 6px;
     font-weight: 600;
-    font-size: 0.75em;
+    font-size: 0.8em;
     cursor: pointer;
     transition: all 0.2s ease;
-    color: #4a5568;
-}
-
-.selector-tab:last-child {
-    border-right: none;
+    color: #64748b;
 }
 
 .selector-tab:hover {
-    background: #edf2f7;
-    color: #2d3748;
+    background: #e2e8f0;
+    color: #334155;
 }
 
 .selector-tab.active {
     background: #48bb78;
     color: white;
+    box-shadow: 0 2px 4px rgba(72, 187, 120, 0.3);
 }
 
 .province-select {
     width: 100%;
-    height: 42px;
-    padding: 0 40px 0 14px;
-    border: 1px solid #cbd5e0;
-    border-radius: 6px;
-    font-size: 0.9em;
+    height: 44px;
+    padding: 0 44px 0 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.95em;
+    font-weight: 500;
     transition: all 0.2s ease;
     background: white;
     cursor: pointer;
     appearance: none;
     background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="%234a5568" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>');
     background-repeat: no-repeat;
-    background-position: right 14px center;
+    background-position: right 16px center;
+}
+
+.province-select:hover {
+    border-color: #48bb78;
+    background-color: #f7fafc;
 }
 
 .province-select:focus {
     outline: none;
     border-color: #48bb78;
-    box-shadow: 0 0 0 3px rgba(72, 187, 120, 0.1);
+    box-shadow: 0 0 0 4px rgba(72, 187, 120, 0.12);
+    background-color: white;
 }
 
 .city-search-input {
     width: 100%;
-    height: 42px;
-    padding: 0 35px 0 14px;
-    border: 1px solid #cbd5e0;
-    border-radius: 6px;
-    font-size: 0.9em;
+    height: 44px;
+    padding: 0 40px 0 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.95em;
+    font-weight: 500;
     transition: all 0.2s ease;
-    background: white url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23718096" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>') no-repeat right 14px center;
+    background: white url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23718096" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>') no-repeat right 16px center;
+}
+
+.city-search-input:hover {
+    border-color: #cbd5e0;
+    background-color: #f7fafc;
 }
 
 .city-search-input:focus {
     outline: none;
     border-color: #48bb78;
-    box-shadow: 0 0 0 3px rgba(72, 187, 120, 0.1);
+    box-shadow: 0 0 0 4px rgba(72, 187, 120, 0.12);
+    background-color: white;
 }
 
 .city-search-input::placeholder {
     color: #a0aec0;
-    font-style: italic;
 }
 
 .selected-cities {
@@ -1473,42 +1518,46 @@ footer {
 
 .filter-select {
     width: 100%;
-    height: 42px;
-    padding: 0 14px;
-    border: 1px solid #cbd5e0;
-    border-radius: 6px;
+    height: 44px;
+    padding: 0 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
     background: white;
     color: #2d3748;
-    font-size: 0.9em;
+    font-size: 0.95em;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
     appearance: none;
     background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="%234a5568" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>');
     background-repeat: no-repeat;
-    background-position: right 14px center;
-    padding-right: 40px;
+    background-position: right 16px center;
+    padding-right: 44px;
 }
 
 .filter-select:hover {
     border-color: #48bb78;
+    background-color: #f7fafc;
 }
 
 .filter-select:focus {
     outline: none;
     border-color: #48bb78;
-    box-shadow: 0 0 0 3px rgba(72, 187, 120, 0.1);
+    box-shadow: 0 0 0 4px rgba(72, 187, 120, 0.12);
+    background-color: white;
 }
 
 .reset-btn {
-    height: 42px;
-    padding: 0 24px;
-    background: #48bb78;
+    height: 44px;
+    padding: 0 28px;
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     font-weight: 600;
     font-size: 0.9em;
     cursor: pointer;
+    box-shadow: 0 2px 8px rgba(72, 187, 120, 0.25);
     transition: all 0.2s ease;
     white-space: nowrap;
     font-family: inherit;
@@ -1516,11 +1565,14 @@ footer {
 }
 
 .reset-btn:hover {
-    background: #38a169;
+    background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+    box-shadow: 0 4px 12px rgba(72, 187, 120, 0.35);
+    transform: translateY(-1px);
 }
 
 .reset-btn:active {
-    transform: translateY(1px);
+    transform: translateY(0px);
+    box-shadow: 0 2px 6px rgba(72, 187, 120, 0.25);
 }
 
 .filter-count {
@@ -2198,6 +2250,7 @@ footer {
 mark {
   background-color: #fff2ac;
 }
+
 
 .caption {
     font-size: 1em;

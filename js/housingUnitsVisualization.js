@@ -21,6 +21,16 @@ function initCityMap() {
         .style('min-width', '0')
         .style('position', 'relative');
 
+    // Map title
+    const mapTitle = mapAreaContainer.append('div')
+        .attr('class', 'map-title')
+        .style('font-size', '18px')
+        .style('font-weight', '700')
+        .style('color', '#1f2937')
+        .style('margin', '6px 12px')
+        .style('text-align', 'center')
+        .text('Canadian Cities Average Rent in 2024');
+
     // Create right container for chart panel (d3 selection)
     const chartPanelContainer = mapContainerSel.append('div')
         .attr('class', 'chart-panel-container')
@@ -173,6 +183,8 @@ function initCityMap() {
                 
                 // Update year display
                 yearDisplay.text(currentYear);
+                    // Update map title to reflect selected year
+                    try { if (typeof mapTitle !== 'undefined' && mapTitle) mapTitle.text(`Canadian Cities Average Rent in ${currentYear}`); } catch (e) {}
                 // Update year note in chart panel (if present)
                 try {
                     if (typeof yearNote !== 'undefined' && yearNote) {
@@ -198,35 +210,6 @@ function initCityMap() {
         .style('color', '#718096')
         .text('2024');
 
-    // Add zoom controls container
-    const controlsContainer = mapAreaContainer
-        .append('div')
-        .attr('class', 'map-controls')
-        .style('position', 'absolute')
-        .style('top', '10px')
-        .style('left', '10px')
-        .style('display', 'flex')
-        .style('flex-direction', 'column')
-        .style('gap', '10px')
-        .style('z-index', '1000');
-
-    // Zoom controls group
-    const zoomGroup = controlsContainer.append('div')
-        .style('display', 'flex')
-        .style('flex-direction', 'column')
-        .style('gap', '5px');
-
-    const zoomInBtn = zoomGroup.append('button')
-        .attr('class', 'zoom-btn rentalpricemap-btn')
-        .text('+');
-
-    const zoomOutBtn = zoomGroup.append('button')
-        .attr('class', 'zoom-btn rentalpricemap-btn')
-        .text('−');
-
-    const resetBtn = zoomGroup.append('button')
-        .attr('class', 'zoom-btn rentalpricemap-btn reset')
-        .text('Reset');
     
     // Close button to hide the chart panel
     const closeBtn = chartPanelContainer.append('button')
@@ -263,6 +246,7 @@ function initCityMap() {
         })
         .on('click', function() {
             // Close the chart and deselect the city
+            const prevSelected = selectedCity;
             selectedCity = null;
             chartContent.style('display', 'none');
             instructionsDiv.style('display', 'flex');
@@ -270,12 +254,15 @@ function initCityMap() {
             // Hide the close button when showing the instructions
             try { closeBtn.style('display', 'none'); } catch (e) {}
 
-            // Reset all city circle colors
+            // Reset all city circle colors and clear any stored original color
             if (typeof cityCircles !== 'undefined') {
                 cityCircles.each(function(c) {
-                    d3.select(this).attr('fill', getCityColor(c.city));
+                    d3.select(this).attr('fill', getCityColor(c.city)).attr('data-original-color', null);
                 });
             }
+
+            // Ensure any visual scaling/visibility is refreshed
+            try { updateCityColors(); } catch (e) {}
         });
     
     // Instructions div (shown when no city is selected)
@@ -510,6 +497,28 @@ function initCityMap() {
             .style('font-weight', '600')
             .style('fill', '#666')
             .text('Average Monthly Rent ($)');
+
+        // Draw a vertical dotted indicator for the selected year (behind plotted lines)
+        try {
+            const indicatorX = xScale(currentYear);
+            // remove any previous indicator
+            chartG.selectAll('.year-indicator').remove();
+            // append new indicator line
+            chartG.append('line')
+                .attr('class', 'year-indicator')
+                .attr('x1', indicatorX)
+                .attr('x2', indicatorX)
+                .attr('y1', 0)
+                .attr('y2', innerHeight)
+                .attr('stroke', '#0ea5e9')
+                .attr('stroke-width', 1.2)
+                .attr('stroke-dasharray', '2,4')
+                .style('opacity', 0.9);
+            // move behind plotted paths
+            try { chartG.selectAll('.year-indicator').lower(); } catch (e) {}
+        } catch (e) {
+            // ignore if scales/positions not ready
+        }
         
         // Line generator
         const line = d3.line()
@@ -1080,15 +1089,19 @@ function initCityMap() {
                 
                 // If the clicked city is already selected, deselect it
                 if (selectedCity && selectedCity.city === d.city) {
+                    const prevSelected = selectedCity;
                     selectedCity = null;
                     chartContent.style('display', 'none');
                     instructionsDiv.style('display', 'flex');
-                        // Hide the close button when switching back to instructions
-                        try { closeBtn.style('display', 'none'); } catch (e) {}
-                    // Reset all city colors
-                    cityCircles.each(function(c) {
-                        d3.select(this).attr('fill', getCityColor(c.city));
-                    });
+                    // Hide the close button when switching back to instructions
+                    try { closeBtn.style('display', 'none'); } catch (e) {}
+                    // Reset all city colors and clear stored original color
+                    if (typeof cityCircles !== 'undefined') {
+                        cityCircles.each(function(c) {
+                            d3.select(this).attr('fill', getCityColor(c.city)).attr('data-original-color', null);
+                        });
+                    }
+                    try { updateCityColors(); } catch (e) {}
                     return;
                 }
 
@@ -1200,31 +1213,25 @@ function initCityMap() {
                 
                 // Deselect city and show instructions
                 if (selectedCity) {
+                    const prevSelected = selectedCity;
                     selectedCity = null;
                     chartContent.style('display', 'none');
                     instructionsDiv.style('display', 'flex');
                     // Hide the close button when no city is selected
                     try { closeBtn.style('display', 'none'); } catch (e) {}
                     
-                    // Reset all city colors
-                    cityCircles.each(function(c) {
-                        d3.select(this).attr('fill', getCityColor(c.city));
-                    });
+                    // Reset all city colors and clear stored original color
+                    if (typeof cityCircles !== 'undefined') {
+                        cityCircles.each(function(c) {
+                            d3.select(this).attr('fill', getCityColor(c.city)).attr('data-original-color', null);
+                        });
+                    }
+                    try { updateCityColors(); } catch (e) {}
                 }
             }
         });
 
-        zoomInBtn.on('click', function() {
-            svg.transition().duration(300).call(zoom.scaleBy, 1.3);
-        });
-
-        zoomOutBtn.on('click', function() {
-            svg.transition().duration(300).call(zoom.scaleBy, 0.77);
-        });
-
-        resetBtn.on('click', function() {
-            svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity);
-        });
+        // Zoom button handlers removed (controls not rendered)
 
     }).catch(function(err) {
         console.error('Failed to load map data:', err);

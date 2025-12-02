@@ -25,10 +25,10 @@
             <button id="tab1" class="tab active-tab" data-target="vis0">Intro</button>
             <button id="tab2" class="tab" data-target="vis1">Mortgage Rates</button>
             <button id="tab3" class="tab" data-target="vis2">Rent Increases</button>
-            <button id="tab4" class="tab" data-target="vis3">Income vs Rent</button>
             <button id="tab5" class="tab" data-target="vis4">Rent & Population</button>
             <button id="tab6" class="tab" data-target="vis5">Vacancy Rates</button>
             <button id="tab7" class="tab" data-target="vis6">Construction</button>
+            <button id="tab4" class="tab" data-target="vis3">Income vs Rent</button>
             <button id="tab8" class="tab" data-target="vis7">Conclusion</button>
         </div>
 
@@ -74,7 +74,17 @@
                 <div class="row justify-content-center g-5" id="vis1">
                             <header>
                                 <h1>How Quickly Have Mortgage Rates Increased?</h1>
-                                <p class="subtitle">Interactive exploration of housing costs across provinces · 2012—2024</p>
+                                <p>Mortgage prices have <strong>skyrocketed since 2020</strong>, with the pandemic triggering an
+                                unprecedented surge in housing costs.
+                                While there has been a slight cooling off since 2024, the damage is done: the average
+                                Canadian income of approximately
+                                <span class="stat">$60,000–$70,000/year</span> now makes housing unaffordable across most of Canada. What
+                                would have been comfortably affordable
+                                in 2012 is now out of reach for the majority of working Canadians. In many provinces,
+                                even households earning significantly
+                                    above the national average are spending <span class="stat">40–50%+ of their income</span> on mortgage
+                                payments—well beyond the <span class="stat">30% affordability threshold</span>.
+                            </p>
                             </header>
                             
                             <div class="container">
@@ -155,20 +165,6 @@
                             </div>
                         </div>
 
-                        <div class="data-table-section">
-                            <p>Mortgage prices have skyrocketed since 2020, with the pandemic triggering an
-                                unprecedented surge in housing costs.
-                                While there has been a slight cooling off since 2024, the damage is done: the average
-                                Canadian income of approximately
-                                $60,000-$70,000 per year now makes housing unaffordable across most of Canada. What
-                                would have been comfortably affordable
-                                in 2012 is now out of reach for the majority of working Canadians. In many provinces,
-                                even households earning significantly
-                                above the national average are spending 40-50% or more of their income on mortgage
-                                payments—well beyond the 30% affordability threshold.
-                            </p>
-                        </div>
-
                         <footer>
                             <p>Data Source: Equifax Canada via Canada Mortgage and Housing Corporation (CMHC) | Last
                                 Updated: September 2025</p>
@@ -190,11 +186,11 @@
                     <div id="map" style="min-height: 700px;"></div>
 
                     <div class="data-table-section">
-                        <p>The rental market hasn't faired any better, with rent in many cities only steadily decreasing
+                        <p>The rental market hasn't fared any better, with rent in many cities only steadily decreasing
                             in the 2010's to
-                            noticeably climbing across unit types in the past five years. Thus we begin to explore: what
-                            factors have lead to
-                            the current housing crisis?
+                            <strong>noticeably climbing across unit types</strong> in the past five years. Thus we begin to explore: <em>what
+                            factors have led to
+                            the current housing crisis?</em>
                         </p>
                     </div>
                 </div>
@@ -228,7 +224,7 @@
                 <!-- Visualization 5 -->
                 <div class="viz-block" id="vis4">
                     <header>
-                        <h1>How Have Rent Responded to Population Changes?</h1>
+                        <h1>How Has Rent Responded to Population Changes?</h1>
                             <p>Overall, most years and locations in which there is a high percentage increase in rent also see a corresponding increase 
                                 in population. There are of course exceptions, such as PEI in 2023 which saw a mere 0.93% increase in average rent despite 
                                 a 4.52% increase in population, or Ontario in 2022 which saw a 7% increase in average rent with only a 0.27% increase in population. 
@@ -301,7 +297,7 @@
                         </div>
                         
                         <div id="vis5-area"
-                            style="width: 100%; height: 60vh; min-height: 400px; border: thin solid transparent;">
+                            style="width: 100%; height: 40vh; min-height: 300px; border: thin solid transparent;">
                         </div>
 
                         </div>
@@ -313,7 +309,7 @@
                 <header>
                     <h1>How Tight Are Vacancy Rates in Major Cities?</h1>
                     <p class="subtitle">
-                        Each building represents a major Canadian city. Windows now show the estimated number of vacant homes (based on the selected year's housing supply × vacancy rate), with gray windows stacked from the bottom up; the size of each window auto-scales to fill the 5×20 grid.</p>
+                        Each building represents a major Canadian city. Windows show the estimated number of vacant homes (based on the selected year's housing supply × vacancy rate), with gray windows stacked from the bottom up; the size of each window auto-scales to fill the 5×20 grid.</p>
                 </header>
                 <div class="row justify-content-center g-5" id="vis5">
 
@@ -344,7 +340,7 @@
                             <div class="vacancy-info-panel">
                                 <div class="vacancy-scale">
                                     <div class="label">Current scale</div>
-                                    <div class="value" id="vacancy-scale-value">-</div>
+                                    <div class="value" id="vacancy-scale-value">–</div>
                                     <div class="note" id="vacancy-scale-note">Adjusts when cities/year change</div>
                                 </div>
                                 <h3>Displayed Cities</h3>
@@ -363,26 +359,16 @@
             <div id="visualization-area-6" class="content" data-content="vis6">
                 <header>
                     <h1>Does Housing Construction Keep Up With Population Growth?</h1>
+                            <p>At the root of housing issues lies the rate of construction of housing units across Canada. 
+                            In comparison to the sharp increase in population that Canada has seen in the past five years, 
+                            <strong>housing completions have remained stagnant</strong> leading to overhwhelming demand over supply.<br><br>
+                        </p>
                 </header>
                 <div class="viz-block" id="vis6">
                     <div class="row justify-content-center g-5">
                         <div class="col-12 visualization-section">
-                            <div id="construction-visualization" style="min-height: 700px;"></div>
+                            <div id="construction-visualization" style="width: 100%; height: 80vh; min-height: 700px; border: thin solid transparent;"></div>
                         </div>
-                    </div>
-                    <div class="data-table-section">
-                        <p> At the root of housing issues lies the rate of consutrction of housing units across Canada.
-                            In comparison to
-                            the sharp increase in population that Canada has seen in the past 5 years, housing
-                            completions have remained
-                            stagnant. Excluding Newfoundland and Labrador and Saskatchewen, which are notably two of the
-                            more affordable provinces,
-                            the ratio of completions to population change has been steadily decreasing over the past few
-                            years across housing types. Looking
-                            at British Columbia and Ontario, two of the least affordable provinces, housing completion
-                            ratios have gone under 0.1 in 2023,
-                            indicating significantly higher demand than supply and leading to decreased affordability.
-                        </p>
                     </div>
                 </div> <!-- /.viz-block -->
 
@@ -425,6 +411,7 @@
     <script src="js/incomeRentV2.js"></script>
     <script src="js/housingUnitsVisualization.js"></script>
     <script src="js/constructionVisualization.js"></script>
+    <script src="js/constructionVisualizationV2.js"></script>
 
     <!-- Main Visualization Script -->
     <script src="js/main.js"></script>
