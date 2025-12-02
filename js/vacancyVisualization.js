@@ -24,10 +24,9 @@ function getFullProvinceName(abbreviation) {
 let allCitiesData = [];
 let selectedCities = [];
 let currentFilters = {
-  unitType: "total",
+  year: "2023",
   vacancy: "all",
-  rent: "all",
-  sort: "population",
+  sort: "custom",
 };
 
 let carouselViewport = null;
@@ -186,29 +185,23 @@ function snapToNearestCard() {
 
 // Setup filter event listeners
 function setupFilterListeners() {
-  const unitTypeFilter = document.getElementById("unit-type-filter");
+  const yearFilter = document.getElementById("year-filter");
   const vacancyFilter = document.getElementById("vacancy-filter");
-  const rentFilter = document.getElementById("rent-filter");
   const sortFilter = document.getElementById("sort-filter");
   const resetButton = document.getElementById("reset-filters");
 
-  if (!unitTypeFilter || !vacancyFilter || !rentFilter || !sortFilter || !resetButton) {
+  if (!yearFilter || !vacancyFilter || !sortFilter || !resetButton) {
     console.error("Filter elements not found");
     return;
   }
 
-  unitTypeFilter.addEventListener("change", (e) => {
-    currentFilters.unitType = e.target.value;
+  yearFilter.addEventListener("change", (e) => {
+    currentFilters.year = e.target.value;
     applyFilters();
   });
 
   vacancyFilter.addEventListener("change", (e) => {
     currentFilters.vacancy = e.target.value;
-    applyFilters();
-  });
-
-  rentFilter.addEventListener("change", (e) => {
-    currentFilters.rent = e.target.value;
     applyFilters();
   });
 
@@ -218,15 +211,13 @@ function setupFilterListeners() {
   });
 
   resetButton.addEventListener("click", () => {
-    unitTypeFilter.value = "total";
+    yearFilter.value = "2023";
     vacancyFilter.value = "all";
-    rentFilter.value = "all";
-    sortFilter.value = "population";
+    sortFilter.value = "custom";
     currentFilters = {
-      unitType: "total",
+      year: "2023",
       vacancy: "all",
-      rent: "all",
-      sort: "population",
+      sort: "custom",
     };
     selectedCities = [];
     updateSelectedCitiesDisplay();
@@ -482,39 +473,36 @@ function updateSelectedCitiesDisplay() {
 
 // Apply current filters to the data
 function applyFilters() {
-  let filteredData = allCitiesData;
+  const selectedYear = parseInt(currentFilters.year);
 
+  // Convert multi-year data to single-year format
+  let filteredData = allCitiesData.map(city => {
+    // Find the vacancy rate for the selected year
+    const yearData = city.years.find(y => y.year === selectedYear);
 
-  // Filter out cities that don't have data for the selected unit type
-  const unitType = currentFilters.unitType;
-  filteredData = filteredData.filter((d) => d.data && d.data[unitType]);
+    if (!yearData) {
+      return null; // City doesn't have data for this year
+    }
+
+    return {
+      city: city.city,
+      province: city.province,
+      population: city.population,
+      year: selectedYear,
+      vacancy_rate: yearData.vacancy_rate
+    };
+  }).filter(d => d !== null); // Remove cities without data for selected year
 
   // City selection filter (highest priority)
   if (selectedCities.length > 0) {
     filteredData = filteredData.filter((d) => selectedCities.includes(d.city));
   }
 
-  // Vacancy rate filter (using selected unit type)
+  // Vacancy rate filter
   if (currentFilters.vacancy === "high") {
-    filteredData = filteredData.filter(
-      (d) => d.data[unitType].vacancy_rate > 2.0
-    );
+    filteredData = filteredData.filter((d) => d.vacancy_rate > 2.0);
   } else if (currentFilters.vacancy === "low") {
-    filteredData = filteredData.filter(
-      (d) => d.data[unitType].vacancy_rate <= 2.0
-    );
-  }
-
-  // Rent filter (using selected unit type)
-  if (currentFilters.rent === "high") {
-    filteredData = filteredData.filter((d) => d.data[unitType].avg_rent > 1500);
-  } else if (currentFilters.rent === "medium") {
-    filteredData = filteredData.filter(
-      (d) =>
-        d.data[unitType].avg_rent >= 1200 && d.data[unitType].avg_rent <= 1500
-    );
-  } else if (currentFilters.rent === "low") {
-    filteredData = filteredData.filter((d) => d.data[unitType].avg_rent < 1200);
+    filteredData = filteredData.filter((d) => d.vacancy_rate <= 2.0);
   }
 
   // Update visualization with filtered data
@@ -537,91 +525,64 @@ function createBuildingVisualization(cities) {
       return;
     }
 
-    // Get the current unit type
-    const unitType = currentFilters.unitType;
-
   // Apply sorting based on current filter
   switch (currentFilters.sort) {
-    case "population":
-      cities.sort((a, b) => b.population - a.population);
+    case "custom":
+      // Major cities first (by importance/population), then others
+      const majorCities = [
+        "Toronto", "Montréal", "Vancouver", "Calgary", "Edmonton",
+        "Winnipeg", "Hamilton", "London", "Halifax", "Windsor",
+        "Oshawa", "Victoria", "Saskatoon", "Regina", "Kelowna",
+        "Sherbrooke", "St. John's", "Trois-Rivières", "Lethbridge",
+        "Red Deer", "Charlottetown", "Wood Buffalo", "Prince Albert",
+        "Bathurst", "Fort St. John", "Squamish", "Petawawa",
+        "Camrose", "Swift Current", "Estevan"
+      ];
+
+      cities.sort((a, b) => {
+        const indexA = majorCities.indexOf(a.city);
+        const indexB = majorCities.indexOf(b.city);
+
+        // If both are in the list, sort by their position
+        if (indexA !== -1 && indexB !== -1) {
+          return indexA - indexB;
+        }
+        // If only A is in the list, A comes first
+        if (indexA !== -1) return -1;
+        // If only B is in the list, B comes first
+        if (indexB !== -1) return 1;
+        // If neither is in the list, sort alphabetically
+        return a.city.localeCompare(b.city);
+      });
       break;
     case "vacancy-high":
-      cities.sort(
-        (a, b) => b.data[unitType].vacancy_rate - a.data[unitType].vacancy_rate
-      );
+      cities.sort((a, b) => b.vacancy_rate - a.vacancy_rate);
       break;
     case "vacancy-low":
-      cities.sort(
-        (a, b) => a.data[unitType].vacancy_rate - b.data[unitType].vacancy_rate
-      );
-      break;
-    case "rent-high":
-      cities.sort(
-        (a, b) => b.data[unitType].avg_rent - a.data[unitType].avg_rent
-      );
-      break;
-    case "rent-low":
-      cities.sort(
-        (a, b) => a.data[unitType].avg_rent - b.data[unitType].avg_rent
-      );
+      cities.sort((a, b) => a.vacancy_rate - b.vacancy_rate);
       break;
     case "name":
       cities.sort((a, b) => a.city.localeCompare(b.city));
       break;
     default:
+      // Default to custom sort
       cities.sort((a, b) => b.population - a.population);
   }
 
-  // Calculate scales
-  const maxPopulation = d3.max(cities, (d) => d.population);
-  const minPopulation = d3.min(cities, (d) => d.population);
-  const maxRent = d3.max(cities, (d) => d.data[unitType].avg_rent);
-  const minRent = d3.min(cities, (d) => d.data[unitType].avg_rent);
-
-  const populationScale = d3
-    .scaleLinear()
-    .domain([minPopulation, maxPopulation])
-    .range([16, 48]);
-
-  const chimneyHeightScale = d3
-    .scaleLinear()
-    .domain([minRent, maxRent])
-    .range([40, 100]);
-
   cities.forEach((city) => {
-    const totalWindows = Math.round(populationScale(city.population));
+    // Fixed number of windows for all cities
+    const totalWindows = 32;
     const cols = 4;
 
-    // Get data for selected unit type
-    const cityData = city.data[unitType];
-    const vacancyRate = cityData.vacancy_rate;
-    const avgRent = cityData.avg_rent;
+    // Get vacancy rate
+    const vacancyRate = city.vacancy_rate;
 
-    // Calculate exact vacancy - including fractional part
-    const exactVacantWindows = totalWindows * (vacancyRate / 100);
-    const fullVacantCount = Math.floor(exactVacantWindows);
-    const partialVacantPercent = exactVacantWindows - fullVacantCount;
-
-    const fullOccupiedCount = Math.floor(totalWindows - exactVacantWindows);
-    const hasPartialWindow = partialVacantPercent > 0;
+    // Calculate vacant windows (rounded to nearest whole number)
+    const vacantCount = Math.round(totalWindows * (vacancyRate / 100));
+    const occupiedCount = totalWindows - vacantCount;
 
     // Create building container
     const buildingDiv = container.append("div").attr("class", "city-building");
-
-    // Chimney container
-    const chimneyContainer = buildingDiv
-      .append("div")
-      .attr("class", "smoke-container");
-
-    // Add chimney with variable height based on rent
-    const chimneyHeight = Math.round(chimneyHeightScale(avgRent));
-    const chimney = chimneyContainer
-      .append("div")
-      .attr("class", "chimney")
-      .style("height", `${chimneyHeight}px`);
-
-    // Add dollar sign inside chimney
-    chimney.append("div").attr("class", "chimney-dollar").text("$");
 
     // Building structure
     const building = buildingDiv.append("div").attr("class", "building");
@@ -631,52 +592,24 @@ function createBuildingVisualization(cities) {
       .attr("class", "windows-grid")
       .style("grid-template-columns", `repeat(${cols}, 1fr)`);
 
-    // Create windows array with occupied, vacant, and partial
+    // Create windows array - always exactly 32 windows
     const windows = [];
 
-    // Add fully occupied windows
-    for (let i = 0; i < fullOccupiedCount; i++) {
-      windows.push({ type: "occupied", fill: 1.0 });
+    // Add vacant windows first (so they appear at top-left)
+    for (let i = 0; i < vacantCount; i++) {
+      windows.push({ type: "vacant" });
     }
 
-    // Add partially filled window if needed
-    if (hasPartialWindow) {
-      windows.push({ type: "partial", fill: 1 - partialVacantPercent });
+    // Add occupied windows after
+    for (let i = 0; i < occupiedCount; i++) {
+      windows.push({ type: "occupied" });
     }
 
-    // Add fully vacant windows
-    for (let i = 0; i < fullVacantCount; i++) {
-      windows.push({ type: "vacant", fill: 0 });
-    }
-
-    // Shuffle the windows array
-    for (let i = windows.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [windows[i], windows[j]] = [windows[j], windows[i]];
-    }
-
-    // Add windows to grid
+    // Add windows to grid - always exactly 32 windows
     windows.forEach((window, index) => {
-      const windowDiv = windowsGrid
+      windowsGrid
         .append("div")
-        .attr("class", `window ${window.type}`)
-        .attr(
-          "title",
-          window.type === "occupied"
-            ? "Occupied unit"
-            : window.type === "vacant"
-            ? "Vacant unit"
-            : `Partially occupied (${Math.round(window.fill * 100)}%)`
-        );
-
-      // For partial windows, create a gradient fill
-      if (window.type === "partial") {
-        const fillPercent = window.fill * 100;
-        windowDiv.style(
-          "background",
-          `linear-gradient(to top, #f6ad55 0%, #ed8936 ${fillPercent}%, #e2e8f0 ${fillPercent}%, #e2e8f0 100%)`
-        );
-      }
+        .attr("class", `window ${window.type}`);
     });
 
     // City label
@@ -687,30 +620,13 @@ function createBuildingVisualization(cities) {
 
     label.append("div").attr("class", "city-name").text(city.city);
 
-    // Helper function to get unit type label
-    const getUnitTypeLabel = () => {
-      const labels = {
-        bachelor: "Bachelor",
-        "1_bedroom": "1 Bedroom",
-        "2_bedroom": "2 Bedroom",
-        "3_bedroom_plus": "3+ Bedroom",
-        total: "All Units",
-      };
-      return labels[unitType] || "All Units";
-    };
-
     label.append("div").attr("class", "city-stats").html(`
                 ${
                   city.year
                     ? `<div><strong>Year:</strong> ${city.year}</div>`
                     : ""
                 }
-                <div><strong>Unit Type:</strong> ${getUnitTypeLabel()}</div>
                 <div><strong>Vacancy:</strong> ${vacancyRate}%</div>
-                <div><strong>Avg Rent:</strong> $${Math.round(avgRent)}</div>
-                <div><strong>Pop:</strong> ${formatPopulation(
-                  city.population
-                )}</div>
             `);
 
     // Keep green background for high vacancy cities, but don't show badge text
@@ -728,11 +644,3 @@ function createBuildingVisualization(cities) {
   }
 }
 
-function formatPopulation(pop) {
-  if (pop >= 1000000) {
-    return (pop / 1000000).toFixed(1) + "M";
-  } else if (pop >= 1000) {
-    return Math.round(pop / 1000) + "K";
-  }
-  return pop.toString();
-}
