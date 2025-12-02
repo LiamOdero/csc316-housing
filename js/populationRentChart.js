@@ -543,7 +543,6 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
 
                     g.transition()
                         .duration(350)
-                        .attr("opacity", 1);
 
                     // Hover events
                     g.on("mouseover", function(event, d) {
@@ -614,18 +613,13 @@ constructor(parentElement, citySearch, cityList, dropdown, filterParent, selecti
                 exit => exit
                             .transition()
                             .duration(350) 
-                            .attr("opacity", 0) 
                             .remove() 
                             );
             vis.svg.select(".x-axis")
-                .transition()
-                .duration(350)
                 .call(vis.xAxis)
 
                 
             vis.svg.select(".y-axis")
-                .transition()
-                .duration(350)
                 .call(vis.yAxis)
                 .on("end", function() {
                     vis.transitionLock = false;
