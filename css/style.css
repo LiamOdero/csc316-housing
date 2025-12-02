@@ -1662,7 +1662,7 @@ footer {
 
 .vacancy-wrapper {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 2fr) minmax(240px, 0.7fr);
     gap: 24px;
     align-items: stretch;
     width: 100%;
@@ -1781,6 +1781,12 @@ footer {
 .vacancy-scale .note {
     font-size: 0.8rem;
     color: #718096;
+}
+
+@media (max-width: 900px) {
+    .vacancy-wrapper {
+        grid-template-columns: 1fr;
+    }
 }
 
 .vacancy-city-row {

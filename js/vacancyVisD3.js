@@ -15,11 +15,6 @@
     "Sask.": "Saskatchewan",
   };
 
-  const DEFAULT_FILTERS = {
-    rent: "all",
-    sort: "vacancy-high",
-  };
-
   // Match the city set used in incomeRentV2 (largest city per province)
   const ALLOWED_CITIES = [
     "Calgary",
@@ -98,7 +93,6 @@
       this.housingSupply = new Map();
       this.allCitiesData = [];
       this.selectedCities = [];
-      this.currentFilters = { ...DEFAULT_FILTERS };
       this.tooltip = null;
 
       this.svg = null;
@@ -144,10 +138,8 @@
       this.selectedCities = this.allCitiesData
         .slice()
         .sort((a, b) => b.population - a.population)
-        .slice(0, 4)
+        .slice(0, 3)
         .map((d) => d.city);
-      this.setupCitySelector();
-      this.setupFilterListeners();
       this.cacheInfoElements();
       this.setupControlPanel();
 
@@ -327,129 +319,18 @@
       };
     }
 
-    setupFilterListeners() {
-      const rentFilter = document.getElementById("rent-filter");
-      const sortFilter = document.getElementById("sort-filter");
-      const resetButton = document.getElementById("reset-filters");
-
-      if (!sortFilter || !resetButton) {
-        return;
-      }
-
-      if (rentFilter) {
-        rentFilter.addEventListener("change", (e) => {
-          this.currentFilters.rent = e.target.value;
-          this.render();
-        });
-      }
-
-      sortFilter.addEventListener("change", (e) => {
-        this.currentFilters.sort = e.target.value;
-        this.render();
-      });
-
-      resetButton.addEventListener("click", () => {
-        if (rentFilter) rentFilter.value = DEFAULT_FILTERS.rent;
-        sortFilter.value = DEFAULT_FILTERS.sort;
-        this.currentFilters = { ...DEFAULT_FILTERS };
-        this.selectedCities = [];
-        this.updateSelectedCitiesDisplay();
-        this.render();
-      });
-    }
-
     getAveragedUnitData(city) {
-      const data = city && city.data ? city.data : null;
-      if (!data || typeof data !== "object") return null;
-
-      const entries = Object.entries(data).filter(
-        ([, v]) =>
-          v &&
-          typeof v === "object" &&
-          Number.isFinite(v.vacancy_rate)
-      );
-
-      const nonTotal = entries.filter(([k]) => k !== "total");
-      const useEntries = nonTotal.length ? nonTotal : entries;
-      if (!useEntries.length) return null;
-
-      const sums = useEntries.reduce(
-        (acc, [, v]) => {
-          acc.vacancy += v.vacancy_rate;
-          if (Number.isFinite(v.avg_rent)) {
-            acc.rent += v.avg_rent;
-            acc.rentCount += 1;
-          }
-          return acc;
-        },
-        { rent: 0, rentCount: 0, vacancy: 0 }
-      );
-      const count = useEntries.length;
+      if (!city || typeof city !== "object") return null;
+      const vacancyRate = Number.isFinite(city.vacancy_rate)
+        ? city.vacancy_rate
+        : null;
+      const avgRent = Number.isFinite(city.avg_rent) ? city.avg_rent : null;
+      if (vacancyRate === null && avgRent === null) return null;
       return {
-        avg_rent: sums.rentCount ? sums.rent / sums.rentCount : null,
-        vacancy_rate: sums.vacancy / count,
-        unitCount: count,
+        avg_rent: avgRent,
+        vacancy_rate: vacancyRate,
+        unitCount: 1,
       };
-    }
-
-    setupCitySelector() {
-      const searchInput = document.getElementById("city-search");
-      const cityDropdown = document.getElementById("city-dropdown");
-      const provinceSelect = document.getElementById("province-select");
-      const tabCities = document.getElementById("tab-cities");
-      const tabProvinces = document.getElementById("tab-provinces");
-
-      if (
-        !searchInput ||
-        !cityDropdown ||
-        !provinceSelect ||
-        !tabCities ||
-        !tabProvinces
-      ) {
-        return;
-      }
-
-      this.populateProvinceDropdown();
-
-      tabCities.addEventListener("click", () => {
-        tabCities.classList.add("active");
-        tabProvinces.classList.remove("active");
-        searchInput.style.display = "block";
-        provinceSelect.style.display = "none";
-        cityDropdown.style.display = "none";
-      });
-
-      tabProvinces.addEventListener("click", () => {
-        tabProvinces.classList.add("active");
-        tabCities.classList.remove("active");
-        searchInput.style.display = "none";
-        provinceSelect.style.display = "block";
-        cityDropdown.style.display = "none";
-      });
-
-      provinceSelect.addEventListener("change", (e) => {
-        const province = e.target.value;
-        if (province) {
-          this.selectProvinceCities(province);
-          e.target.value = "";
-        }
-      });
-
-      searchInput.addEventListener("focus", () => {
-        this.updateCityDropdown("");
-        cityDropdown.style.display = "block";
-      });
-
-      searchInput.addEventListener("input", (e) => {
-        const searchTerm = e.target.value;
-        this.updateCityDropdown(searchTerm);
-      });
-
-      document.addEventListener("click", (e) => {
-        if (!e.target.closest(".city-selector-container")) {
-          cityDropdown.style.display = "none";
-        }
-      });
     }
 
     cacheInfoElements() {
@@ -503,11 +384,8 @@
       }
 
       if (yearSlider && yearDisplay) {
-        const extent = this.getYearExtent() || [2000, this.currentYear || 2023];
-        const minYear = Number.isFinite(extent[0]) ? extent[0] : 2000;
-        const maxYear = Number.isFinite(extent[1])
-          ? extent[1]
-          : Math.max(minYear, this.currentYear || 2023);
+        const minYear = 2000;
+        const maxYear = 2023;
         const clampedYear = Math.max(
           minYear,
           Math.min(maxYear, this.currentYear || maxYear)
@@ -530,174 +408,6 @@
       }
 
       this.updateScaleDisplay(this.percentPerWindow);
-    }
-
-    populateProvinceDropdown() {
-      const provinceSelect = document.getElementById("province-select");
-      if (!provinceSelect) return;
-
-      // Clear existing (except placeholder)
-      while (provinceSelect.options.length > 1) {
-        provinceSelect.remove(1);
-      }
-
-      const provincesMap = new Map();
-      this.allCitiesData.forEach((d) => {
-        if (!provincesMap.has(d.province)) {
-          const citiesInProvince = this.allCitiesData.filter(
-            (c) => c.province === d.province
-          );
-          provincesMap.set(d.province, citiesInProvince.length);
-        }
-      });
-
-      const provinces = Array.from(provincesMap.entries()).sort((a, b) =>
-        a[0].localeCompare(b[0])
-      );
-
-      provinces.forEach(([province, count]) => {
-        const option = document.createElement("option");
-        option.value = province;
-        option.textContent = `${getFullProvinceName(province)} (${count} cities)`;
-        provinceSelect.appendChild(option);
-      });
-    }
-
-    selectProvinceCities(province) {
-      const citiesInProvince = this.allCitiesData
-        .filter((d) => d.province === province)
-        .map((d) => d.city);
-
-      citiesInProvince.forEach((city) => {
-        if (!this.selectedCities.includes(city)) {
-          this.selectedCities.push(city);
-        }
-      });
-
-      this.updateSelectedCitiesDisplay();
-      this.render();
-    }
-
-    updateCityDropdown(searchTerm) {
-      const cityList = document.getElementById("city-list");
-      const dropdown = document.getElementById("city-dropdown");
-      const searchInput = document.getElementById("city-search");
-      if (!cityList || !dropdown || !searchInput) return;
-
-      const cityMap = new Map();
-      this.allCitiesData.forEach((d) => {
-        if (!cityMap.has(d.city)) cityMap.set(d.city, d.province);
-      });
-
-      let availableCities = Array.from(cityMap, ([name, province]) => ({
-        name,
-        province,
-      }));
-
-      if (searchTerm) {
-        availableCities = availableCities.filter(
-          (city) =>
-            city.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            city.province.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      }
-
-      cityList.innerHTML = "";
-
-      const header = document.createElement("div");
-      header.className = "dropdown-header";
-      header.textContent = searchTerm
-        ? `${availableCities.length} cities found`
-        : `All ${cityMap.size} cities`;
-      cityList.appendChild(header);
-
-      if (availableCities.length === 0) {
-        cityList.innerHTML +=
-          '<div style="padding: 20px; text-align: center; color: #718096;">No cities match your search</div>';
-        return;
-      }
-
-      const citiesByProvince = new Map();
-      availableCities.forEach((city) => {
-        if (!citiesByProvince.has(city.province)) {
-          citiesByProvince.set(city.province, []);
-        }
-        citiesByProvince.get(city.province).push(city);
-      });
-
-      const sortedProvinces = Array.from(citiesByProvince.keys()).sort();
-
-      sortedProvinces.forEach((province) => {
-        const provinceHeader = document.createElement("div");
-        provinceHeader.className = "province-group-header";
-        provinceHeader.textContent = `${getFullProvinceName(province)} (${
-          citiesByProvince.get(province).length
-        })`;
-        cityList.appendChild(provinceHeader);
-
-        const cities = citiesByProvince
-          .get(province)
-          .sort((a, b) => a.name.localeCompare(b.name));
-
-        cities.forEach((city) => {
-          const isSelected = this.selectedCities.includes(city.name);
-          const option = document.createElement("div");
-          option.className = "city-option";
-          if (isSelected) option.classList.add("selected");
-
-          const cityName = document.createElement("span");
-          cityName.textContent = city.name;
-          option.appendChild(cityName);
-
-          option.addEventListener("click", () => {
-            this.toggleCitySelection(city.name);
-            searchInput.value = "";
-            this.updateCityDropdown("");
-          });
-
-          cityList.appendChild(option);
-        });
-      });
-    }
-
-    toggleCitySelection(cityName) {
-      const index = this.selectedCities.indexOf(cityName);
-      if (index > -1) {
-        this.selectedCities.splice(index, 1);
-      } else {
-        this.selectedCities.push(cityName);
-      }
-      this.updateSelectedCitiesDisplay();
-      this.render();
-    }
-
-    updateSelectedCitiesDisplay() {
-      const container = document.getElementById("selected-cities");
-      if (!container) return;
-
-      container.innerHTML = "";
-
-      if (this.selectedCities.length === 0) {
-        container.innerHTML =
-          '<div style="color: #718096; font-size: 0.9em; padding: 5px;">No cities selected - showing all</div>';
-        return;
-      }
-
-      this.selectedCities.forEach((cityName) => {
-        const tag = document.createElement("div");
-        tag.className = "selected-city-tag";
-        tag.innerHTML = `
-          <span>${cityName}</span>
-          <span class="remove-city" data-city="${cityName}">×</span>
-        `;
-        tag
-          .querySelector(".remove-city")
-          .addEventListener("click", (e) => {
-            e.stopPropagation();
-            this.toggleCitySelection(cityName);
-          });
-        container.appendChild(tag);
-      });
     }
 
     getHousingSupply(cityName, year) {
@@ -761,12 +471,12 @@
       if (existingIdx >= 0) {
         this.selectedCities.splice(existingIdx, 1);
       } else {
-        this.selectedCities.push(cityName);
-        if (this.selectedCities.length > 4) {
-          this.selectedCities.shift();
+          this.selectedCities.push(cityName);
+          if (this.selectedCities.length > 3) {
+            this.selectedCities.shift();
+          }
         }
       }
-    }
 
     ensureTooltip() {
       if (this.tooltip && !this.tooltip.empty()) return this.tooltip;
@@ -842,7 +552,9 @@
       const containerNode = this.infoElements.cityList;
       const containerWidth =
         (containerNode && containerNode.clientWidth) || 0;
-      const svgWidth = Math.max(520, containerWidth || 0);
+      const svgWidth = containerWidth
+        ? Math.max(320, Math.floor(containerWidth * 0.7))
+        : 320;
 
       if (!data.length) {
         const svg = listSel
@@ -941,7 +653,7 @@
     }
 
     applyFilters() {
-      let filteredData = this.allCitiesData
+      const withVacancy = this.allCitiesData
         .map((city) => {
           const agg = this.getAveragedUnitData(city);
           const vacancyEntry = this.getVacancyRate(
@@ -968,31 +680,12 @@
             Number.isFinite(d._vacancyRate)
         );
 
-      if (this.selectedCities.length > 0) {
-        filteredData = filteredData.filter((d) =>
-          this.selectedCities.includes(d.city)
-        );
-      } else {
-        filteredData = [];
-      }
+      const selectedOnly = this.selectedCities.length
+        ? withVacancy.filter((d) => this.selectedCities.includes(d.city))
+        : [];
 
-      switch (this.currentFilters.sort) {
-        case "vacancy-low":
-          filteredData.sort(
-            (a, b) => a._vacancyRate - b._vacancyRate
-          );
-          break;
-        case "name":
-          filteredData.sort((a, b) => a.city.localeCompare(b.city));
-          break;
-        default:
-          filteredData.sort(
-            (a, b) => b._vacancyRate - a._vacancyRate
-          );
-          break;
-      }
-
-      return filteredData;
+      selectedOnly.sort((a, b) => b._vacancyRate - a._vacancyRate);
+      return selectedOnly;
     }
 
     render() {
@@ -1058,7 +751,7 @@
           this.svg = null;
         }
         this.containerEl.innerHTML =
-          '<div class="vacancy-empty">No cities selected. Choose up to four cities to view buildings.</div>';
+          '<div class="vacancy-empty">No cities selected. Choose up to three cities to view buildings.</div>';
         this.updateInfoPanelList([]);
         return;
       }
