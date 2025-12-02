@@ -2063,6 +2063,14 @@ footer {
         transform: perspective(2000px) rotateY(0deg);
         backface-visibility: hidden;
         opacity: 1;
+        /* Required to make Flexbox work */
+        display: flex;
+
+        /* Stacks children vertically instead of side-by-side */
+        flex-direction: column;
+
+        /* Keep existing styles */
+        min-height: 1343.58px;
     }
     
     #folder-page.flipping {
