@@ -2024,7 +2024,6 @@ footer {
             cursor: pointer;
             font-weight: 600;
             color: #4b5563;
-            transition: all 0.2s;
             user-select: none;
             margin-right: -1px;
             font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
@@ -2065,12 +2064,15 @@ footer {
         opacity: 1;
         /* Required to make Flexbox work */
         display: flex;
-
+        /* Centers children horizontally along the main axis */
+        justify-content: center-top;
+        /* Centers children vertically along the cross axis */
+        align-items: center;
         /* Stacks children vertically instead of side-by-side */
         flex-direction: column;
 
         /* Keep existing styles */
-        min-height: 1343.58px;
+        
     }
     
     #folder-page.flipping {
