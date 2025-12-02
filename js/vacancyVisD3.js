@@ -37,12 +37,12 @@
 
   // Visual tuning values for the SVG layout
   const CONFIG = {
-    windowCols: 5,
+    windowCols: 10,
     windowRows: 20,
     windowSize: 16,
     windowGap: 5,
     buildingPadding: 10,
-    vacancyUnitPerWindow: 1250,
+    vacancyPercentPerWindow: 0.5,
     cardPaddingX: 18,
     cardGapX: 32,
     cardGapY: 42,
@@ -114,8 +114,7 @@
       this.populationYearExtent = [null, null];
       this.populationData = new Map();
       this.vacancyRates = new Map();
-      this.unitPerWindow = CONFIG.vacancyUnitPerWindow;
-      this.currentScaleKey = "";
+      this.percentPerWindow = CONFIG.vacancyPercentPerWindow;
 
       this.resizeTimeout = null;
       this.handleResize = this.handleResize.bind(this);
@@ -165,10 +164,8 @@
       ])
         .finally(() => {
           this.syncCurrentYearFromData();
-          this.recomputeGlobalMax().then(() => {
-            this.setupControlPanel();
-            this.render();
-          });
+          this.setupControlPanel();
+          this.render();
         });
 
       window.addEventListener("resize", this.handleResize);
@@ -320,33 +317,14 @@
         : { vacancy_rate: vacancyRate };
       const supplyEntry = this.getHousingSupply(city.city, targetYear);
       const populationEntry = this.getPopulation(city.city, targetYear);
-      const housingSupply = supplyEntry ? supplyEntry.homes : null;
-      const vacantUnits =
-        Number.isFinite(housingSupply) && Number.isFinite(cityData.vacancy_rate)
-          ? housingSupply * (cityData.vacancy_rate / 100)
-          : null;
       return {
         cityData,
         vacancyRate,
         vacancyYear: vacancyEntry ? vacancyEntry.year : city.year || null,
         supplyEntry,
-        housingSupply,
-        vacantUnits,
         population: populationEntry ? populationEntry.pop : null,
         populationYear: populationEntry ? populationEntry.year : null,
       };
-    }
-
-    recomputeGlobalMax() {
-      return new Promise((resolve) => {
-        const maxVacantUnits =
-          d3.max(
-            this.allCitiesData,
-            (city) => this.computeCityVacantUnits(city, this.currentYear).vacantUnits || null
-          ) || 0;
-        this.allMaxVacantUnits = maxVacantUnits;
-        resolve(maxVacantUnits);
-      });
     }
 
     setupFilterListeners() {
@@ -547,11 +525,11 @@
           const yr = parseInt(e.target.value, 10);
           this.currentYear = yr;
           yearDisplay.textContent = yr;
-          this.recomputeGlobalMax().then(() => this.render());
+          this.render();
         };
       }
 
-      this.updateScaleDisplay(null);
+      this.updateScaleDisplay(this.percentPerWindow);
     }
 
     populateProvinceDropdown() {
@@ -828,26 +806,28 @@
     }
 
     buildTooltipHtml(data) {
-      if (!Number.isFinite(data.vacantUnits)) {
-        return `<div><strong>${data.city}</strong></div><div>Vacant homes unavailable</div>`;
+      if (!Number.isFinite(data.vacancyRate)) {
+        return `<div><strong>${data.city}</strong></div><div>Vacancy rate unavailable</div>`;
       }
-      const est = data.housingSupplyEstimate ? " (estimate)" : " (reported)";
-      return `<div><strong>${data.city}</strong></div><div>≈ ${formatNumber(
-        data.vacantUnits
-      )} vacant homes${est}</div><div style="color:#cbd5e0;font-size:11px;"> Each dark window ≈ ${formatNumber(
-        data.vacancyUnitPerWindow
-      )} homes</div>`;
+      const yearLabel = data.vacancyYear ? ` (${data.vacancyYear})` : "";
+      const perWindow =
+        Number.isFinite(data.vacancyPercentPerWindow) && data.vacancyPercentPerWindow > 0
+          ? data.vacancyPercentPerWindow
+          : this.percentPerWindow;
+      return `<div><strong>${data.city}</strong></div><div>${data.vacancyRate.toFixed(
+        1
+      )}% vacancy rate${yearLabel}</div><div style="color:#cbd5e0;font-size:11px;">Each window = ${perWindow}% (rounded up)</div>`;
     }
 
-    updateScaleDisplay(unitPerWindow) {
+    updateScaleDisplay(percentPerWindow) {
       if (!this.infoElements.scaleValue) return;
-      const display = unitPerWindow
-        ? `Each dark window ≈ ${formatNumber(unitPerWindow)} homes`
+      const display = Number.isFinite(percentPerWindow)
+        ? `Each window = ${percentPerWindow}% vacancy (rounded up)`
         : "–";
       this.infoElements.scaleValue.textContent = display;
       if (this.infoElements.scaleNote) {
         this.infoElements.scaleNote.textContent =
-          "Scale updates when the city selection changes";
+          "Raw vacancy rates; windows stack bottom-up on a 10×20 grid.";
       }
     }
 
@@ -884,9 +864,7 @@
       const height = padding * 2 + rowHeight * data.length;
       const colName = 6;
       const colPop = 12;
-      const colVac = 90;
-      const colVacUnits = 170;
-      const colSup = 290;
+      const colVac = 150;
       const svg = listSel
         .append("svg")
         .attr("class", "vacancy-city-svg")
@@ -928,23 +906,7 @@
         .attr("y", 36)
         .attr("fill", "#4a5568")
         .attr("font-size", "12px")
-        .text("Vacancy");
-
-      rows
-        .append("text")
-        .attr("x", colVacUnits)
-        .attr("y", 36)
-        .attr("fill", "#4a5568")
-        .attr("font-size", "12px")
-        .text("Vacant units (est.)");
-
-      rows
-        .append("text")
-        .attr("x", colSup)
-        .attr("y", 36)
-        .attr("fill", "#4a5568")
-        .attr("font-size", "12px")
-        .text("Housing supply");
+        .text("Vacancy rate");
 
       rows
         .append("text")
@@ -969,35 +931,13 @@
         );
 
       rows
+        .filter((d) => d.vacancyYear)
         .append("text")
-        .attr("x", colVacUnits)
-        .attr("y", 56)
-        .attr("fill", "#2d3748")
-        .attr("font-size", "14px")
-        .attr("font-weight", "600")
-        .text((d) =>
-          Number.isFinite(d.vacantUnits) ? formatNumber(d.vacantUnits) : "–"
-        );
-
-      rows
-        .append("text")
-        .attr("x", colSup)
-        .attr("y", 56)
-        .attr("fill", "#2d3748")
-        .attr("font-size", "14px")
-        .attr("font-weight", "600")
-        .text((d) =>
-          Number.isFinite(d.housingSupply) ? formatNumber(d.housingSupply) : "–"
-        );
-
-      rows
-        .filter((d) => d.housingSupplyEstimate)
-        .append("text")
-        .attr("x", colSup)
+        .attr("x", colVac)
         .attr("y", 72)
         .attr("fill", "#718096")
         .attr("font-size", "10px")
-        .text("(estimated)");
+        .text((d) => `(year ${d.vacancyYear})`);
     }
 
     applyFilters() {
@@ -1112,8 +1052,7 @@
       if (!this.containerEl) return;
 
       if (!cities || cities.length === 0) {
-        this.currentScaleKey = "";
-        this.unitPerWindow = CONFIG.vacancyUnitPerWindow;
+        this.percentPerWindow = CONFIG.vacancyPercentPerWindow;
         if (this.svg) {
           this.svg.remove();
           this.svg = null;
@@ -1128,13 +1067,12 @@
         const {
           cityData,
           supplyEntry,
-          housingSupply,
-          vacantUnits,
           population,
           populationYear,
           vacancyRate,
           vacancyYear,
         } = this.computeCityVacantUnits(city);
+        const housingSupply = supplyEntry ? supplyEntry.homes : null;
         return {
           key: `${city.city}-${city.province}-${city.year}-avg`,
           city: city.city,
@@ -1148,7 +1086,6 @@
           housingSupply,
           housingSupplyYear: supplyEntry ? supplyEntry.year : null,
           housingSupplyEstimate: supplyEntry ? supplyEntry.estimate : false,
-          vacantUnits,
         };
       });
 
@@ -1163,38 +1100,17 @@
         Math.max(0, uniformRows - 1) * CONFIG.windowGap +
         2 * CONFIG.buildingPadding;
 
-      const selectionKey = cities
-        .map((c) => c.city)
-        .slice()
-        .sort()
-        .join("|");
-      let unitPerWindow = this.unitPerWindow || CONFIG.vacancyUnitPerWindow;
-      if (selectionKey !== this.currentScaleKey) {
-        const maxVacantUnits =
-          d3.max(
-            baseVisuals,
-            (d) => (Number.isFinite(d.vacantUnits) ? d.vacantUnits : null)
-          ) || 0;
-        unitPerWindow =
-          maxVacantUnits > 0
-            ? Math.max(1, maxVacantUnits / uniformTotalWindows)
-            : CONFIG.vacancyUnitPerWindow;
-        this.unitPerWindow = unitPerWindow;
-        this.currentScaleKey = selectionKey;
-      }
+      const percentPerWindow =
+        Number.isFinite(this.percentPerWindow) && this.percentPerWindow > 0
+          ? this.percentPerWindow
+          : CONFIG.vacancyPercentPerWindow;
+      this.percentPerWindow = percentPerWindow;
 
       const visuals = baseVisuals.map((d) => {
-        const vacantWindowsRaw =
-          d.vacantUnits === null
-            ? 0
-            : Math.max(
-                d.vacantUnits > 0 ? 1 : 0,
-                Math.round(d.vacantUnits / unitPerWindow)
-              );
-        const vacantWindows = Math.max(
-          0,
-          Math.min(vacantWindowsRaw, uniformTotalWindows)
-        );
+        const vacantWindowsRaw = Number.isFinite(d.vacancyRate)
+          ? Math.ceil(Math.max(0, d.vacancyRate) / percentPerWindow)
+          : 0;
+        const vacantWindows = Math.max(0, Math.min(vacantWindowsRaw, uniformTotalWindows));
         const windows = this.buildWindows(
           vacantWindows,
           uniformTotalWindows,
@@ -1203,7 +1119,7 @@
         return {
           ...d,
           vacantWindows,
-          vacancyUnitPerWindow: unitPerWindow,
+          vacancyPercentPerWindow: percentPerWindow,
           windowCount: uniformTotalWindows,
           windows,
           rows: uniformRows,
@@ -1211,7 +1127,7 @@
         };
       });
 
-      this.updateScaleDisplay(unitPerWindow);
+      this.updateScaleDisplay(percentPerWindow);
       this.updateInfoPanelList(visuals);
 
       const maxBuildingHeight = uniformBuildingHeight;

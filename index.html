@@ -313,7 +313,7 @@
                 <header>
                     <h1>How Tight Are Vacancy Rates in Major Cities?</h1>
                     <p class="subtitle">
-                        Each building represents a major Canadian city. Windows now show the estimated number of vacant homes (based on the selected year's housing supply × vacancy rate), with gray windows stacked from the bottom up; the size of each window auto-scales to fill the 5×20 grid.</p>
+                        Each building represents a major Canadian city. Windows now show the raw vacancy rate directly: each dark window equals 0.5 percentage points, stacked from the bottom up across a 10×20 grid.</p>
                 </header>
                 <div class="row justify-content-center g-5" id="vis5">
 
@@ -335,26 +335,24 @@
                             </div>
                         </div>
 
+                        <div class="vacancy-legend-bar">
+                            <div class="vacancy-scale">
+                                <div class="label">Legend</div>
+                                <div class="value" id="vacancy-scale-value">Each window = 0.5% vacancy (rounded up)</div>
+                                <div class="note" id="vacancy-scale-note">Windows stack bottom-up on a 10×20 grid.</div>
+                            </div>
+                        </div>
+
                         <div class="vacancy-wrapper">
                             <div class="vacancy-left">
                                 <div class="buildings-viewport">
                                     <div id="buildings-container"></div>
                                 </div>
                             </div>
-                            <div class="vacancy-info-panel">
-                                <div class="vacancy-scale">
-                                    <div class="label">Current scale</div>
-                                    <div class="value" id="vacancy-scale-value">-</div>
-                                    <div class="note" id="vacancy-scale-note">Adjusts when cities/year change</div>
-                                </div>
-                                <h3>Displayed Cities</h3>
-                                <div id="vacancy-city-list" class="vacancy-city-list"></div>
-                                <p class="vacancy-note">Pick up to four cities to compare; details update with the selected year.</p>
-                            </div>
                         </div>
 
                         <div class="data-table-section">
-                            <p>Housing supply data is taken from the 2001, 2006, 2011, 2016, and 2021 Canadian censuses, extrapolated for the years between. Estimated vacant units are taken by multiplying vacancy rates with the extrapolated census data.</p>
+                            <p>Vacancy rates come from CMHC releases for the selected year; each window represents 0.5% of vacancy, rounded up.</p>
                         </div>
                     </div>
                 </div>
