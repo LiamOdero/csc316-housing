@@ -303,6 +303,12 @@ class ConstructionVisualization   {
             .style('cursor', 'pointer')
             .text(d => d)
             .on('click', (_, d) => {
+                let wasPlaying = false;
+                if (this.playing)   {
+                    vis.stopPlayback();
+                    wasPlaying = true;
+                }
+                
                 familyButtons
                     .style('background', btn => btn === d ? '#e0f2fe' : '#f4f4f5')
                     .style('border-color', btn => btn === d ? '#60a5fa' : '#d1d5db');
@@ -322,6 +328,11 @@ class ConstructionVisualization   {
                 }
 
                 vis.wrangleData();
+                if (wasPlaying) {
+                    vis.playing = true;
+                    playBtn.text('❚❚ Pause');
+                    playTimer = setInterval(stepPlayback, 1000);
+                }
             });
 
 
@@ -446,9 +457,14 @@ class ConstructionVisualization   {
         let currentProvinces = vis.displayData.map(d => d.province);
         vis.yScale.domain(currentProvinces)
 
+        if (this.ratioMode) {
+            // theres some bug with some rectangles remaining, this seems to be the only way to fix it
+            vis.svg.selectAll(".construction-rect").remove();
+        }
 
         vis.constructionGroup = vis.svg.selectAll(".construction-rect")
            .data(vis.displayData)
+        
 
         vis.popRatioAxis.ticks(vis.popRatioScale.domain()[1])
 
@@ -508,9 +524,10 @@ class ConstructionVisualization   {
                                         return centerLine - barLength;
                                         })
                                      .attr("y", d => vis.yScale(d.province) + 5) 
-                                     .attr("width", d => vis.popScale(d.completions) * (vis.ratioMode === false)) 
+                                     .attr("width", d => (vis.ratioMode) ? 0 :  vis.popScale(d.completions)) 
                                      .attr("height", vis.yScale.bandwidth() - 4) 
-                                     .attr("fill", "steelblue");
+                                     .attr("fill", "steelblue")
+                                     .attr("opacity", 1 - 0.75 * vis.ratioMode);
 
         vis.popGroup = vis.svg.selectAll("popGroup")
            .data(vis.ratioData)
