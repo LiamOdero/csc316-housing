@@ -340,14 +340,6 @@
                             </div>
                         </div>
 
-                        <div class="vacancy-legend-bar">
-                            <div class="vacancy-scale">
-                                <div class="label">Legend</div>
-                                <div class="value" id="vacancy-scale-value">Each window = 0.5% vacancy (rounded up)</div>
-                                <div class="note" id="vacancy-scale-note">Windows stack bottom-up on a 10x20 grid.</div>
-                            </div>
-                        </div>
-
                         <div class="vacancy-wrapper">
                             <div class="vacancy-left">
                                 <div class="buildings-viewport">
@@ -356,9 +348,11 @@
                             </div>
                             <div class="vacancy-info-panel">
                                 <div class="vacancy-scale">
-                                    <div class="label">Current scale</div>
-                                    <div class="value" id="vacancy-scale-value">–</div>
-                                    <div class="note" id="vacancy-scale-note">Adjusts when cities/year change</div>
+                                    <div class="label">Legend</div>
+                                    <div class="vacancy-scale-row">
+                                        <div class="vacancy-window-empty" aria-hidden="true"></div>
+                                        <div class="value" data-vacancy-scale-value></div>
+                                    </div>
                                 </div>
                                 <h3>Displayed Cities</h3>
                                 <div id="vacancy-city-list" class="vacancy-city-list"></div>

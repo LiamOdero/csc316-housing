@@ -121,6 +121,8 @@
         citySelect: null,
         yearSlider: null,
         yearDisplay: null,
+        scaleValues: [],
+        scaleNotes: [],
       };
     }
 
@@ -344,11 +346,11 @@
       );
       this.infoElements.yearMin = document.getElementById("vacancy-year-min");
       this.infoElements.yearMax = document.getElementById("vacancy-year-max");
-      this.infoElements.scaleValue = document.getElementById(
-        "vacancy-scale-value"
+      this.infoElements.scaleValues = Array.from(
+        document.querySelectorAll("[data-vacancy-scale-value]")
       );
-      this.infoElements.scaleNote = document.getElementById(
-        "vacancy-scale-note"
+      this.infoElements.scaleNotes = Array.from(
+        document.querySelectorAll("[data-vacancy-scale-note]")
       );
       this.infoElements.cityButtons = document.getElementById(
         "vacancy-city-buttons"
@@ -526,18 +528,22 @@
           : this.percentPerWindow;
       return `<div><strong>${data.city}</strong></div><div>${data.vacancyRate.toFixed(
         1
-      )}% vacancy rate${yearLabel}</div><div style="color:#cbd5e0;font-size:11px;">Each window = ${perWindow}% (rounded up)</div>`;
+      )}% vacancy rate${yearLabel}</div><div style="color:#cbd5e0;font-size:11px;">:${perWindow}% vacancy (rounded up)</div>`;
     }
 
     updateScaleDisplay(percentPerWindow) {
-      if (!this.infoElements.scaleValue) return;
+      const hasValues =
+        this.infoElements.scaleValues && this.infoElements.scaleValues.length;
+      const hasNotes =
+        this.infoElements.scaleNotes && this.infoElements.scaleNotes.length;
+      if (!hasValues && !hasNotes) return;
       const display = Number.isFinite(percentPerWindow)
-        ? `Each window = ${percentPerWindow}% vacancy (rounded up)`
-        : "–";
-      this.infoElements.scaleValue.textContent = display;
-      if (this.infoElements.scaleNote) {
-        this.infoElements.scaleNote.textContent =
-          "Raw vacancy rates; windows stack bottom-up on a 10×20 grid.";
+        ? `= ${percentPerWindow}% vacancy (rounded up)`
+        : "-";
+      if (hasValues) {
+        this.infoElements.scaleValues.forEach((el) => {
+          el.textContent = display;
+        });
       }
     }
 
