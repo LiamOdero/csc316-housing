@@ -1,0 +1,1222 @@
+{
+  "Toronto": [
+    {
+      "year": 2000,
+      "homes": 2339798,
+      "estimate": true
+    },
+    {
+      "year": 2001,
+      "homes": 2367045,
+      "estimate": false
+    },
+    {
+      "year": 2002,
+      "homes": 2394292,
+      "estimate": true
+    },
+    {
+      "year": 2003,
+      "homes": 2421539,
+      "estimate": true
+    },
+    {
+      "year": 2004,
+      "homes": 2448787,
+      "estimate": true
+    },
+    {
+      "year": 2005,
+      "homes": 2476034,
+      "estimate": true
+    },
+    {
+      "year": 2006,
+      "homes": 2503281,
+      "estimate": false
+    },
+    {
+      "year": 2007,
+      "homes": 2525637,
+      "estimate": true
+    },
+    {
+      "year": 2008,
+      "homes": 2547993,
+      "estimate": true
+    },
+    {
+      "year": 2009,
+      "homes": 2570348,
+      "estimate": true
+    },
+    {
+      "year": 2010,
+      "homes": 2592704,
+      "estimate": true
+    },
+    {
+      "year": 2011,
+      "homes": 2615060,
+      "estimate": false
+    },
+    {
+      "year": 2012,
+      "homes": 2638362,
+      "estimate": true
+    },
+    {
+      "year": 2013,
+      "homes": 2661664,
+      "estimate": true
+    },
+    {
+      "year": 2014,
+      "homes": 2684967,
+      "estimate": true
+    },
+    {
+      "year": 2015,
+      "homes": 2708269,
+      "estimate": true
+    },
+    {
+      "year": 2016,
+      "homes": 2731571,
+      "estimate": false
+    },
+    {
+      "year": 2017,
+      "homes": 2758422,
+      "estimate": true
+    },
+    {
+      "year": 2018,
+      "homes": 2785273,
+      "estimate": true
+    },
+    {
+      "year": 2019,
+      "homes": 2812123,
+      "estimate": true
+    },
+    {
+      "year": 2020,
+      "homes": 2838974,
+      "estimate": true
+    },
+    {
+      "year": 2021,
+      "homes": 2865825,
+      "estimate": false
+    },
+    {
+      "year": 2022,
+      "homes": 2892676,
+      "estimate": true
+    },
+    {
+      "year": 2023,
+      "homes": 2919527,
+      "estimate": true
+    }
+  ],
+  "Montreal": [
+    {
+      "year": 2000,
+      "homes": 1576169,
+      "estimate": true
+    },
+    {
+      "year": 2001,
+      "homes": 1583590,
+      "estimate": false
+    },
+    {
+      "year": 2002,
+      "homes": 1591011,
+      "estimate": true
+    },
+    {
+      "year": 2003,
+      "homes": 1598431,
+      "estimate": true
+    },
+    {
+      "year": 2004,
+      "homes": 1605852,
+      "estimate": true
+    },
+    {
+      "year": 2005,
+      "homes": 1613272,
+      "estimate": true
+    },
+    {
+      "year": 2006,
+      "homes": 1620693,
+      "estimate": false
+    },
+    {
+      "year": 2007,
+      "homes": 1626458,
+      "estimate": true
+    },
+    {
+      "year": 2008,
+      "homes": 1632223,
+      "estimate": true
+    },
+    {
+      "year": 2009,
+      "homes": 1637989,
+      "estimate": true
+    },
+    {
+      "year": 2010,
+      "homes": 1643754,
+      "estimate": true
+    },
+    {
+      "year": 2011,
+      "homes": 1649519,
+      "estimate": false
+    },
+    {
+      "year": 2012,
+      "homes": 1660554,
+      "estimate": true
+    },
+    {
+      "year": 2013,
+      "homes": 1671589,
+      "estimate": true
+    },
+    {
+      "year": 2014,
+      "homes": 1682624,
+      "estimate": true
+    },
+    {
+      "year": 2015,
+      "homes": 1693659,
+      "estimate": true
+    },
+    {
+      "year": 2016,
+      "homes": 1704694,
+      "estimate": false
+    },
+    {
+      "year": 2017,
+      "homes": 1720280,
+      "estimate": true
+    },
+    {
+      "year": 2018,
+      "homes": 1735866,
+      "estimate": true
+    },
+    {
+      "year": 2019,
+      "homes": 1751453,
+      "estimate": true
+    },
+    {
+      "year": 2020,
+      "homes": 1767039,
+      "estimate": true
+    },
+    {
+      "year": 2021,
+      "homes": 1782625,
+      "estimate": false
+    },
+    {
+      "year": 2022,
+      "homes": 1798211,
+      "estimate": true
+    },
+    {
+      "year": 2023,
+      "homes": 1813797,
+      "estimate": true
+    }
+  ],
+  "Vancouver": [
+    {
+      "year": 2000,
+      "homes": 1161232,
+      "estimate": true
+    },
+    {
+      "year": 2001,
+      "homes": 1172623,
+      "estimate": false
+    },
+    {
+      "year": 2002,
+      "homes": 1184014,
+      "estimate": true
+    },
+    {
+      "year": 2003,
+      "homes": 1195406,
+      "estimate": true
+    },
+    {
+      "year": 2004,
+      "homes": 1206797,
+      "estimate": true
+    },
+    {
+      "year": 2005,
+      "homes": 1218189,
+      "estimate": true
+    },
+    {
+      "year": 2006,
+      "homes": 1229580,
+      "estimate": false
+    },
+    {
+      "year": 2007,
+      "homes": 1242866,
+      "estimate": true
+    },
+    {
+      "year": 2008,
+      "homes": 1256152,
+      "estimate": true
+    },
+    {
+      "year": 2009,
+      "homes": 1269438,
+      "estimate": true
+    },
+    {
+      "year": 2010,
+      "homes": 1282724,
+      "estimate": true
+    },
+    {
+      "year": 2011,
+      "homes": 1296010,
+      "estimate": false
+    },
+    {
+      "year": 2012,
+      "homes": 1309065,
+      "estimate": true
+    },
+    {
+      "year": 2013,
+      "homes": 1322120,
+      "estimate": true
+    },
+    {
+      "year": 2014,
+      "homes": 1335176,
+      "estimate": true
+    },
+    {
+      "year": 2015,
+      "homes": 1348231,
+      "estimate": true
+    },
+    {
+      "year": 2016,
+      "homes": 1361286,
+      "estimate": false
+    },
+    {
+      "year": 2017,
+      "homes": 1378417,
+      "estimate": true
+    },
+    {
+      "year": 2018,
+      "homes": 1395548,
+      "estimate": true
+    },
+    {
+      "year": 2019,
+      "homes": 1412678,
+      "estimate": true
+    },
+    {
+      "year": 2020,
+      "homes": 1429809,
+      "estimate": true
+    },
+    {
+      "year": 2021,
+      "homes": 1446940,
+      "estimate": false
+    },
+    {
+      "year": 2022,
+      "homes": 1464071,
+      "estimate": true
+    },
+    {
+      "year": 2023,
+      "homes": 1481202,
+      "estimate": true
+    }
+  ],
+  "Calgary": [
+    {
+      "year": 2000,
+      "homes": 857165,
+      "estimate": true
+    },
+    {
+      "year": 2001,
+      "homes": 879003,
+      "estimate": false
+    },
+    {
+      "year": 2002,
+      "homes": 900841,
+      "estimate": true
+    },
+    {
+      "year": 2003,
+      "homes": 922679,
+      "estimate": true
+    },
+    {
+      "year": 2004,
+      "homes": 944517,
+      "estimate": true
+    },
+    {
+      "year": 2005,
+      "homes": 966355,
+      "estimate": true
+    },
+    {
+      "year": 2006,
+      "homes": 988193,
+      "estimate": false
+    },
+    {
+      "year": 2007,
+      "homes": 1009921,
+      "estimate": true
+    },
+    {
+      "year": 2008,
+      "homes": 1031649,
+      "estimate": true
+    },
+    {
+      "year": 2009,
+      "homes": 1053377,
+      "estimate": true
+    },
+    {
+      "year": 2010,
+      "homes": 1075105,
+      "estimate": true
+    },
+    {
+      "year": 2011,
+      "homes": 1096833,
+      "estimate": false
+    },
+    {
+      "year": 2012,
+      "homes": 1125310,
+      "estimate": true
+    },
+    {
+      "year": 2013,
+      "homes": 1153788,
+      "estimate": true
+    },
+    {
+      "year": 2014,
+      "homes": 1182265,
+      "estimate": true
+    },
+    {
+      "year": 2015,
+      "homes": 1210743,
+      "estimate": true
+    },
+    {
+      "year": 2016,
+      "homes": 1239220,
+      "estimate": false
+    },
+    {
+      "year": 2017,
+      "homes": 1248056,
+      "estimate": true
+    },
+    {
+      "year": 2018,
+      "homes": 1256892,
+      "estimate": true
+    },
+    {
+      "year": 2019,
+      "homes": 1265728,
+      "estimate": true
+    },
+    {
+      "year": 2020,
+      "homes": 1274564,
+      "estimate": true
+    },
+    {
+      "year": 2021,
+      "homes": 1283400,
+      "estimate": false
+    },
+    {
+      "year": 2022,
+      "homes": 1292236,
+      "estimate": true
+    },
+    {
+      "year": 2023,
+      "homes": 1301072,
+      "estimate": true
+    }
+  ],
+  "Winnipeg": [
+    {
+      "year": 2000,
+      "homes": 616763,
+      "estimate": true
+    },
+    {
+      "year": 2001,
+      "homes": 619544,
+      "estimate": false
+    },
+    {
+      "year": 2002,
+      "homes": 622325,
+      "estimate": true
+    },
+    {
+      "year": 2003,
+      "homes": 625107,
+      "estimate": true
+    },
+    {
+      "year": 2004,
+      "homes": 627888,
+      "estimate": true
+    },
+    {
+      "year": 2005,
+      "homes": 630670,
+      "estimate": true
+    },
+    {
+      "year": 2006,
+      "homes": 633451,
+      "estimate": false
+    },
+    {
+      "year": 2007,
+      "homes": 639484,
+      "estimate": true
+    },
+    {
+      "year": 2008,
+      "homes": 645517,
+      "estimate": true
+    },
+    {
+      "year": 2009,
+      "homes": 651551,
+      "estimate": true
+    },
+    {
+      "year": 2010,
+      "homes": 657584,
+      "estimate": true
+    },
+    {
+      "year": 2011,
+      "homes": 663617,
+      "estimate": false
+    },
+    {
+      "year": 2012,
+      "homes": 671942,
+      "estimate": true
+    },
+    {
+      "year": 2013,
+      "homes": 680268,
+      "estimate": true
+    },
+    {
+      "year": 2014,
+      "homes": 688593,
+      "estimate": true
+    },
+    {
+      "year": 2015,
+      "homes": 696919,
+      "estimate": true
+    },
+    {
+      "year": 2016,
+      "homes": 705244,
+      "estimate": false
+    },
+    {
+      "year": 2017,
+      "homes": 714117,
+      "estimate": true
+    },
+    {
+      "year": 2018,
+      "homes": 722989,
+      "estimate": true
+    },
+    {
+      "year": 2019,
+      "homes": 731862,
+      "estimate": true
+    },
+    {
+      "year": 2020,
+      "homes": 740734,
+      "estimate": true
+    },
+    {
+      "year": 2021,
+      "homes": 749607,
+      "estimate": false
+    },
+    {
+      "year": 2022,
+      "homes": 758480,
+      "estimate": true
+    },
+    {
+      "year": 2023,
+      "homes": 767352,
+      "estimate": true
+    }
+  ],
+  "Halifax": [
+    {
+      "year": 2000,
+      "homes": 185200,
+      "estimate": true
+    },
+    {
+      "year": 2001,
+      "homes": 186937,
+      "estimate": false
+    },
+    {
+      "year": 2002,
+      "homes": 188674,
+      "estimate": true
+    },
+    {
+      "year": 2003,
+      "homes": 190411,
+      "estimate": true
+    },
+    {
+      "year": 2004,
+      "homes": 192147,
+      "estimate": true
+    },
+    {
+      "year": 2005,
+      "homes": 193884,
+      "estimate": true
+    },
+    {
+      "year": 2006,
+      "homes": 195621,
+      "estimate": false
+    },
+    {
+      "year": 2007,
+      "homes": 197572,
+      "estimate": true
+    },
+    {
+      "year": 2008,
+      "homes": 199522,
+      "estimate": true
+    },
+    {
+      "year": 2009,
+      "homes": 201473,
+      "estimate": true
+    },
+    {
+      "year": 2010,
+      "homes": 203423,
+      "estimate": true
+    },
+    {
+      "year": 2011,
+      "homes": 205374,
+      "estimate": false
+    },
+    {
+      "year": 2012,
+      "homes": 207841,
+      "estimate": true
+    },
+    {
+      "year": 2013,
+      "homes": 210307,
+      "estimate": true
+    },
+    {
+      "year": 2014,
+      "homes": 212774,
+      "estimate": true
+    },
+    {
+      "year": 2015,
+      "homes": 215240,
+      "estimate": true
+    },
+    {
+      "year": 2016,
+      "homes": 217707,
+      "estimate": false
+    },
+    {
+      "year": 2017,
+      "homes": 220479,
+      "estimate": true
+    },
+    {
+      "year": 2018,
+      "homes": 223252,
+      "estimate": true
+    },
+    {
+      "year": 2019,
+      "homes": 226024,
+      "estimate": true
+    },
+    {
+      "year": 2020,
+      "homes": 228797,
+      "estimate": true
+    },
+    {
+      "year": 2021,
+      "homes": 231569,
+      "estimate": false
+    },
+    {
+      "year": 2022,
+      "homes": 234341,
+      "estimate": true
+    },
+    {
+      "year": 2023,
+      "homes": 237114,
+      "estimate": true
+    }
+  ],
+  "Moncton": [
+    {
+      "year": 2000,
+      "homes": 43408,
+      "estimate": true
+    },
+    {
+      "year": 2001,
+      "homes": 44074,
+      "estimate": false
+    },
+    {
+      "year": 2002,
+      "homes": 44740,
+      "estimate": true
+    },
+    {
+      "year": 2003,
+      "homes": 45405,
+      "estimate": true
+    },
+    {
+      "year": 2004,
+      "homes": 46071,
+      "estimate": true
+    },
+    {
+      "year": 2005,
+      "homes": 46736,
+      "estimate": true
+    },
+    {
+      "year": 2006,
+      "homes": 47402,
+      "estimate": false
+    },
+    {
+      "year": 2007,
+      "homes": 48068,
+      "estimate": true
+    },
+    {
+      "year": 2008,
+      "homes": 48734,
+      "estimate": true
+    },
+    {
+      "year": 2009,
+      "homes": 49399,
+      "estimate": true
+    },
+    {
+      "year": 2010,
+      "homes": 50065,
+      "estimate": true
+    },
+    {
+      "year": 2011,
+      "homes": 50731,
+      "estimate": false
+    },
+    {
+      "year": 2012,
+      "homes": 51489,
+      "estimate": true
+    },
+    {
+      "year": 2013,
+      "homes": 52246,
+      "estimate": true
+    },
+    {
+      "year": 2014,
+      "homes": 53004,
+      "estimate": true
+    },
+    {
+      "year": 2015,
+      "homes": 53761,
+      "estimate": true
+    },
+    {
+      "year": 2016,
+      "homes": 54519,
+      "estimate": false
+    },
+    {
+      "year": 2017,
+      "homes": 55969,
+      "estimate": true
+    },
+    {
+      "year": 2018,
+      "homes": 57419,
+      "estimate": true
+    },
+    {
+      "year": 2019,
+      "homes": 58870,
+      "estimate": true
+    },
+    {
+      "year": 2020,
+      "homes": 60320,
+      "estimate": true
+    },
+    {
+      "year": 2021,
+      "homes": 61770,
+      "estimate": false
+    },
+    {
+      "year": 2022,
+      "homes": 63220,
+      "estimate": true
+    },
+    {
+      "year": 2023,
+      "homes": 64670,
+      "estimate": true
+    }
+  ],
+  "St. John's ": [
+    {
+      "year": 2000,
+      "homes": 34189,
+      "estimate": true
+    },
+    {
+      "year": 2001,
+      "homes": 34685,
+      "estimate": false
+    },
+    {
+      "year": 2002,
+      "homes": 35181,
+      "estimate": true
+    },
+    {
+      "year": 2003,
+      "homes": 35676,
+      "estimate": true
+    },
+    {
+      "year": 2004,
+      "homes": 36172,
+      "estimate": true
+    },
+    {
+      "year": 2005,
+      "homes": 36667,
+      "estimate": true
+    },
+    {
+      "year": 2006,
+      "homes": 37163,
+      "estimate": false
+    },
+    {
+      "year": 2007,
+      "homes": 37770,
+      "estimate": true
+    },
+    {
+      "year": 2008,
+      "homes": 38377,
+      "estimate": true
+    },
+    {
+      "year": 2009,
+      "homes": 38985,
+      "estimate": true
+    },
+    {
+      "year": 2010,
+      "homes": 39592,
+      "estimate": true
+    },
+    {
+      "year": 2011,
+      "homes": 40199,
+      "estimate": false
+    },
+    {
+      "year": 2012,
+      "homes": 40846,
+      "estimate": true
+    },
+    {
+      "year": 2013,
+      "homes": 41493,
+      "estimate": true
+    },
+    {
+      "year": 2014,
+      "homes": 42141,
+      "estimate": true
+    },
+    {
+      "year": 2015,
+      "homes": 42788,
+      "estimate": true
+    },
+    {
+      "year": 2016,
+      "homes": 43435,
+      "estimate": false
+    },
+    {
+      "year": 2017,
+      "homes": 44528,
+      "estimate": true
+    },
+    {
+      "year": 2018,
+      "homes": 45622,
+      "estimate": true
+    },
+    {
+      "year": 2019,
+      "homes": 46715,
+      "estimate": true
+    },
+    {
+      "year": 2020,
+      "homes": 47809,
+      "estimate": true
+    },
+    {
+      "year": 2021,
+      "homes": 48902,
+      "estimate": false
+    },
+    {
+      "year": 2022,
+      "homes": 49995,
+      "estimate": true
+    },
+    {
+      "year": 2023,
+      "homes": 51089,
+      "estimate": true
+    }
+  ],
+  "Charlottetown": [
+    {
+      "year": 2000,
+      "homes": 12132,
+      "estimate": true
+    },
+    {
+      "year": 2001,
+      "homes": 12450,
+      "estimate": false
+    },
+    {
+      "year": 2002,
+      "homes": 12768,
+      "estimate": true
+    },
+    {
+      "year": 2003,
+      "homes": 13085,
+      "estimate": true
+    },
+    {
+      "year": 2004,
+      "homes": 13403,
+      "estimate": true
+    },
+    {
+      "year": 2005,
+      "homes": 13720,
+      "estimate": true
+    },
+    {
+      "year": 2006,
+      "homes": 14038,
+      "estimate": false
+    },
+    {
+      "year": 2007,
+      "homes": 14384,
+      "estimate": true
+    },
+    {
+      "year": 2008,
+      "homes": 14730,
+      "estimate": true
+    },
+    {
+      "year": 2009,
+      "homes": 15076,
+      "estimate": true
+    },
+    {
+      "year": 2010,
+      "homes": 15422,
+      "estimate": true
+    },
+    {
+      "year": 2011,
+      "homes": 15768,
+      "estimate": false
+    },
+    {
+      "year": 2012,
+      "homes": 16053,
+      "estimate": true
+    },
+    {
+      "year": 2013,
+      "homes": 16338,
+      "estimate": true
+    },
+    {
+      "year": 2014,
+      "homes": 16623,
+      "estimate": true
+    },
+    {
+      "year": 2015,
+      "homes": 16908,
+      "estimate": true
+    },
+    {
+      "year": 2016,
+      "homes": 17193,
+      "estimate": false
+    },
+    {
+      "year": 2017,
+      "homes": 17683,
+      "estimate": true
+    },
+    {
+      "year": 2018,
+      "homes": 18174,
+      "estimate": true
+    },
+    {
+      "year": 2019,
+      "homes": 18664,
+      "estimate": true
+    },
+    {
+      "year": 2020,
+      "homes": 19155,
+      "estimate": true
+    },
+    {
+      "year": 2021,
+      "homes": 19645,
+      "estimate": false
+    },
+    {
+      "year": 2022,
+      "homes": 20135,
+      "estimate": true
+    },
+    {
+      "year": 2023,
+      "homes": 20626,
+      "estimate": true
+    }
+  ],
+  "Saskatoon": [
+    {
+      "year": 2000,
+      "homes": 54128,
+      "estimate": true
+    },
+    {
+      "year": 2001,
+      "homes": 55940,
+      "estimate": false
+    },
+    {
+      "year": 2002,
+      "homes": 57752,
+      "estimate": true
+    },
+    {
+      "year": 2003,
+      "homes": 59563,
+      "estimate": true
+    },
+    {
+      "year": 2004,
+      "homes": 61375,
+      "estimate": true
+    },
+    {
+      "year": 2005,
+      "homes": 63186,
+      "estimate": true
+    },
+    {
+      "year": 2006,
+      "homes": 64998,
+      "estimate": false
+    },
+    {
+      "year": 2007,
+      "homes": 67205,
+      "estimate": true
+    },
+    {
+      "year": 2008,
+      "homes": 69412,
+      "estimate": true
+    },
+    {
+      "year": 2009,
+      "homes": 71620,
+      "estimate": true
+    },
+    {
+      "year": 2010,
+      "homes": 73827,
+      "estimate": true
+    },
+    {
+      "year": 2011,
+      "homes": 76034,
+      "estimate": false
+    },
+    {
+      "year": 2012,
+      "homes": 78056,
+      "estimate": true
+    },
+    {
+      "year": 2013,
+      "homes": 80078,
+      "estimate": true
+    },
+    {
+      "year": 2014,
+      "homes": 82101,
+      "estimate": true
+    },
+    {
+      "year": 2015,
+      "homes": 84123,
+      "estimate": true
+    },
+    {
+      "year": 2016,
+      "homes": 86145,
+      "estimate": false
+    },
+    {
+      "year": 2017,
+      "homes": 88580,
+      "estimate": true
+    },
+    {
+      "year": 2018,
+      "homes": 91015,
+      "estimate": true
+    },
+    {
+      "year": 2019,
+      "homes": 93450,
+      "estimate": true
+    },
+    {
+      "year": 2020,
+      "homes": 95885,
+      "estimate": true
+    },
+    {
+      "year": 2021,
+      "homes": 98320,
+      "estimate": false
+    },
+    {
+      "year": 2022,
+      "homes": 100755,
+      "estimate": true
+    },
+    {
+      "year": 2023,
+      "homes": 103190,
+      "estimate": true
+    }
+  ]
+}
